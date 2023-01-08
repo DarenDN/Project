@@ -5,9 +5,10 @@ namespace ProjectManagementService.Controllers
 {
     public class ProjectController : ControllerBase
     {
-        public async Task<IActionResult> GetProjects()
+        public async Task<JsonResult> GetProjects()
         {
-            return;
+            // TODO implementation
+            return new JsonResult(1);
         }
     }
 }

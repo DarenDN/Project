@@ -5,7 +5,7 @@ using Dtos;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TaskController : ControllerBase
+internal sealed class TaskController : ControllerBase
 {
     [HttpPost()]
     [Route(nameof(GetTask))]
