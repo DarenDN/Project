@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿namespace ProjectManagementService.Controllers;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ProjectManagementService.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class ProjectController : ControllerBase
 {
-    public class ProjectController : ControllerBase
+    [HttpGet]
+    [Route(nameof(GetProjects))]
+    public async Task<JsonResult> GetProjects()
     {
-        public async Task<JsonResult> GetProjects()
-        {
-            // TODO implementation
-            return new JsonResult(1);
-        }
+        // TODO implementation
+        // 1st is handler
+
+        return new JsonResult(1);
     }
 }

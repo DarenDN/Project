@@ -1,11 +1,11 @@
-﻿namespace ProjectManagementService.Handlers;
+﻿namespace ProjectManagementService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Data;
 using Dtos;
-internal sealed class DashboardHandler
+public sealed class DashboardService
 {
     private readonly ApplicationDbContext _applicationDbContext;
-    public DashboardHandler(ApplicationDbContext appDbContext)
+    public DashboardService(ApplicationDbContext appDbContext)
     {
         _applicationDbContext = appDbContext;
     }

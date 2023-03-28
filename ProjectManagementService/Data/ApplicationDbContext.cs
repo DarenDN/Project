@@ -3,7 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using Models;
 
-internal sealed class ApplicationDbContext : DbContext
+public sealed class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {

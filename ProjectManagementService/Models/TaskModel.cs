@@ -3,7 +3,7 @@
 using System.ComponentModel.DataAnnotations;
 using Data;
 
-internal sealed class TaskModel : DbEntity
+public sealed class TaskModel : DbEntity
 {
     [Required]
     [MaxLength(100)]

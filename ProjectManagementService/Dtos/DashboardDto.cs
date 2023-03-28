@@ -1,6 +1,6 @@
 ﻿namespace ProjectManagementService.Dtos;
 using Models;
-internal sealed class DashboardDto
+public sealed class DashboardDto
 {
     public string Title { get; private set; }
     public Guid ID { get; private set; }

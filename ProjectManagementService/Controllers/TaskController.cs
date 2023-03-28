@@ -5,9 +5,9 @@ using Dtos;
 
 [Route("api/[controller]")]
 [ApiController]
-internal sealed class TaskController : ControllerBase
+public sealed class TaskController : ControllerBase
 {
-    [HttpPost()]
+    [HttpGet()]
     [Route(nameof(GetTask))]
     public async Task<JsonResult> GetTask(TaskDto taskDto)
     {

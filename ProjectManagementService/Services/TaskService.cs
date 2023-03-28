@@ -1,10 +1,10 @@
-﻿namespace ProjectManagementService.Handlers;
+﻿namespace ProjectManagementService.Services;
 using Data;
 using Dtos;
-internal sealed class TaskHandler
+public sealed class TaskService
 {
     private readonly ApplicationDbContext _applicationDbContext;
-    public TaskHandler(ApplicationDbContext appDbContext)
+    public TaskService(ApplicationDbContext appDbContext)
     {
         _applicationDbContext = appDbContext;
     }

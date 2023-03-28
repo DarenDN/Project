@@ -1,6 +1,6 @@
 ﻿namespace ProjectManagementService.Dtos;
 using Models;
-internal sealed class TaskDto
+public sealed class TaskDto
 {
     public string Title { get; private set; }
 

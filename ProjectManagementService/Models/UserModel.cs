@@ -3,7 +3,7 @@
 using System.ComponentModel.DataAnnotations;
 using Data;
 
-internal sealed class UserModel : DbEntity
+public sealed class UserModel : DbEntity
 {
     [Required]
     [MaxLength(50)]

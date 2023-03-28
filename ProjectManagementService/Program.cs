@@ -5,12 +5,14 @@ using Autofac;
 var builder = WebApplication.CreateBuilder(args);
 
 // TODO if db connection is correct
-var dbContext = builder.Services.AddDbContext<ApplicationDbContext>(options => 
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection"))).First();
+builder.Services.AddControllers();
 
-InitContainer();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection")))
+    .First();
 
-// TODO where to set it?!
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -18,11 +20,11 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
+if(app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.Run();
 
-void InitContainer()
-{
-    var containerBuilder = new ContainerBuilder();
-    containerBuilder.RegisterInstance<ApplicationDbContext>((ApplicationDbContext)dbContext.ImplementationInstance).SingleInstance();
-    Application.Container = containerBuilder.Build();
-}
