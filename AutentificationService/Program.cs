@@ -1,25 +1,31 @@
-using ProjectManagementService.Data;
+using AutentificationService.Data;
 using Microsoft.EntityFrameworkCore;
-using Autofac;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-
 // TODO if db connection is correct
 var dbContext = builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection"))).First();
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("AuthConnection"));
+});
 
-var containerBuilder = new ContainerBuilder();
-containerBuilder.RegisterInstance<ApplicationDbContext>((ApplicationDbContext)dbContext.ImplementationInstance).SingleInstance();
+builder.Services.AddControllers();
 
-// TODO where to set it?!
-container = containerBuilder.Build();
+// TODO add services
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 
 app.MapControllers();
+
+if(app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.Run();

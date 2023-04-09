@@ -3,7 +3,7 @@
 using System.ComponentModel.DataAnnotations;
 using Data;
 
-public sealed class TaskModel : DbEntity
+public sealed class Task : DbEntity
 {
     [Required]
     [MaxLength(100)]
@@ -13,16 +13,16 @@ public sealed class TaskModel : DbEntity
 
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 
-    public Guid CreatorId { get; set; }
+    public User CreatorId { get; set; }
 
-    public Guid? PerformerId { get; set; }
+    public User? PerformerId { get; set; }
 
     [MaxLength(10000)]
     public string Description { get; set; } = string.Empty;
 
-    public DashboardModel Dashboard { get; set; }
+    public Dashboard Dashboard { get; set; }
 
-    public TaskTypeModel Type { get; set; }
+    public TaskType Type { get; set; }
 
-    public TaskStatusModel Status { get; set; }
+    public TaskStatus Status { get; set; }
 }

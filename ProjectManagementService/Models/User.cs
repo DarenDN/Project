@@ -3,7 +3,7 @@
 using System.ComponentModel.DataAnnotations;
 using Data;
 
-public sealed class UserModel : DbEntity
+public sealed class User : DbEntity
 {
     [Required]
     [MaxLength(50)]
@@ -20,5 +20,5 @@ public sealed class UserModel : DbEntity
     [Required]
     public DateTime RegisterTime { get; set; } = DateTime.Now;
 
-    public UserRoleModel Role { get; set; }
+    public UserRole Role { get; set; }
 }

@@ -73,7 +73,7 @@ namespace ProjectManagementService.Migrations
                         name: "FK_DashboardModels_ProjectModels_ProjectID",
                         column: x => x.ProjectID,
                         principalTable: "ProjectModels",
-                        principalColumn: "ID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -95,12 +95,12 @@ namespace ProjectManagementService.Migrations
                         name: "FK_UserModels_UserRoleModels_RoleID",
                         column: x => x.RoleID,
                         principalTable: "UserRoleModels",
-                        principalColumn: "ID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskModels",
+                name: "Tasks",
                 columns: table => new
                 {
                     ID = table.Column<Guid>(type: "uuid", nullable: false),
@@ -121,19 +121,19 @@ namespace ProjectManagementService.Migrations
                         name: "FK_TaskModels_DashboardModels_DashboardID",
                         column: x => x.DashboardID,
                         principalTable: "DashboardModels",
-                        principalColumn: "ID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_TaskModels_TaskStatusModels_StatusID",
                         column: x => x.StatusID,
                         principalTable: "TaskStatusModels",
-                        principalColumn: "ID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_TaskModels_TaskTypeModels_TypeID",
                         column: x => x.TypeID,
                         principalTable: "TaskTypeModels",
-                        principalColumn: "ID",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -144,17 +144,17 @@ namespace ProjectManagementService.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskModels_DashboardID",
-                table: "TaskModels",
+                table: "Tasks",
                 column: "DashboardID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskModels_StatusID",
-                table: "TaskModels",
+                table: "Tasks",
                 column: "StatusID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskModels_TypeID",
-                table: "TaskModels",
+                table: "Tasks",
                 column: "TypeID");
 
             migrationBuilder.CreateIndex(
@@ -166,7 +166,7 @@ namespace ProjectManagementService.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TaskModels");
+                name: "Tasks");
 
             migrationBuilder.DropTable(
                 name: "UserModels");

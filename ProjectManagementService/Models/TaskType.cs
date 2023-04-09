@@ -3,10 +3,9 @@
 using System.ComponentModel.DataAnnotations;
 using Data;
 
-// TODO change to Enum
-public sealed class UserRoleModel : DbEntity
+public sealed class TaskType : DbEntity
 {
     [Required]
     [MaxLength(20)]
-    public string RoleName { get; }
+    public string Name { get; set; }
 }

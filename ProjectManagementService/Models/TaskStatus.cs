@@ -1,9 +1,9 @@
 ﻿namespace ProjectManagementService.Models;
 
-using System.ComponentModel.DataAnnotations;
 using Data;
+using System.ComponentModel.DataAnnotations;
 
-public sealed class TaskTypeModel : DbEntity
+public sealed class TaskStatus : DbEntity
 {
     [Required]
     [MaxLength(20)]

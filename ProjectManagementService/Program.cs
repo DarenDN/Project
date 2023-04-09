@@ -1,15 +1,21 @@
 using ProjectManagementService.Data;
 using Microsoft.EntityFrameworkCore;
-using Autofac;
+using ProjectManagementService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// TODO if db connection is correct
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection"));
+});
+
+// TODO What exactly it does?
 builder.Services.AddControllers();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection")))
-    .First();
+// TODO do we need interfaces?
+builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ProjectService>();
+builder.Services.AddScoped<TaskService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -27,4 +33,3 @@ if(app.Environment.IsDevelopment())
 }
 
 app.Run();
-

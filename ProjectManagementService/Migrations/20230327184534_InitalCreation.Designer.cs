@@ -24,9 +24,9 @@ namespace ProjectManagementService.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ProjectManagementService.Models.DashboardModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.Dashboard", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -46,16 +46,16 @@ namespace ProjectManagementService.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.HasIndex("ProjectID");
 
                     b.ToTable("DashboardModels");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.ProjectModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.Project", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -63,14 +63,14 @@ namespace ProjectManagementService.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("ProjectModels");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.TaskModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.Task", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -105,7 +105,7 @@ namespace ProjectManagementService.Migrations
                     b.Property<DateTime>("UpdateTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.HasIndex("DashboardID");
 
@@ -113,43 +113,43 @@ namespace ProjectManagementService.Migrations
 
                     b.HasIndex("TypeID");
 
-                    b.ToTable("TaskModels");
+                    b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.TaskStatusModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.TaskStatus", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("TaskStatusModels");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.TaskTypeModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.TaskType", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("TaskTypeModels");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.UserModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.User", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -174,27 +174,27 @@ namespace ProjectManagementService.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.HasIndex("RoleID");
 
                     b.ToTable("UserModels");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.UserRoleModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.UserRole", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("UserRoleModels");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.DashboardModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.Dashboard", b =>
                 {
-                    b.HasOne("ProjectManagementService.Models.ProjectModel", "Project")
+                    b.HasOne("ProjectManagementService.Models.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -203,21 +203,21 @@ namespace ProjectManagementService.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.TaskModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.Task", b =>
                 {
-                    b.HasOne("ProjectManagementService.Models.DashboardModel", "Dashboard")
+                    b.HasOne("ProjectManagementService.Models.Dashboard", "Dashboard")
                         .WithMany("Tasks")
                         .HasForeignKey("DashboardID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectManagementService.Models.TaskStatusModel", "Status")
+                    b.HasOne("ProjectManagementService.Models.TaskStatus", "Status")
                         .WithMany()
                         .HasForeignKey("StatusID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectManagementService.Models.TaskTypeModel", "Type")
+                    b.HasOne("ProjectManagementService.Models.TaskType", "Type")
                         .WithMany()
                         .HasForeignKey("TypeID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -230,9 +230,9 @@ namespace ProjectManagementService.Migrations
                     b.Navigation("Type");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.UserModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.User", b =>
                 {
-                    b.HasOne("ProjectManagementService.Models.UserRoleModel", "Role")
+                    b.HasOne("ProjectManagementService.Models.UserRole", "Role")
                         .WithMany()
                         .HasForeignKey("RoleID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -241,7 +241,7 @@ namespace ProjectManagementService.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.DashboardModel", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.Dashboard", b =>
                 {
                     b.Navigation("Tasks");
                 });

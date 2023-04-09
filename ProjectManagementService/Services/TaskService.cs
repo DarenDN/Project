@@ -1,19 +1,59 @@
 ﻿namespace ProjectManagementService.Services;
+
 using Data;
 using Dtos;
+using Microsoft.EntityFrameworkCore;
+using Models;
+
 public sealed class TaskService
 {
-    private readonly ApplicationDbContext _applicationDbContext;
+    private readonly ApplicationDbContext _appDbContext;
+
     public TaskService(ApplicationDbContext appDbContext)
     {
-        _applicationDbContext = appDbContext;
+        _appDbContext = appDbContext;
     }
 
-    public async Task<IEnumerable<TaskDto>> GetDashboardTasks(Guid dashboardId)
+    public async Task<TaskDto> CreateTaskAsync(TaskDto newTaskDto)
     {
-        var tasks = _applicationDbContext.TaskModels.Where(d => d.Dashboard.ID == dashboardId);
-        var taskDtos = tasks.Select(d => new TaskDto(d));
-        return taskDtos;
+        var newTask = new Task
+        {
+
+        };
+
+        var createdTask = await _appDbContext.AddAsync(newTask);
+        await _appDbContext.SaveChangesAsync();
+
+        return newTaskDto;
+    }
+
+    public async Task<TaskDto> UpdateTaskAsync(TaskDto taskDto)
+    {
+        var neededTask = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskDto.Id);
+        if(neededTask is null)
+        {
+
+        }
+        
+        // TODO fill in new data
+
+        return taskDto;
+    }
+
+    public async Task<bool> DeleteTaskAsync(Guid taskId)
+    {
+        var neededTask = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
+        if(neededTask is null)
+        {
+            // TODO 
+            return false;
+        }
+
+        var deletedTask = _appDbContext.Tasks.Remove(neededTask);
+        
+        // TODO check if success
+
+        return true;
     }
 }
 

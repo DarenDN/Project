@@ -1,51 +1,56 @@
 ﻿namespace ProjectManagementService.Controllers;
+
 using Microsoft.AspNetCore.Mvc;
-using Autofac;
 using Dtos;
 using Services;
-using Data;
 
 [ApiController]
 [Route("api/[controller]")]
 public sealed class DashboardController : ControllerBase
 {
-    private readonly ApplicationDbContext _appDbContext;
+    private DashboardService _dashboardService;
 
-    public DashboardController(ApplicationDbContext appDbContext)
+    public DashboardController(DashboardService dashboardService)
     {
-        _appDbContext = appDbContext;
+        _dashboardService = dashboardService;
     }
 
-    [HttpGet()]
-    [Route(nameof(GetDashboardsByUser))]
-    // TODO pass in user ID, JWT
-    public async Task<JsonResult> GetDashboardsByUser(ProjectDto projectDto /* TODO user ID */)
+    [HttpPut()]
+    [Route(nameof(UpdateDashboardAsync))]
+    // TODO pass in user Id, JWT
+    public async Task<JsonResult> UpdateDashboardAsync(DashboardDto dashboardDto)
     {
-        var dashboards = await GetDashboardsByUser(projectDto.Id);
-        return new JsonResult(dashboards);
+        var createdDashboardDto = await _dashboardService.UpdateDashboardAsync(dashboardDto);
+        
+        return new JsonResult(createdDashboardDto);
     }
 
-    // TODO we need also a Dashboard ID here
-    [HttpGet()]
-    [Route(nameof(GetDashboardTasks))]
-    public async Task<JsonResult> GetDashboardTasks(DashboardDto dashboardDto)
+    [HttpPost()]
+    [Route(nameof(CreateDashboardAsync))]
+    // TODO pass in user Id, JWT
+    public async Task<JsonResult> CreateDashboardAsync(DashboardDto dashboardDto)
     {
-        var tasks = await GetDashboardTasks(dashboardDto.ID);
+        var createdDashboardDto = await _dashboardService.CreateDashboardAsync(dashboardDto);
+        
+        return new JsonResult(createdDashboardDto);
+    }
+
+    [HttpDelete()]
+    [Route(nameof(DeleteDashboardAsync))]
+    // TODO pass in user Id, JWT
+    public async Task<JsonResult> DeleteDashboardAsync(Guid dashboardId)
+    {
+        var createdDashboardDto = await _dashboardService.DeleteDashboardAsync(dashboardId);
+        
+        return new JsonResult(createdDashboardDto);
+    }
+
+    // TODO we need also a Dashboard Id here
+    [HttpGet()]
+    [Route(nameof(GetDashboardTasksAsync))]
+    public async Task<JsonResult> GetDashboardTasksAsync(Guid dashboardId)
+    {
+        var tasks = await _dashboardService.GetTasksAsync(dashboardId);
         return new JsonResult(tasks);
-    }
-
-    private async Task<IEnumerable<TaskDto>> GetDashboardTasks(Guid dashboardId)
-    {
-        // TODO store the handler in the container
-        var taskHandler = new TaskService(_appDbContext);
-        return await taskHandler.GetDashboardTasks(dashboardId);
-    }
-
-    // TODO we need user ID, JWT prob
-    private async Task<IEnumerable<DashboardDto>> GetDashboardsByUser(Guid projectId)
-    {
-        // TODO store the handler in the container
-        var dashboardHandler = new DashboardService(_appDbContext);
-        return await dashboardHandler.GetProjectDashboardsByUserId(projectId);
     }
 }

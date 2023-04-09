@@ -3,11 +3,11 @@ using Models;
 public sealed class DashboardDto
 {
     public string Title { get; private set; }
-    public Guid ID { get; private set; }
+    public Guid Id { get; private set; }
 
-    public DashboardDto(DashboardModel dashboardModel)
+    public DashboardDto(Dashboard dashboardModel)
     {
         Title = dashboardModel.Title;
-        ID = dashboardModel.ID;
+        Id = dashboardModel.Id;
     }
 }

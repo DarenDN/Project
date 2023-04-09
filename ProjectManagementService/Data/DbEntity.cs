@@ -6,5 +6,5 @@ public abstract class DbEntity
     [Key]
     [Required]
     [Column(TypeName = "uuid")]
-    public Guid ID { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
 }
