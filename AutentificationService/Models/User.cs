@@ -1,4 +1,4 @@
-﻿namespace AutentificationService.Models;
+﻿namespace IdentityManagementService.Models;
 
 using Data;
 

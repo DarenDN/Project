@@ -1,4 +1,4 @@
-﻿namespace AutentificationService.Dtos
+﻿namespace IdentityManagementService.Dtos
 {
     public class UserAuthDto
     {

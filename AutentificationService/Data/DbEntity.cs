@@ -1,4 +1,4 @@
-﻿namespace AutentificationService.Data
+﻿namespace IdentityManagementService.Data
 {
     public abstract class DbEntity
     {
