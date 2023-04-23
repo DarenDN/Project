@@ -13,9 +13,9 @@ public sealed class Task : DbEntity
 
     public DateTime UpdateTime { get; set; } = DateTime.Now;
 
-    public User CreatorId { get; set; }
+    public Guid CreatorId { get; set; }
 
-    public User? PerformerId { get; set; }
+    public Guid? PerformerId { get; set; }
 
     [MaxLength(10000)]
     public string Description { get; set; } = string.Empty;

@@ -9,5 +9,5 @@ public class IdentityManagementDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users { get; set; }
+    public DbSet<Identity> Users { get; set; }
 }

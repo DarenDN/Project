@@ -2,6 +2,6 @@
 {
     public abstract class DbEntity
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
     }
 }

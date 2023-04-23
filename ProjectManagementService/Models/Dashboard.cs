@@ -11,7 +11,7 @@ public sealed class Dashboard : DbEntity
 
     public string Description { get; set; }
 
-    public List<UserRole> AllowedUserTypes { get; set; } = new List<UserRole>();
+    public List<Guid> AllowedUserRoles { get; set; }
 
     public Project Project { get; set; }
 

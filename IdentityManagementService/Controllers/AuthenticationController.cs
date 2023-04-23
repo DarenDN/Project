@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Dtos;
 using IdentityManagementService.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -16,8 +17,8 @@ public sealed class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
-    [Route(nameof(RegisterUserAsync))]
-    public async Task<ActionResult<object>> RegisterUserAsync(UserAuthDto userAuthDto)
+    [Route(nameof(CreateUserAsync))]
+    public async Task<ActionResult<object>> CreateUserAsync(UserAuthDto userAuthDto)
     {
         try
         {
@@ -32,6 +33,22 @@ public sealed class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
+    [Route(nameof(LogoutAsync))]
+    public async Task<ActionResult> LogoutAsync(UserAuthDto userAuthDto)
+    {
+        try
+        {
+            await _identManagmentService.LogoutAsync(userAuthDto);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            // TODO difs exceptions
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet]
     [Route(nameof(LoginAsync))]
     public async Task<ActionResult<string>> LoginAsync(UserAuthDto userAuthDto)
     {
@@ -47,16 +64,15 @@ public sealed class AuthenticationController : ControllerBase
         }
     }
 
-    // TODO if the methode is correct
     // TODO delete can only an admin/manager and only authorized one
-    [HttpDelete]
+    [HttpDelete, Authorize(Roles = "")]
     [Route(nameof(DeleteUserAsync))]
-    public async Task<ActionResult<object>> DeleteUserAsync(Guid userAuthDto)
+    public async Task<ActionResult> DeleteUserAsync(Guid userAuthDto)
     {
         try
         {
-            var deletingResult = await _identManagmentService.DeleteUserAsync(userAuthDto);
-            return Ok(deletingResult);
+             await _identManagmentService.DeleteUserAsync(userAuthDto);
+            return Ok();
         }
         catch (Exception ex)
         {

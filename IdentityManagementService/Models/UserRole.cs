@@ -1,4 +1,4 @@
-﻿namespace ProjectManagementService.Models;
+﻿namespace IdentityManagementService.Models;
 
 using System.ComponentModel.DataAnnotations;
 using Data;

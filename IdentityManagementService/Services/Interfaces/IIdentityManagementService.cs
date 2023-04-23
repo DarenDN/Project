@@ -9,5 +9,7 @@ public interface IIdentityManagementService
 
     Task<string> LoginAsync(UserAuthDto userAuthDto);
 
+    Task<bool> LogoutAsync(UserAuthDto userAuthDto);
+
     Task<bool> DeleteUserAsync(Guid userId);
 }

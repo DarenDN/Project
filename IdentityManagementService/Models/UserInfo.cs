@@ -1,21 +1,20 @@
-﻿namespace ProjectManagementService.Models;
+﻿namespace IdentityManagementService.Models;
 
+using IdentityManagementService.Data;
 using System.ComponentModel.DataAnnotations;
-using Data;
 
-public sealed class User : DbEntity
+public sealed class UserInfo : DbEntity
 {
     [Required]
     [MaxLength(50)]
     public string FirstName { get; set; }
-
+    [Required]
+    public string Email { get; set; }
     [Required]
     [MaxLength(50)]
     public string SecondName { get; set; }
-
     [Required]
-    [MaxLength(50)]
-    public string MiddleName { get; set; }
+    public Guid ProjectId { get; set; }
 
     [Required]
     public DateTime RegisterTime { get; set; } = DateTime.Now;

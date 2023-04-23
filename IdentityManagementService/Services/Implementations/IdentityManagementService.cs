@@ -33,7 +33,7 @@ public class IdentityManagementService : IIdentityManagementService
 
         var (passwordHash, passwordSalt) = await CreatePasswordHashAndSaltAsync(userAuthDto.Password);
 
-        var newUser = new User
+        var newUser = new Identity
         {
             Login = userAuthDto.Login,
             PasswordHash = passwordHash,
@@ -80,7 +80,7 @@ public class IdentityManagementService : IIdentityManagementService
         return (computedPasswordHash, hmac.Key);
     }
 
-    private async Task<string> GenerateTokenAsync(User user)
+    private async Task<string> GenerateTokenAsync(Identity user)
     {
         var claims = new List<Claim>
         {

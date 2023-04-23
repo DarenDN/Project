@@ -4,6 +4,8 @@ using IdentityManagementService.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 const string AuthConnectionCfgSection = "AuthConnection";
@@ -32,7 +34,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateAudience = false
     });
 
-// TODO add services
 builder.Services.AddSingleton(
     typeof(IIdentityManagementService), 
     typeof(IdentityManagementService.Services.Implementations.IdentityManagementService));
@@ -40,7 +41,18 @@ builder.Services.AddSingleton(
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Description = "Auth header",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    opt.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 var app = builder.Build();
 
