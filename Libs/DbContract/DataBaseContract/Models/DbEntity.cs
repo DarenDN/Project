@@ -1,4 +1,4 @@
-﻿namespace IdentityManagementService.Data;
+﻿namespace DataBaseContract.Data;
 using System.ComponentModel.DataAnnotations;
 
 public abstract class DbEntity
