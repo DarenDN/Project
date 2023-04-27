@@ -9,5 +9,8 @@ public class IdentityManagementDbContext : DbContext
     {
     }
 
-    public DbSet<Identity> Users { get; set; }
+    public DbSet<Identity> Identities { get; set; }
+    public DbSet<UserInfo> UserInfos { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 }

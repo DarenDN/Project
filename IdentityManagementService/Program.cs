@@ -14,9 +14,6 @@ const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
-// TODO if db connection is correct
 builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 {
     options.UseNpgsql(
