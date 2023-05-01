@@ -1,9 +1,13 @@
 ﻿namespace IdentityManagementService.Models;
 
-using IdentityManagementService.Data;
+using Data;
+using System.ComponentModel.DataAnnotations;
 
 public sealed class ProjectsRole : DbEntity
 {
-    public Guid PrijectId { get; set; }
+    [Required]
+    public Guid ProjectId { get; set; }
+
+    [Required]
     public Guid RoleId { get; set; }
 }

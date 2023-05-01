@@ -9,6 +9,7 @@ public sealed class Identity : DbEntity
     public Guid Id { get; set; }
 
     [Required]
+    [MaxLength(30)]
     public string Login { get; set; }
 
     [Required]

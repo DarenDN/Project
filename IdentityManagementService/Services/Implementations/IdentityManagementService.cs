@@ -15,32 +15,61 @@ using Microsoft.EntityFrameworkCore;
 
 public class IdentityManagementService : IIdentityManagementService
 {
-    private SecurityConfiguration _securityCfg;
-    private IdentityManagementDbContext _appDbContext;
+    private readonly SecurityConfiguration _securityCfg;
+    private readonly IdentityManagementDbContext _appDbContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public IdentityManagementService(IdentityManagementDbContext appDbContext, IOptions<SecurityConfiguration> options)
+    public IdentityManagementService(
+        IdentityManagementDbContext appDbContext,
+        IOptions<SecurityConfiguration> options,
+        IHttpContextAccessor httpContextAccessor)
     {
         _securityCfg = options.Value;
         _appDbContext = appDbContext;
+        _httpContextAccessor = httpContextAccessor;
     }
+
+    private const string RefreshTokenKeyWord = "refreshToken";
 
     public async Task<bool> RegisterUserAsync(RegisterUserDto userAuthDto)
     {
-        var newIdentity = await CreateUserAsync(userAuthDto);
-        return true;
+        return await CreateUserAsync(userAuthDto);
     }
 
-    public async Task<TokenUserDto> LoginAsync(UserAuthDto userAuthDto)
+    /// <summary>
+    /// Sets refresh token and creates an access token
+    /// </summary>
+    /// <param name="userAuthDto"></param>
+    /// <returns>Access token</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="KeyNotFoundException"></exception>
+    /// <exception cref="ArgumentException"></exception>
+    public async Task<string> LoginAsync(UserAuthDto userAuthDto)
     {
-        var user = _appDbContext.Identities.FirstOrDefault(u => u.Login == userAuthDto.Login);
-        if (user is null)
+        var userLogin = userAuthDto.Login;
+        var userPass = userAuthDto.Password;
+        if (string.IsNullOrWhiteSpace(userLogin))
         {
-            throw new KeyNotFoundException();
+            throw new ArgumentNullException($"Empty argument value: {nameof(userAuthDto.Login)}");
+        }
+        if (string.IsNullOrWhiteSpace(userPass))
+        {
+            throw new ArgumentNullException($"Empty argument value: {nameof(userAuthDto.Password)}");
         }
 
-        if (!VerifyPassword(userAuthDto.Password, user.PasswordHash, user.PasswordSalt))
+        var user = await _appDbContext.Identities
+            .Include(i=> i.UserInfo)
+            .ThenInclude(ui=> ui.Role)
+            .Include(i=> i.RefreshToken)
+            .FirstOrDefaultAsync(u => u.Login == userLogin);
+        if (user is null)
         {
-            throw new ArgumentException();
+            throw new ArgumentException($"Login {userLogin} does not exist");
+        }
+
+        if (!VerifyPassword(userPass, user.PasswordHash, user.PasswordSalt))
+        {
+            throw new ArgumentException("Invalid password");
         }
 
         if (user.RefreshToken is not null)
@@ -51,61 +80,87 @@ public class IdentityManagementService : IIdentityManagementService
 
         var jwt = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
-
-        await _appDbContext.RefreshTokens.AddAsync(refreshToken);
-
         user.RefreshToken = refreshToken;
+        await _appDbContext.RefreshTokens.AddAsync(refreshToken);
         _appDbContext.Update(user);
 
-        // TODO if errors try catch
-        var success = await _appDbContext.SaveChangesAsync();
-        var refreshTokenDto = new RefreshTokenDto(refreshToken.Token, refreshToken.Expires);
+        try
+        {
+            var success = await _appDbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // TODO something
+        }
 
-        return new TokenUserDto(jwt, refreshTokenDto);
+        SetRefreshToken(refreshToken.Token, refreshToken.Expires);
+        
+        return jwt;
     }
 
-    public async Task<bool> LogoutAsync(UserAuthDto userAuthDto)
+    public async Task<bool> LogoutAsync()
     {
-        var identity = _appDbContext.Identities.FirstOrDefault(u => u.Login == userAuthDto.Login);
-        var token = identity.RefreshToken;
-
-        if (token is null)
+        var requestCookieToken = GetCookieRefreshToken();
+        if(string.IsNullOrWhiteSpace(requestCookieToken))
         {
             return true;
         }
 
-        _appDbContext.RefreshTokens.Remove(token);
+        var identity = await _appDbContext.Identities
+            .Include(i=>i.RefreshToken)
+            .FirstOrDefaultAsync(i => i.RefreshToken != null 
+        && i.RefreshToken.Token == requestCookieToken);
+
+        if (identity is null)
+        {
+            return true;
+        }
+
+        _appDbContext.RefreshTokens.Remove(identity.RefreshToken);
         identity.RefreshToken = null;
         _appDbContext.Identities.Update(identity);
-        // TODO an event of save failed
-        var success = await _appDbContext.SaveChangesAsync();
+
+        try
+        {
+            var success = await _appDbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // TODO
+        }
+
+        DeleteRefreshToken();
 
         return true;
     }
 
-    public async Task<UserAuthDto> CreateUserAsync(RegisterUserDto registerUserDto)
+    public async Task<bool> CreateUserAsync(RegisterUserDto registerUserDto)
     {
-        if (string.IsNullOrWhiteSpace(registerUserDto.Login))
+        var newUserLogin = registerUserDto.Login;
+        var newUserPass = registerUserDto.Password;
+
+        if (string.IsNullOrWhiteSpace(newUserLogin))
         {
             throw new ArgumentNullException(nameof(registerUserDto.Login));
         }
-        if (string.IsNullOrWhiteSpace(registerUserDto.Password))
+        if (string.IsNullOrWhiteSpace(newUserPass))
         {
             throw new ArgumentNullException(nameof(registerUserDto.Password));
         }
-        if (await LoginExists(registerUserDto.Login))
+        if (await LoginExistsAsync(newUserLogin))
         {
             throw new ArgumentException(nameof(registerUserDto.Login));
         }
 
+        // TODO manage no role possibility smh
         var role = _appDbContext.UserRoles.FirstOrDefault(r => r.Id == registerUserDto.RoleId);
 
-        if(role is null)
+        if (role is null)
         {
             throw new NullReferenceException(role.GetType().ToString());
         }
 
-        var (passwordHash, passwordSalt) = await CreatePasswordHashAndSaltAsync(registerUserDto.Password);
+        var (passwordHash, passwordSalt) = await CreatePasswordHashAndSaltAsync(newUserPass);
 
         var newUserInfo = new UserInfo
         {
@@ -119,7 +174,7 @@ public class IdentityManagementService : IIdentityManagementService
 
         var newIdentity = new Identity
         {
-            Login = registerUserDto.Login,
+            Login = newUserLogin,
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
             UserInfo = newUserInfo
@@ -130,14 +185,15 @@ public class IdentityManagementService : IIdentityManagementService
 
         await _appDbContext.SaveChangesAsync();
 
-        var createdUser = new UserAuthDto(registerUserDto.Login, registerUserDto.Password);
-
-        return createdUser;
+        return true;
     }
 
-    public async Task<bool> DeleteUserAsync(Guid identityId)
+    public async Task<bool> DeleteUserAsync(Guid? identityId)
     {
-        var identityToDelete = await _appDbContext.Identities.FirstOrDefaultAsync(i=>i.Id == identityId);
+        var identityToDelete = await _appDbContext.Identities
+            .Include(i=>i.UserInfo)
+            .Include(i=>i.RefreshToken)
+            .FirstOrDefaultAsync(i => i.Id == identityId);
         if (identityToDelete is null)
         {
             throw new KeyNotFoundException(nameof(identityId));
@@ -165,24 +221,44 @@ public class IdentityManagementService : IIdentityManagementService
         return true;
     }
 
-    public async Task<TokenUserDto> RefreshTokensAsync(string refreshToken)
+    /// <summary>
+    /// Updates refresh token and creates new access token
+    /// </summary>
+    /// <returns>New access token</returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="SecurityTokenExpiredException"></exception>
+    public async Task<string> RefreshTokensAsync()
     {
-        var identity = await _appDbContext.Identities.FirstOrDefaultAsync(i => i.RefreshToken != null 
+        var refreshToken = GetCookieRefreshToken();
+
+        if(refreshToken is null)
+        {
+            throw new ArgumentNullException(nameof(refreshToken));
+        }
+
+        var identity = await _appDbContext.Identities.Include(i=>i.RefreshToken).FirstOrDefaultAsync(i => i.RefreshToken != null
             && i.RefreshToken.Token == refreshToken);
         if (identity is null)
         {
-            // TODO 
-            throw 
+            throw new ArgumentNullException();
         }
+
         var oldRefreshToken = identity.RefreshToken;
         _appDbContext.RefreshTokens.Remove(oldRefreshToken);
         if (oldRefreshToken.Expires < DateTime.Now)
         {
             identity.RefreshToken = null;
             _appDbContext.Identities.Update(identity);
-            await _appDbContext.SaveChangesAsync();
+            try
+            {
+                await _appDbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // TODO
+            }
 
-            throw
+            throw new SecurityTokenExpiredException();
         }
 
         var newAccessToken = GenerateAccessToken(identity);
@@ -192,14 +268,151 @@ public class IdentityManagementService : IIdentityManagementService
         identity.RefreshToken = newRefreshToken;
         _appDbContext.Identities.Update(identity);
 
-        var success = await _appDbContext.SaveChangesAsync();
+        SetRefreshToken(newRefreshToken.Token, newRefreshToken.Expires);
 
-        return new TokenUserDto(newAccessToken, new RefreshTokenDto(newRefreshToken.Token, newRefreshToken.Expires));
+        try
+        {
+            var success = await _appDbContext.SaveChangesAsync();
+        }
+        catch 
+        {
+            // TODO
+        }
+
+        return newAccessToken;
     }
 
-    public async Task<List<UserRoleDto>> GetAllUserRolesAsync(string identityId)
+    public async Task<bool> CreateUserRoleAsync(string? newRoleName)
     {
-        
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var role = await _appDbContext.UserRoles.FirstOrDefaultAsync(r => r.Name == newRoleName);
+        if (role != null)
+        {
+            var existsInProject = await _appDbContext.ProjectsRoles
+                .Where(r => r.ProjectId == projectId)
+                .AnyAsync(r => r.RoleId == role.Id);
+
+            if (existsInProject)
+            {
+                throw new ArgumentException(nameof(newRoleName));
+            }
+
+            var projectRole = new ProjectsRole
+            {
+                ProjectId = projectId.Value,
+                RoleId = role.Id
+            };
+
+            await _appDbContext.ProjectsRoles.AddAsync(projectRole);
+        }
+        else
+        {
+            var newRole = new UserRole
+            {
+                Name = newRoleName
+            };
+
+            var newProjectRole = new ProjectsRole
+            {
+                ProjectId = projectId.Value,
+                RoleId = newRole.Id
+            };
+
+            await _appDbContext.UserRoles.AddAsync(newRole);
+            await _appDbContext.ProjectsRoles.AddAsync(newProjectRole);
+        }
+
+        try
+        {
+            await _appDbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // TODO
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="roleId"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public async Task<bool> DeleteUserRoleAsync(Guid? roleId)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+
+        if (projectId is null)
+        {
+            throw new ArgumentNullException();
+        }
+
+        if (roleId is null)
+        {
+            throw new ArgumentNullException(nameof(roleId));
+        }
+
+        var roleInProjectsCount = await _appDbContext.ProjectsRoles.CountAsync(r => r.RoleId == roleId);
+
+        if (roleInProjectsCount > 1)
+        {
+            var projectRole = await _appDbContext.ProjectsRoles.FirstOrDefaultAsync(r => r.ProjectId == projectId 
+            && r.RoleId == roleId);
+
+            _appDbContext.ProjectsRoles.Remove(projectRole);
+        }
+        else if (roleInProjectsCount == 1)
+        {
+            var userRole = await _appDbContext.UserRoles.FirstOrDefaultAsync(r=>r.Id == roleId);
+            var projectRole = await _appDbContext.ProjectsRoles.FirstOrDefaultAsync(r => r.ProjectId == projectId
+            && r.RoleId == roleId);
+
+            _appDbContext.UserRoles.Remove(userRole);
+            _appDbContext.ProjectsRoles.Remove(projectRole);
+        }
+        else
+        {
+            // TODO
+        }
+
+        try
+        {
+            await _appDbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // TODO
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public async Task<List<UserRoleDto>> GetAllUserRolesAsync()
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+
+        if (projectId is null)
+        {
+            throw new ArgumentNullException(nameof(projectId));
+        } 
+
+        var roles = await _appDbContext.UserRoles
+            .Join(_appDbContext.ProjectsRoles.Where(r => r.ProjectId == projectId),
+                userRole => userRole.Id,
+                projRole => projRole.RoleId,
+                (userRole, projRole) => userRole)
+            .Distinct()
+            .Select(r => new UserRoleDto(r.Id, r.Name))
+            .ToListAsync();
+
+        return roles;
     }
 
     /// <summary>
@@ -242,17 +455,18 @@ public class IdentityManagementService : IIdentityManagementService
 
     private RefreshToken GenerateRefreshToken()
     {
+        var refreshTokenLifeTime = TimeSpan.Parse(_securityCfg.RefreshTokenLifeTime).Ticks;
         var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var refreshToken = new RefreshToken
         {
             Token = token,
-            Expires = DateTime.Now.AddHours(3)
+            Expires = DateTime.Now.AddTicks(refreshTokenLifeTime)
         };
 
         return refreshToken;
     }
 
-    private async Task<bool> LoginExists(string login)
+    private async Task<bool> LoginExistsAsync(string login)
     {
         return await _appDbContext.Identities.AnyAsync(i => i.Login == login);
     }
@@ -263,5 +477,54 @@ public class IdentityManagementService : IIdentityManagementService
         var computedHash = hmac.ComputeHash(Encoding.Unicode.GetBytes(password));
 
         return computedHash.SequenceEqual(passwordHash);
+    }
+
+    private void SetRefreshToken(string token, DateTime expires)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = expires
+        };
+        var context = _httpContextAccessor.HttpContext;
+
+        context.Response.Cookies.Append(RefreshTokenKeyWord, token, cookieOptions);
+    }
+
+    private void DeleteRefreshToken()
+    {
+        var context = _httpContextAccessor.HttpContext;
+
+        context.Response.Cookies.Delete(RefreshTokenKeyWord);
+    }
+
+    private string GetClaimedIdentityId()
+    {
+        var identityId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return identityId;
+    }
+
+    private async Task<Guid?> GetRequestingUsersProjectIdAsync()
+    {
+        var identityId = GetClaimedIdentityId();
+        if (string.IsNullOrWhiteSpace(identityId))
+        {
+            return Guid.Empty;
+        }
+
+        var identity = await _appDbContext.Identities
+            .Include(i=>i.UserInfo)
+            .FirstOrDefaultAsync(i => i.Id == Guid.Parse(identityId));
+
+        var projectId = identity?.UserInfo.ProjectId;
+
+        return projectId;
+    }
+
+    private string? GetCookieRefreshToken()
+    {
+        var token = _httpContextAccessor.HttpContext?.Request.Cookies[RefreshTokenKeyWord];
+        return token;
     }
 }

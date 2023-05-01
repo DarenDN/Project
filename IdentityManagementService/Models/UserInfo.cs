@@ -22,6 +22,7 @@ public sealed class UserInfo : DbEntity
     public string MiddleName { get; set; }
 
     [Required]
+    [MaxLength(50)]
     public string Email { get; set; }
 
     [Required]

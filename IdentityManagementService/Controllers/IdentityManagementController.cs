@@ -2,23 +2,20 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 using Dtos;
 using Services.Interfaces;   
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class AuthenticationController : ControllerBase
+public sealed class IdentityManagementController : ControllerBase
 {
-    private const string RefreshTokenKeyWord = "refreshToken";
     private IIdentityManagementService _identityManagmentService;
 
-    public AuthenticationController(IIdentityManagementService identManagmentService)
+    public IdentityManagementController(IIdentityManagementService identManagmentService)
     {
         _identityManagmentService = identManagmentService;
     }
 
-    // TODO create role
 
     [HttpPost]
     [Route(nameof(RegisterAsync))]
@@ -36,31 +33,36 @@ public sealed class AuthenticationController : ControllerBase
         }
     }
 
-    [HttpGet]
+    [HttpPost]
     [Route(nameof(LoginAsync))]
     public async Task<ActionResult> LoginAsync(UserAuthDto userAuthDto)
     {
         try
         {
             var createdToken = await _identityManagmentService.LoginAsync(userAuthDto);
-            SetRefreshToken(createdToken.RefreshToken);
-            return Ok(createdToken.JwtToken);
+            return Ok(createdToken);
+        }
+        catch (ArgumentNullException argNullEx)
+        {
+            return BadRequest(argNullEx.Message);
+        }
+        catch (ArgumentException argEx)
+        {
+            return Unauthorized(argEx.Message);
         }
         catch (Exception ex)
         {
-            // TODO difs exceptions
-            return BadRequest(ex.Message);
+            return StatusCode(500 ,ex.Message);
         }
     }
 
     [HttpPost]
     [Route(nameof(LogoutAsync))]
-    public async Task<ActionResult> LogoutAsync(UserAuthDto userAuthDto)
+    public async Task<ActionResult> LogoutAsync()
     {
         try
         {
-            await _identityManagmentService.LogoutAsync(userAuthDto);
-            DeleteRefreshToken();
+            await _identityManagmentService.LogoutAsync();
             return Ok();
         }
         catch (Exception ex)
@@ -103,19 +105,49 @@ public sealed class AuthenticationController : ControllerBase
     }
 
     [HttpPost]
-    [Route(nameof(UpdateRefreshTokenAsync))]
-    public async Task<ActionResult> UpdateRefreshTokenAsync()
+    [Route(nameof(RefreshTokenAsync))]
+    public async Task<ActionResult> RefreshTokenAsync()
     {
         try
         {
-            var currentRefreshToken = Request.Cookies[RefreshTokenKeyWord];
-            var refreshedTokens = await _identityManagmentService.RefreshTokensAsync(currentRefreshToken);
-            SetRefreshToken(refreshedTokens.RefreshToken);
-            return Ok(refreshedTokens.JwtToken);
+            var newAccessToken = await _identityManagmentService.RefreshTokensAsync();
+            return Ok(newAccessToken);
         }
         catch (Exception ex)
         {
             // TODO handle exceptions
+            return BadRequest();
+        }
+    }
+
+    [HttpPost, Authorize]
+    [Route(nameof(CreateUserRoleAsync))]
+    public async Task<ActionResult> CreateUserRoleAsync(string newRoleName)
+    {
+        try
+        {
+            await _identityManagmentService.CreateUserRoleAsync(newRoleName);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            // TODO
+            return BadRequest();
+        }
+    }
+
+    [HttpDelete, Authorize]
+    [Route(nameof(DeleteUserRoleAsync))]
+    public async Task<ActionResult> DeleteUserRoleAsync(Guid roleId)
+    {
+        try
+        {
+            await _identityManagmentService.DeleteUserRoleAsync(roleId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            // TODO
             return BadRequest();
         }
     }
@@ -126,8 +158,7 @@ public sealed class AuthenticationController : ControllerBase
     {
         try
         {
-            var identityIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var userRoleDtos = await _identityManagmentService.GetAllUserRolesAsync(identityIdClaim?.Value);
+            var userRoleDtos = await _identityManagmentService.GetAllUserRolesAsync();
             return Ok(userRoleDtos);
         }
         catch (ArgumentNullException ex)
@@ -135,21 +166,5 @@ public sealed class AuthenticationController : ControllerBase
             // TODO handle other exceptions
             return BadRequest(ex.Message);
         }
-    }
-
-    private void SetRefreshToken(RefreshTokenDto refreshToken)
-    {
-        var cookieOptions = new CookieOptions
-        { 
-            HttpOnly = true,
-            Expires = refreshToken.Expires
-        };
-
-        Response.Cookies.Append(RefreshTokenKeyWord, refreshToken.Token, cookieOptions);
-    }
-
-    private void DeleteRefreshToken()
-    {
-        Response.Cookies.Delete(RefreshTokenKeyWord);
     }
 }

@@ -20,7 +20,7 @@ builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
         builder.Configuration.GetConnectionString(AuthConnectionCfgSection));
 });
 
-builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("Security"));
+builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("SecurityConfiguration"));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters
@@ -33,8 +33,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateAudience = false
     });
 
-builder.Services.AddSingleton(
-    typeof(IIdentityManagementService), 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped(typeof(IIdentityManagementService),
     typeof(IdentityManagementService.Services.Implementations.IdentityManagementService));
 
 builder.Services.AddControllers();

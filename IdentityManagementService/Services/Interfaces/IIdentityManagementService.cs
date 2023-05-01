@@ -1,20 +1,24 @@
-﻿using IdentityManagementService.Dtos;
+﻿namespace IdentityManagementService.Services.Interfaces;
 
-namespace IdentityManagementService.Services.Interfaces;
+using Dtos;
 
 public interface IIdentityManagementService
 {
     Task<bool> RegisterUserAsync(RegisterUserDto userAuthDto);
 
-    Task<UserAuthDto> CreateUserAsync(RegisterUserDto userAuthDto);
+    Task<bool> CreateUserAsync(RegisterUserDto userAuthDto);
 
-    Task<TokenUserDto> LoginAsync(UserAuthDto userAuthDto);
+    Task<string> LoginAsync(UserAuthDto userAuthDto);
 
-    Task<bool> LogoutAsync(UserAuthDto userAuthDto);
+    Task<bool> LogoutAsync();
 
-    Task<bool> DeleteUserAsync(Guid identityId);
+    Task<bool> DeleteUserAsync(Guid? identityId);
 
-    Task<TokenUserDto> RefreshTokensAsync(string refreshToken);
+    Task<string> RefreshTokensAsync();
 
-    Task<List<UserRoleDto>> GetAllUserRolesAsync(string identityId);
+    Task<bool> CreateUserRoleAsync(string? newRoleName);
+
+    Task<bool> DeleteUserRoleAsync(Guid? roleId);
+
+    Task<List<UserRoleDto>> GetAllUserRolesAsync();
 }

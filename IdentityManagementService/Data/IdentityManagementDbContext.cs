@@ -13,4 +13,5 @@ public class IdentityManagementDbContext : DbContext
     public DbSet<UserInfo> UserInfos { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<ProjectsRole> ProjectsRoles { get; set; }
 }

@@ -7,5 +7,5 @@ public sealed class UserRole : DbEntity
 {
     [Required]
     [MaxLength(20)]
-    public string RoleName { get; set; }
+    public string Name { get; set; }
 }
