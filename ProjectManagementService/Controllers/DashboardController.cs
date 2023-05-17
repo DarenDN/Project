@@ -1,56 +1,93 @@
 ﻿namespace ProjectManagementService.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using Dtos;
-using Services;
+using Microsoft.AspNetCore.Authorization;
+using Services.Dashboard;
+using Dtos.Dashboard;
 
-[ApiController]
+[ApiController, Authorize]
 [Route("api/[controller]")]
 public sealed class DashboardController : ControllerBase
 {
-    private DashboardService _dashboardService;
+    private IDashboardService _dashboardService;
 
-    public DashboardController(DashboardService dashboardService)
+    public DashboardController(IDashboardService dashboardService)
     {
         _dashboardService = dashboardService;
     }
 
-    [HttpPut()]
+    [HttpPut]
     [Route(nameof(UpdateDashboardAsync))]
-    // TODO pass in user Id, JWT
-    public async Task<JsonResult> UpdateDashboardAsync(DashboardDto dashboardDto)
+    public async Task<ActionResult> UpdateDashboardAsync(UpdateDashboardDto dashboardDto)
     {
-        var createdDashboardDto = await _dashboardService.UpdateDashboardAsync(dashboardDto);
-        
-        return new JsonResult(createdDashboardDto);
+        try
+        {
+            var createdDashboardDto = await _dashboardService.UpdateDashboardAsync(dashboardDto);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }   
     }
 
-    [HttpPost()]
+    [HttpPost]
     [Route(nameof(CreateDashboardAsync))]
-    // TODO pass in user Id, JWT
-    public async Task<JsonResult> CreateDashboardAsync(DashboardDto dashboardDto)
+    public async Task<ActionResult> CreateDashboardAsync(CreateDashboardDto dashboardDto)
     {
-        var createdDashboardDto = await _dashboardService.CreateDashboardAsync(dashboardDto);
-        
-        return new JsonResult(createdDashboardDto);
+        try
+        {
+            var createdDashboardDto = await _dashboardService.CreateDashboardAsync(dashboardDto);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
-    [HttpDelete()]
+    [HttpDelete]
     [Route(nameof(DeleteDashboardAsync))]
-    // TODO pass in user Id, JWT
-    public async Task<JsonResult> DeleteDashboardAsync(Guid dashboardId)
+    public async Task<ActionResult> DeleteDashboardAsync(Guid dashboardId)
     {
-        var createdDashboardDto = await _dashboardService.DeleteDashboardAsync(dashboardId);
-        
-        return new JsonResult(createdDashboardDto);
+        try
+        {
+            await _dashboardService.DeleteDashboardAsync(dashboardId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
-    // TODO we need also a Dashboard Id here
-    [HttpGet()]
-    [Route(nameof(GetDashboardTasksAsync))]
-    public async Task<JsonResult> GetDashboardTasksAsync(Guid dashboardId)
+    [HttpGet]
+    [Route(nameof(GetDashboardsAsync))]
+    public async Task<ActionResult> GetDashboardsAsync()
     {
-        var tasks = await _dashboardService.GetTasksAsync(dashboardId);
-        return new JsonResult(tasks);
+        try
+        {
+            var dashboards = await _dashboardService.GetDashboardsAsync();
+            return Ok(dashboards);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost]
+    [Route(nameof(GetDashboardAsync))]
+    public async Task<ActionResult> GetDashboardAsync(Guid dashboardId)
+    {
+        try
+        {
+            var dashboard = await _dashboardService.GetDashboardAsync(dashboardId);
+            return Ok(dashboard);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }

@@ -1,9 +1,16 @@
-using ProjectManagementService.Data;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
-using ProjectManagementService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
+using ProjectManagementService.Data;
+using ProjectManagementService.Services.Dashboard;
+using ProjectManagementService.Services.Project;
+using ProjectManagementService.Services.Task;
+using ProjectManagementService.Services.Role;
+using ProjectManagementService.Services.ProductBacklog;
+using ProjectManagementService.Services.BurndownChart;
 
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
 
@@ -25,14 +32,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateAudience = false
     });
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped(typeof(IDashboardService), typeof(DashboardService));
+builder.Services.AddScoped(typeof(IProjectService), typeof(ProjectService));
+builder.Services.AddScoped(typeof(ITaskService), typeof(TaskService));
+builder.Services.AddScoped(typeof(IRoleService), typeof(RoleService));
+builder.Services.AddScoped(typeof(IUserStoryService), typeof(UserStoryService));
+builder.Services.AddScoped(typeof(IBurndownChartService), typeof(BurndownChartService));
+
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton(typeof(IDashboardService), typeof(DashboardService));
-builder.Services.AddSingleton(typeof(IProjectService), typeof(ProjectService));
-builder.Services.AddSingleton(typeof(ITaskService), typeof(TaskService));
-
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Description = "Auth header",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    opt.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 var app = builder.Build();
 

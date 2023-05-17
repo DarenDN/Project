@@ -1,60 +1,78 @@
 ﻿namespace ProjectManagementService.Controllers;
 
 using Microsoft.AspNetCore.Mvc;
-using Dtos;
-using Services;
+using Dtos.Project;
+using Services.Project;
 
+// working with project could be easily drawn into one own microservice
 [ApiController]
 [Route("api/[controller]")]
 public class ProjectController : ControllerBase
 {
-    private ProjectService _projectService;
+    private IProjectService _projectService;
 
-    public ProjectController(ProjectService projectService)
+    public ProjectController(IProjectService projectService)
     {
         _projectService = projectService;
     }
 
     [HttpGet]
     [Route(nameof(GetProjectDataAsync))]
-    public async Task<JsonResult> GetProjectDataAsync(Guid projectId)
+    public async Task<ActionResult> GetProjectDataAsync()
     {
-        var projectData = await _projectService.GetProjectDataAsync(projectId);
-
-        return new JsonResult(projectData);
-    }
-
-    [HttpGet]
-    [Route(nameof(GetDashboardsAsync))]
-    public async Task<JsonResult> GetDashboardsAsync(Guid projectId)
-    {
-        var dashboards = await _projectService.GetDashboardsAsync(projectId);
-
-        return new JsonResult(dashboards);
+        try
+        {
+            var projectData = await _projectService.GetProjectAsync();
+            return Ok(projectData);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpPut]
     [Route(nameof(UpdateProjectAsync))]
-    public async Task<JsonResult> UpdateProjectAsync(ProjectDto projectDto)
+    public async Task<ActionResult> UpdateProjectAsync(UpdateProjectDto projectDto)
     {
-        var updatedProject = await _projectService.UpdateProjectAsync(projectDto);
-        return new JsonResult(updatedProject);
+        try
+        {
+            await _projectService.UpdateProjectAsync(projectDto);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpPost]
     [Route(nameof(CreateProjectAsync))]
-    public async Task<JsonResult> CreateProjectAsync(ProjectDto projectDto)
+    public async Task<ActionResult> CreateProjectAsync(CreateProjectDto projectDto)
     {
-        var createdProject = await _projectService.CreateProjectAsync(projectDto);
-        return new JsonResult(1);
+        try
+        {
+            await _projectService.CreateProjectAsync(projectDto);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpDelete]
     [Route(nameof(DeleteProjectAsync))]
-    public async Task<ActionResult> DeleteProjectAsync(Guid projectId)
+    public async Task<ActionResult> DeleteProjectAsync()
     {
-        var success = await _projectService.DeleteProjectAsync(projectId);
-        // TODO if delete greate if not then something else 
-        return Ok();
+        try
+        {
+            await _projectService.DeleteProjectAsync();
+            return Ok();
+        }
+        catch(Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }

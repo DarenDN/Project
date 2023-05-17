@@ -1,7 +1,0 @@
-{
-  "SecurityConfiguration": {
-    // We also need to be able to repair it somehow
-    // And probablt we should generate those key each time we create a project
-    "Token": "heres gotta be some top secret key"
-  }
-}

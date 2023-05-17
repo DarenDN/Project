@@ -1,12 +1,12 @@
-using IdentityManagementService.Configurations;
-using IdentityManagementService.Data;
-using IdentityManagementService.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using IdentityManagementService.Configurations;
+using IdentityManagementService.Data;
+using IdentityManagementService.Services.IdentityManagement;
 
 const string AuthConnectionCfgSection = "AuthConnection";
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
@@ -34,8 +34,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped(typeof(IAuthService),
+    typeof(IdentityManagementService.Services.IdentityManagement.AuthService));
 builder.Services.AddScoped(typeof(IIdentityManagementService),
-    typeof(IdentityManagementService.Services.Implementations.IdentityManagementService));
+    typeof(IdentityManagementService.Services.IdentityManagement.IdentityManagementService));
 
 builder.Services.AddControllers();
 

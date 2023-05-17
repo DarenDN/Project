@@ -1,3 +1,3 @@
 ﻿namespace IdentityManagementService.Dtos;
 
-public record UserAuthDto(string Login, string Password);
+public sealed record UserAuthDto(string Login, string Password);

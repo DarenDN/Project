@@ -19,7 +19,7 @@ public sealed class UserInfo : DbEntity
     public string LastName { get; set; }
 
     [MaxLength(50)]
-    public string MiddleName { get; set; }
+    public string? MiddleName { get; set; }
 
     [Required]
     [MaxLength(50)]
@@ -33,5 +33,5 @@ public sealed class UserInfo : DbEntity
     public DateTime RegisterTime { get; set; } = DateTime.Now;
 
     [Required]
-    public UserRole Role { get; set; }
+    public Guid? RoleId { get; set; }
 }

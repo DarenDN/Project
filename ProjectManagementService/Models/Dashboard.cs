@@ -9,11 +9,10 @@ public sealed class Dashboard : DbEntity
     [MaxLength(40)]
     public string Title { get; set; }
 
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
-    public List<Guid> AllowedUserRoles { get; set; }
+    public List<Guid>? AllowedUserRoles { get; set; }
 
+    [Required]
     public Project Project { get; set; }
-
-    public List<Task> Tasks { get; set; } = new List<Task>();
 }
