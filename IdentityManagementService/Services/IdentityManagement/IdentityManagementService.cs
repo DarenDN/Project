@@ -25,12 +25,34 @@ public class IdentityManagementService : IIdentityManagementService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task RegisterUserAsync(RegisterUserDto userAuthDto)
+    public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
     {
-        await CreateUserAsync(userAuthDto);
+        await RegisterNewUser(registerUserDto);
     }
 
-    public async Task CreateUserAsync(RegisterUserDto registerUserDto)
+    public async Task CreateUserAsync(CreateUserDto createUserDto)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        if(projectId is null)
+        {
+            throw new ArgumentException(nameof(projectId));
+        }
+
+        var registerUserDto = new RegisterUserDto(
+            createUserDto.Login,
+            createUserDto.Password,
+            createUserDto.FirstName,
+            createUserDto.LastName,
+            createUserDto.Email,
+            projectId.Value,
+            createUserDto.RoleId,
+            createUserDto.MiddleName ?? ""
+            );
+
+        await RegisterNewUser(registerUserDto);
+    }
+
+    private async Task RegisterNewUser(RegisterUserDto registerUserDto)
     {
         var newUserLogin = registerUserDto.Login;
         var newUserPass = registerUserDto.Password;

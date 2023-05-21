@@ -6,4 +6,4 @@ public sealed record CreateTaskDto(
     Guid StatusId,
     Guid TypeId, 
     Guid CreatorId,
-    Guid DashboardId);
+    Guid? SprintId);

@@ -6,7 +6,7 @@ public interface IIdentityManagementService
 {
     Task RegisterUserAsync(RegisterUserDto userAuthDto);
 
-    Task CreateUserAsync(RegisterUserDto userAuthDto);
+    Task CreateUserAsync(CreateUserDto userAuthDto);
 
     Task DeleteUserAsync(Guid? identityId);
 

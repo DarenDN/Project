@@ -8,5 +8,5 @@ public record TaskUpdateDto
     Guid Status,
     Guid Type,
     Guid? PerformerId,
-    Guid DashboardId
+    Guid? SprintId
     );

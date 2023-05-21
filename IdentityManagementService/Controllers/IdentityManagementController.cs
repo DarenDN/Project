@@ -34,7 +34,7 @@ public sealed class IdentityManagementController : ControllerBase
 
     [HttpPost, Authorize]
     [Route(nameof(CreateUserAsync))]
-    public async Task<ActionResult> CreateUserAsync(RegisterUserDto registerUserDto)
+    public async Task<ActionResult> CreateUserAsync(CreateUserDto registerUserDto)
     {
         try
         {

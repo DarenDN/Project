@@ -23,7 +23,7 @@ public sealed class TaskService : ITaskService
         {
             Title = newTaskDto.Title,
             Description = newTaskDto.Description,
-            DashboardId = newTaskDto.DashboardId,
+            SprintId = newTaskDto.SprintId,
             Status = status,
             Type = type
         };
@@ -38,7 +38,7 @@ public sealed class TaskService : ITaskService
 
         task.Title = taskDto.Title;
         task.Description = taskDto.Description;
-        task.DashboardId = taskDto.DashboardId;
+        task.SprintId = taskDto.SprintId;
         // TODO chagne status and type
         // task.Status 
         // task.Type
@@ -60,10 +60,10 @@ public sealed class TaskService : ITaskService
         await TrySaveChangesAsync();
     }
 
-    public async Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync(Guid dashboardId)
+    public async Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync(Guid sprintId)
     {
         var tasks = await _appDbContext.Tasks
-            .Where(t => t.DashboardId == dashboardId)
+            .Where(t => t.SprintId == sprintId)
             .Include(t => t.Status)
             .Include(t => t.Type)
             .Select(t => new TaskShortInfoDto(t.Id, t.Title, t.Status.Name, t.Type.Name, t.PerformerId, t.CreatorId))

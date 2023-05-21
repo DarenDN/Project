@@ -23,14 +23,12 @@ public sealed class Task : DbEntity
     [MaxLength(10000)]
     public string? Description { get; set; } = string.Empty;
 
-
     public TimeSpan? EstimationInTime { get; set; } = null!;
     public int? EstimationInPoints { get; set; } = null!;
 
     public UserStory? CorrespondingUserStory { get; set; } = null!;
 
-    [Required]
-    public Guid DashboardId { get; set; }
+    public Guid? SprintId { get; set; } = null!;
 
     [Required]
     public TaskType Type { get; set; }

@@ -39,6 +39,7 @@ builder.Services.AddScoped(typeof(ITaskService), typeof(TaskService));
 builder.Services.AddScoped(typeof(IRoleService), typeof(RoleService));
 builder.Services.AddScoped(typeof(IUserStoryService), typeof(UserStoryService));
 builder.Services.AddScoped(typeof(IBurndownChartService), typeof(BurndownChartService));
+builder.Services.AddScoped(typeof(ISprintService), typeof(SprintService));
 
 builder.Services.AddControllers();
 
