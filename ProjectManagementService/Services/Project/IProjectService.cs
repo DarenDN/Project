@@ -4,9 +4,12 @@ using System.Threading.Tasks;
 
 public interface IProjectService
 {
+    Task SetProjectIdentityAsync(Guid identityId);
+    Task DeleteProjectIdentityAsync(Guid identityId);
+
     Task<ProjectDto> GetProjectAsync();
 
-    Task CreateProjectAsync(CreateProjectDto projectDto);
+    Task<CreatedProjectDto> CreateProjectAsync(CreateProjectDto projectDto);
 
     Task DeleteProjectAsync();
 

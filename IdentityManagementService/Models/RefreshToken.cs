@@ -1,13 +1,11 @@
 ﻿namespace IdentityManagementService.Models;
 
+using IdentityManagementService.Data;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-public class RefreshToken
+public class RefreshToken : DbEntity
 {
-    [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
-
     [Required]
     public string Token { get; set; }
 

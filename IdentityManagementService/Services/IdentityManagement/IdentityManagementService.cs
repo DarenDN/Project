@@ -3,97 +3,60 @@
 using Data;
 using Dtos;
 using Models;
-using Configurations;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Handler.Token;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Configurations;
+using System.Security.Principal;
 
 public class IdentityManagementService : IIdentityManagementService
 {
+    private TokenHandler TokenHandler { get; set; }
+
     private readonly IdentityManagementDbContext _appDbContext;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private IHttpContextAccessor _httpContextAccessor;
+    private readonly SecurityConfiguration _securityCfg;
 
     public IdentityManagementService(
         IdentityManagementDbContext appDbContext,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IOptions<SecurityConfiguration> securityCfg)
     {
         _appDbContext = appDbContext;
         _httpContextAccessor = httpContextAccessor;
+        _securityCfg = securityCfg.Value;
+        TokenHandler = new TokenHandler();
     }
 
-    public async Task RegisterUserAsync(RegisterUserDto registerUserDto)
+    /// <summary>
+    /// registers user, sets up refresh token and access token (jwt)
+    /// </summary>
+    /// <param name="registerUserDto"></param>
+    /// <returns>access token (jwt)</returns>
+    public async Task<string> RegisterUserIdentityAsync(RegisterIdentityDto registerUserDto)
     {
-        await RegisterNewUser(registerUserDto);
-    }
-
-    public async Task CreateUserAsync(CreateUserDto createUserDto)
-    {
-        var projectId = await GetRequestingUsersProjectIdAsync();
-        if(projectId is null)
-        {
-            throw new ArgumentException(nameof(projectId));
-        }
-
-        var registerUserDto = new RegisterUserDto(
-            createUserDto.Login,
-            createUserDto.Password,
-            createUserDto.FirstName,
-            createUserDto.LastName,
-            createUserDto.Email,
-            projectId.Value,
-            createUserDto.RoleId,
-            createUserDto.MiddleName ?? ""
-            );
-
-        await RegisterNewUser(registerUserDto);
-    }
-
-    private async Task RegisterNewUser(RegisterUserDto registerUserDto)
-    {
-        var newUserLogin = registerUserDto.Login;
-        var newUserPass = registerUserDto.Password;
-
-        if (string.IsNullOrWhiteSpace(newUserLogin))
-        {
-            throw new ArgumentNullException(nameof(registerUserDto.Login));
-        }
-        if (string.IsNullOrWhiteSpace(newUserPass))
-        {
-            throw new ArgumentNullException(nameof(registerUserDto.Password));
-        }
-        if (await LoginExistsAsync(newUserLogin))
-        {
-            throw new ArgumentException(nameof(registerUserDto.Login));
-        }
-
-        var (passwordHash, passwordSalt) = await CreatePasswordHashAndSaltAsync(newUserPass);
-
-        var newUserInfo = new UserInfo
-        {
-            FirstName = registerUserDto.FirstName,
-            LastName = registerUserDto.LastName,
-            MiddleName = registerUserDto.MiddleName,
-            ProjectId = registerUserDto.ProjectId,
-            Email = registerUserDto.Email,
-            RoleId = registerUserDto.RoleId
-        };
-
-        var newIdentity = new Identity
-        {
-            Login = newUserLogin,
-            PasswordHash = passwordHash,
-            PasswordSalt = passwordSalt,
-            UserInfo = newUserInfo
-        };
-
-        _appDbContext.UserInfos.Add(newUserInfo);
-        _appDbContext.Identities.Add(newIdentity);
-
+        var createdIdentity = await RegisterNewIdentityAsync(registerUserDto);
+        var refreshToken = TokenHandler.GenerateRefreshToken(_securityCfg.RefreshTokenLifeTime);
+        var accessToken = TokenHandler.GenerateAccessToken(createdIdentity, _securityCfg.Token,_securityCfg.AccessTokenLifeTime);
+        TokenHandler.SetRefreshToken(refreshToken.Token, refreshToken.Expires, _httpContextAccessor.HttpContext);
+        await _appDbContext.RefreshTokens.AddAsync(refreshToken);
+        createdIdentity.RefreshToken = refreshToken;
         await TrySaveChangesAsync();
+        return accessToken;
+    }
+
+    public async Task RegisterUserDataAsync(RegisterUserDataDto registerUserDto)
+    {
+        await RegisterNewDataAsync(registerUserDto);
+    }
+
+    public async Task<Guid> CreateUserAsync(CreateUserDto createUserDto)
+    {
+        var identityId = await CreateNewUser(createUserDto);
+        return identityId;
     }
 
     public async Task DeleteUserAsync(Guid? identityId)
@@ -124,6 +87,175 @@ public class IdentityManagementService : IIdentityManagementService
 
         _appDbContext.Identities.Remove(identityToDelete);
         await TrySaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<UserDto>> GetUsersAsync()
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        if(projectId is null)
+        {
+            throw new ArgumentNullException(nameof(projectId));
+        }
+
+        var users = _appDbContext.Identities
+                                    .Include(i => i.UserInfo)
+                                    .Where(i => i.UserInfo.ProjectId == projectId)
+                                    .Select(i=> new UserDto(i.Id, i.UserInfo.RoleId, i.UserInfo.FirstName, i.UserInfo.LastName, i.UserInfo.MiddleName));
+
+        return users;
+    }
+
+    public async Task<UserIdentityDto> GetUserAsync(Guid? identityId)
+    {
+        var identity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i => i.Id == identityId);
+        var userInfo = identity.UserInfo;
+
+        return new UserIdentityDto(
+            identity.Id,
+            userInfo.RoleId,
+            identity.Login,
+            userInfo.FirstName,
+            userInfo.LastName,
+            userInfo.MiddleName,
+            userInfo.Email,
+            userInfo.RegisterTime);
+    }
+
+    public async Task<CurrentUserInfoDto> GetUserAsync()
+    {
+        var identityId = GetClaimedIdentityId();
+        if(string.IsNullOrWhiteSpace(identityId))
+        {
+            throw new ArgumentException(nameof(identityId));
+        }
+
+        var identity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i => i.Id == Guid.Parse(identityId));
+        var userInfo = identity.UserInfo;
+
+        return new CurrentUserInfoDto(userInfo.FirstName, userInfo.LastName, userInfo.MiddleName);
+    }
+
+    private async Task<Identity> RegisterNewIdentityAsync(RegisterIdentityDto registerUserDto)
+    {
+        var newUserLogin = registerUserDto.Login;
+        var newUserPass = registerUserDto.Password;
+
+        if (string.IsNullOrWhiteSpace(newUserLogin))
+        {
+            throw new ArgumentNullException(nameof(registerUserDto.Login));
+        }
+        if (string.IsNullOrWhiteSpace(newUserPass))
+        {
+            throw new ArgumentNullException(nameof(registerUserDto.Password));
+        }
+        if (await LoginExistsAsync(newUserLogin))
+        {
+            throw new ArgumentException(nameof(registerUserDto.Login));
+        }
+
+        var (passwordHash, passwordSalt) = await CreatePasswordHashAndSaltAsync(newUserPass);
+
+
+        var newIdentity = new Identity
+        {
+            Login = newUserLogin,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+        };
+
+        _appDbContext.Identities.AddAsync(newIdentity);
+
+        return newIdentity;
+    }
+    private async Task RegisterNewDataAsync(RegisterUserDataDto registerUserDto)
+    {
+        var identityIdString = GetClaimedIdentityId();
+        if(string.IsNullOrWhiteSpace(identityIdString) || !Guid.TryParse(identityIdString, out var identityId))
+        {
+            throw new ArgumentException();
+        }
+
+        var identity = await _appDbContext.Identities.FirstOrDefaultAsync(i=>i.Id == identityId);
+
+        var newUserInfo = new UserInfo
+        {
+            FirstName = registerUserDto.FirstName,
+            LastName = registerUserDto.LastName,
+            MiddleName = registerUserDto.MiddleName,
+            ProjectId = registerUserDto.ProjectId,
+            Email = registerUserDto.Email,
+            RoleId = registerUserDto.RoleId
+        };
+
+        identity.UserInfo = newUserInfo;
+
+        _appDbContext.UserInfos.Add(newUserInfo);
+        _appDbContext.Identities.Update(identity);
+
+        await TrySaveChangesAsync();
+    }
+
+    private async Task<Guid> CreateNewUser(CreateUserDto createUserDto)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        if (projectId is null)
+        {
+            throw new ArgumentException(nameof(projectId));
+        }
+        var newUserLogin = createUserDto.Login;
+        var newUserPass = createUserDto.Password;
+
+        if (string.IsNullOrWhiteSpace(newUserLogin))
+        {
+            throw new ArgumentNullException(nameof(createUserDto.Login));
+        }
+        if (string.IsNullOrWhiteSpace(newUserPass))
+        {
+            throw new ArgumentNullException(nameof(createUserDto.Password));
+        }
+        if (await LoginExistsAsync(newUserLogin))
+        {
+            throw new ArgumentException(nameof(createUserDto.Login));
+        }
+
+        var (passwordHash, passwordSalt) = await CreatePasswordHashAndSaltAsync(newUserPass);
+
+        var newUserInfo = new UserInfo
+        {
+            FirstName = createUserDto.FirstName,
+            LastName = createUserDto.LastName,
+            MiddleName = createUserDto.MiddleName,
+            ProjectId = projectId.Value,
+            Email = createUserDto.Email,
+            RoleId = createUserDto.RoleId
+        };
+
+        var newIdentity = new Identity
+        {
+            Login = newUserLogin,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            UserInfo = newUserInfo
+        };
+
+        _appDbContext.UserInfos.Add(newUserInfo);
+        _appDbContext.Identities.Add(newIdentity);
+
+        await TrySaveChangesAsync();
+
+        return newIdentity.Id;
+    }
+
+    private async Task TrySaveChangesAsync()
+    {
+        try
+        {
+            await _appDbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
     }
 
     /// <summary>
@@ -170,47 +302,23 @@ public class IdentityManagementService : IIdentityManagementService
         return projectId;
     }
 
-    public async Task<IEnumerable<UserDto>> GetUsers()
+    public Task UpdateUserAsync()
     {
-        var projectId = await GetRequestingUsersProjectIdAsync();
-        if(projectId is null)
-        {
-            throw new ArgumentNullException(nameof(projectId));
-        }
-
-        var users = _appDbContext.Identities
-                                    .Include(i => i.UserInfo)
-                                    .Where(i => i.UserInfo.ProjectId == projectId)
-                                    .Select(i=> new UserDto(i.Id, i.UserInfo.RoleId, i.UserInfo.FirstName, i.UserInfo.LastName, i.UserInfo.MiddleName));
-
-        return users;
+        throw new NotImplementedException();
     }
 
-    public async Task<UserIdentityDto> GetUser(Guid? identityId)
+    public async Task SetProjectIdToUserAsync(Guid projectId)
     {
-        var identity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i => i.Id == identityId);
-        var userInfo = identity.UserInfo;
-
-        return new UserIdentityDto(
-            identity.Id,
-            userInfo.RoleId,
-            identity.Login,
-            userInfo.FirstName,
-            userInfo.LastName,
-            userInfo.MiddleName,
-            userInfo.Email,
-            userInfo.RegisterTime);
-    }
-
-    private async Task TrySaveChangesAsync()
-    {
-        try
+        var identityIdString = GetClaimedIdentityId();
+        if(string.IsNullOrWhiteSpace(identityIdString) || !Guid.TryParse(identityIdString, out var identityId))
         {
-            await _appDbContext.SaveChangesAsync();
+            throw new ArgumentException(nameof(identityIdString));
         }
-        catch (Exception ex)
-        {
-            throw;
-        }
+
+        var idnetity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i=>i.Id == identityId);
+        var userInfo = idnetity.UserInfo;
+        userInfo.ProjectId = projectId;
+        _appDbContext.UserInfos.Update(userInfo);
+        await TrySaveChangesAsync();
     }
 }

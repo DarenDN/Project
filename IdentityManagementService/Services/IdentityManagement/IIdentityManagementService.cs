@@ -4,13 +4,20 @@ using Dtos;
 
 public interface IIdentityManagementService
 {
-    Task RegisterUserAsync(RegisterUserDto userAuthDto);
+    Task<string> RegisterUserIdentityAsync(RegisterIdentityDto userAuthDto);
+    Task RegisterUserDataAsync(RegisterUserDataDto userAuthDto);
 
-    Task CreateUserAsync(CreateUserDto userAuthDto);
+    Task<Guid> CreateUserAsync(CreateUserDto userAuthDto);
 
     Task DeleteUserAsync(Guid? identityId);
 
-    Task<IEnumerable<UserDto>> GetUsers();
+    Task<IEnumerable<UserDto>> GetUsersAsync();
 
-    Task<UserIdentityDto> GetUser(Guid? identityId);
+    Task<UserIdentityDto> GetUserAsync(Guid? identityId);
+
+    Task<CurrentUserInfoDto> GetUserAsync();
+
+    Task UpdateUserAsync();
+
+    Task SetProjectIdToUserAsync(Guid projectId);
 }

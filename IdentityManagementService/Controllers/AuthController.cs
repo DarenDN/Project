@@ -2,7 +2,7 @@
 
 using IdentityManagementService.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using Services.IdentityManagement;
+using Services.Auth;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -1,19 +1,18 @@
-﻿namespace IdentityManagementService.Services.IdentityManagement;
+﻿namespace IdentityManagementService.Services.Auth;
 
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Data;
 using Dtos;
-using Models;
 using Configurations;
 
 public class AuthService : IAuthService
 {
+    private Handler.Token.TokenHandler TokenHandler { get; set; }
+
     private readonly SecurityConfiguration _securityCfg;
     private readonly IdentityManagementDbContext _appDbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -26,9 +25,8 @@ public class AuthService : IAuthService
         _securityCfg = options.Value;
         _appDbContext = appDbContext;
         _httpContextAccessor = httpContextAccessor;
+        TokenHandler = new Handler.Token.TokenHandler();
     }
-
-    private const string RefreshTokenKeyWord = "refreshTokenString";
 
     /// <summary>
     /// Sets refresh token and creates an access token
@@ -71,22 +69,22 @@ public class AuthService : IAuthService
             identity.RefreshToken = null;
         }
 
-        var jwt = GenerateAccessToken(identity);
-        var refreshToken = GenerateRefreshToken();
+        var jwt = TokenHandler.GenerateAccessToken(identity, _securityCfg.Token, _securityCfg.AccessTokenLifeTime);
+        var refreshToken = TokenHandler.GenerateRefreshToken(_securityCfg.RefreshTokenLifeTime);
         identity.RefreshToken = refreshToken;
         await _appDbContext.RefreshTokens.AddAsync(refreshToken);
         _appDbContext.Identities.Update(identity);
 
         await TrySaveChangesAsync();
 
-        SetRefreshToken(refreshToken.Token, refreshToken.Expires);
+        TokenHandler.SetRefreshToken(refreshToken.Token, refreshToken.Expires, _httpContextAccessor.HttpContext);
 
         return jwt;
     }
 
     public async Task LogoutAsync()
     {
-        var requestCookieToken = GetCookieRefreshToken();
+        var requestCookieToken = TokenHandler.GetCookieRefreshToken(_httpContextAccessor.HttpContext);
         if (string.IsNullOrWhiteSpace(requestCookieToken))
         {
             throw new ArgumentNullException(nameof(requestCookieToken));
@@ -108,7 +106,7 @@ public class AuthService : IAuthService
 
         await TrySaveChangesAsync();
 
-        DeleteRefreshToken();
+        TokenHandler.DeleteRefreshToken(_httpContextAccessor.HttpContext);
     }
 
     /// <summary>
@@ -119,15 +117,18 @@ public class AuthService : IAuthService
     /// <exception cref="SecurityTokenExpiredException"></exception>
     public async Task<string> RefreshTokensAsync()
     {
-        var refreshToken = GetCookieRefreshToken();
+        var refreshToken = TokenHandler.GetCookieRefreshToken(_httpContextAccessor.HttpContext);
 
         if (refreshToken is null)
         {
             throw new ArgumentNullException(nameof(refreshToken));
         }
 
-        var identity = await _appDbContext.Identities.Include(i => i.RefreshToken).FirstOrDefaultAsync(i => i.RefreshToken != null
-            && i.RefreshToken.Token == refreshToken);
+        var identity = await _appDbContext.Identities
+            .Include(i => i.RefreshToken)
+            .Include(i=>i.UserInfo)
+            .FirstOrDefaultAsync(i => i.RefreshToken != null
+                && i.RefreshToken.Token == refreshToken);
         if (identity is null)
         {
             throw new ArgumentNullException();
@@ -144,14 +145,14 @@ public class AuthService : IAuthService
             throw new SecurityTokenExpiredException();
         }
 
-        var newAccessToken = GenerateAccessToken(identity);
-        var newRefreshToken = GenerateRefreshToken();
+        var newAccessToken = TokenHandler.GenerateAccessToken(identity, _securityCfg.Token, _securityCfg.AccessTokenLifeTime);
+        var newRefreshToken = TokenHandler.GenerateRefreshToken(_securityCfg.RefreshTokenLifeTime);
 
         await _appDbContext.RefreshTokens.AddAsync(newRefreshToken);
         identity.RefreshToken = newRefreshToken;
         _appDbContext.Identities.Update(identity);
 
-        SetRefreshToken(newRefreshToken.Token, newRefreshToken.Expires);
+        TokenHandler.SetRefreshToken(newRefreshToken.Token, newRefreshToken.Expires, _httpContextAccessor.HttpContext);
 
         await TrySaveChangesAsync();
 
@@ -160,7 +161,7 @@ public class AuthService : IAuthService
 
     public async Task<bool> IsAuthorized()
     {
-        var refreshTokenString = GetCookieRefreshToken();
+        var refreshTokenString = TokenHandler.GetCookieRefreshToken(_httpContextAccessor.HttpContext);
 
         if (refreshTokenString is null)
         {
@@ -183,73 +184,12 @@ public class AuthService : IAuthService
         return true;
     }
 
-    private string GenerateAccessToken(Identity user)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Login),
-            new Claim(ClaimTypes.Role, user.UserInfo.RoleId.ToString()),
-        };
-
-        var key = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(_securityCfg.Token));
-
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-        var accessTokenLifeTime = TimeSpan.Parse(_securityCfg.AccessTokenLifeTime).Ticks;
-        var token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.Now.AddTicks(accessTokenLifeTime),
-            signingCredentials: creds);
-
-        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-        return jwt;
-    }
-
-    private RefreshToken GenerateRefreshToken()
-    {
-        var refreshTokenLifeTime = TimeSpan.Parse(_securityCfg.RefreshTokenLifeTime).Ticks;
-        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        var refreshToken = new RefreshToken
-        {
-            Token = token,
-            Expires = DateTime.Now.AddTicks(refreshTokenLifeTime)
-        };
-
-        return refreshToken;
-    }
-
     private bool VerifyPassword(string password, byte[] passwordHash, byte[] passwordSalt)
     {
         using var hmac = new HMACSHA512(passwordSalt);
         var computedHash = hmac.ComputeHash(Encoding.Unicode.GetBytes(password));
 
         return computedHash.SequenceEqual(passwordHash);
-    }
-
-    private void SetRefreshToken(string token, DateTime expires)
-    {
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Expires = expires
-        };
-        var context = _httpContextAccessor.HttpContext;
-
-        context.Response.Cookies.Append(RefreshTokenKeyWord, token, cookieOptions);
-    }
-
-    private void DeleteRefreshToken()
-    {
-        var context = _httpContextAccessor.HttpContext;
-
-        context.Response.Cookies.Delete(RefreshTokenKeyWord);
-    }
-
-    private string? GetCookieRefreshToken()
-    {
-        var token = _httpContextAccessor.HttpContext?.Request.Cookies[RefreshTokenKeyWord];
-        return token;
     }
 
     private async Task TrySaveChangesAsync()

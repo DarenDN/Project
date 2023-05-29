@@ -1,6 +1,6 @@
 using MeetingService.Hubs;
-using MeetingService.Services.Implementations;
-using MeetingService.Services.Interfaces;
+using MeetingService.Services.CacheService;
+using MeetingService.Services.MeetingService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -28,8 +28,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration.GetConnectionString(RedisConnectionStringSection);
     options.InstanceName = builder.Configuration.GetValue<string>(RedisCfgInstanceNameSection);
 });
+
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(typeof(ICacheService),typeof(RedisCacheService));
-builder.Services.AddSingleton(typeof(IMeetingService),typeof(MeetingService.Services.Implementations.MeetingService));
+builder.Services.AddScoped(typeof(IMeetingService),typeof(MeetingService.Services.MeetingService.MeetingService));
 
 builder.Services.AddSignalR(cfg =>
 {

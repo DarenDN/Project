@@ -1,4 +1,4 @@
-﻿namespace MeetingService.Services.Implementations;
+﻿namespace MeetingService.Services.CacheService;
 
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
@@ -23,17 +23,17 @@ public class RedisCacheService : ICacheService
         return true;
     }
 
-    public async Task<Meeting> GetAsync(Guid projectId)
+    public async Task<ParticipantEvaluation> GetAsync(Guid projectId)
     {
         var storedMeeting = await _distributedCache.GetStringAsync(projectId.ToString());
-        if(string.IsNullOrWhiteSpace(storedMeeting))
+        if (string.IsNullOrWhiteSpace(storedMeeting))
         {
             throw new Exception("Meeting does not found");
         }
 
-        var deserializedMeeting = JsonSerializer.Deserialize<Meeting>(storedMeeting);
+        var deserializedMeeting = JsonSerializer.Deserialize<ParticipantEvaluation>(storedMeeting);
 
-        if(deserializedMeeting is null)
+        if (deserializedMeeting is null)
         {
             // TODO smt
         }
@@ -41,7 +41,7 @@ public class RedisCacheService : ICacheService
         return deserializedMeeting;
     }
 
-    public async Task<bool> UpdateAsync(Meeting meeting, Guid projectId)
+    public async Task<bool> UpdateAsync(ParticipantEvaluation meeting, Guid projectId)
     {
         // TODO update logic
 
@@ -50,11 +50,11 @@ public class RedisCacheService : ICacheService
         return true;
     }
 
-    public async Task<bool> SaveAsync(Meeting meeting, Guid projectId)
+    public async Task<bool> SaveAsync(ParticipantEvaluation meeting, Guid projectId)
     {
         // TODO cashe expiration time need to be set somewhere
         // Config?
-        
+
         var options = new DistributedCacheEntryOptions()
         {
             // TODO expiration time

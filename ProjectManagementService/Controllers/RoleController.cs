@@ -80,4 +80,19 @@ public class RoleController : ControllerBase
             return StatusCode(500, ex.Message);
         }
     }
+
+    [HttpGet]
+    [Route(nameof(IsAdminAsync))]
+    public async Task<ActionResult> IsAdminAsync()
+    {
+        try
+        {
+            var isAdmin = await _roleService.IsAdminAsync();
+            return Ok(isAdmin);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 }

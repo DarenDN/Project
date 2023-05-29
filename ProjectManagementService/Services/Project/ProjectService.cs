@@ -6,24 +6,29 @@ using Dtos.Project;
 using Models;
 using System.Security.Claims;
 using Task = System.Threading.Tasks.Task;
+using System;
+using Microsoft.Extensions.Options;
+using ProjectManagementService.Configurations;
 
 public sealed class ProjectService : IProjectService
 {
     private readonly ApplicationDbContext _appDbContext;
     private IHttpContextAccessor _httpContextAccessor;
+    private readonly RoleConfiguration _roleConfiguration;
 
-    public ProjectService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor)
+    public ProjectService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor, IOptions<RoleConfiguration> options)
     {
         _appDbContext = appDbContext;
         _httpContextAccessor = httpContextAccessor;
-    }
+        _roleConfiguration = options.Value;
+    }   
 
     public async Task<ProjectDto> GetProjectAsync()
     {
         var projectId = await GetRequestingUsersProjectIdAsync();
         var project = await _appDbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
 
-        return new ProjectDto(projectId.Value, project.Title);
+        return new ProjectDto(projectId.Value, project.Title, project.Description);
     }
 
     public async Task UpdateProjectAsync(UpdateProjectDto projectDto)
@@ -45,7 +50,7 @@ public sealed class ProjectService : IProjectService
         }
     }
 
-    public async Task CreateProjectAsync(CreateProjectDto projectDto)
+    public async Task<CreatedProjectDto> CreateProjectAsync(CreateProjectDto projectDto)
     {
         var newProject = new Project
         {
@@ -53,7 +58,16 @@ public sealed class ProjectService : IProjectService
             Description = projectDto.Description,
         };
 
-        await _appDbContext.AddAsync(newProject);
+        await _appDbContext.Projects.AddAsync(newProject);
+        var identityId = GetRequestingIdentityId();
+        if(identityId is null)
+        {
+            throw new ArgumentException(nameof(identityId));
+        }
+
+        await ChainIdentityToProjectAsync(newProject.Id, identityId.Value);
+        var adminRoleId = await GetAdminRoleAsync();
+
         try
         {
             await _appDbContext.SaveChangesAsync();
@@ -63,6 +77,8 @@ public sealed class ProjectService : IProjectService
             // TODO exceptions
             throw;
         }
+
+        return new CreatedProjectDto(newProject.Id, adminRoleId.Id);
     }
 
     public async Task DeleteProjectAsync()
@@ -86,6 +102,12 @@ public sealed class ProjectService : IProjectService
         }
     }
 
+    /// <summary>
+    /// Doesnt save changes.
+    /// </summary>
+    /// <param name="projectId"></param>
+    /// <param name="identityId"></param>
+    /// <returns></returns>
     private async Task ChainIdentityToProjectAsync(Guid projectId, Guid identityId)
     {
         var projectsIdentity = new ProjectsIdentity
@@ -95,15 +117,15 @@ public sealed class ProjectService : IProjectService
         };
 
         await _appDbContext.ProjectsIdentities.AddAsync(projectsIdentity);
-        try
-        {
-            await _appDbContext.SaveChangesAsync();
-        }
-        catch
-        {
-            throw;
-        }
     }
+
+    // TODO move method. Wrong class logic.
+    /// <summary>
+    /// Doesnt save changes.
+    /// Creates Admin role if not exists and creates ProjectRole
+    /// </summary>
+    /// <param name="projectId"></param>
+    /// <returns></returns>
 
     private Guid? GetRequestingIdentityId()
     {
@@ -124,5 +146,67 @@ public sealed class ProjectService : IProjectService
         var projectsIdentity = await _appDbContext.ProjectsIdentities.FirstOrDefaultAsync(pi => pi.IdentityId == identityId);
 
         return projectsIdentity?.ProjectId;
+    }
+
+    public async Task SetProjectIdentityAsync(Guid identityId)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        if(projectId is null)
+        {
+            throw new ArgumentException();
+        }
+
+        if(await _appDbContext.ProjectsIdentities.AnyAsync(pi => pi.IdentityId == identityId && pi.ProjectId == projectId))
+        {
+            return;
+        }
+
+        var projectsIdentity = new ProjectsIdentity { IdentityId = identityId, ProjectId = projectId.Value };
+        _appDbContext.ProjectsIdentities.Add(projectsIdentity);
+
+        try
+        {
+            await _appDbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            throw;
+        }
+    }
+
+    private async Task<UserRole?> GetAdminRoleAsync()
+    {
+        if(!_roleConfiguration.BasicRoles.TryGetValue(_roleConfiguration.AdminRole, out var adminRoleId))
+        {
+            return null;
+        }
+
+        return await _appDbContext.UserRoles.FirstOrDefaultAsync(r => r.Id == adminRoleId);
+    }
+
+    public async Task DeleteProjectIdentityAsync(Guid identityId)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        if (projectId is null)
+        {
+            throw new ArgumentException();
+        }
+        var projectsIdentity = await _appDbContext.ProjectsIdentities.FirstOrDefaultAsync(pi => pi.IdentityId == identityId && pi.ProjectId == projectId);
+
+        if (projectsIdentity is null)
+        {
+            return;
+        }
+
+        _appDbContext.ProjectsIdentities.Remove(projectsIdentity);
+
+        try
+        {
+            await _appDbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            throw;
+        }
     }
 }

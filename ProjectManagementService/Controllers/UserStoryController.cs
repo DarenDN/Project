@@ -19,9 +19,9 @@ public sealed class UserStoryController : ControllerBase
     }
 
     [HttpPost]
-    [Route()]
+    [Route(nameof(CreateUserStoryAsync))]
     public async Task<ActionResult> CreateUserStoryAsync()
     {
-
+        throw new NotImplementedException();
     }
 }

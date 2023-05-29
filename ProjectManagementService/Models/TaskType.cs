@@ -6,6 +6,6 @@ using Data;
 public sealed class TaskType : DbEntity
 {
     [Required]
-    [MaxLength(20)]
+    [MaxLength(40)]
     public string Name { get; set; }
 }

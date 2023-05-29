@@ -2,9 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Data;
-using Dtos;
 using Models;
-using Interfaces;
 using System.Collections.Generic;
 using System.Security.Claims;
 using ProjectManagementService.Dtos.Dashboard;
@@ -13,12 +11,11 @@ public sealed class DashboardService : IDashboardService
 {
     private readonly ApplicationDbContext _appDbContext;
     private readonly ILogger _logger;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private IHttpContextAccessor _httpContextAccessor;
 
-    public DashboardService(ApplicationDbContext appDbContext, ILogger logger, IHttpContextAccessor httpContextAccessor)
+    public DashboardService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor)
     {
         _appDbContext = appDbContext;
-        _logger = logger;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -74,23 +71,24 @@ public sealed class DashboardService : IDashboardService
 
     public async Task<bool> DeleteDashboardAsync(Guid dashboardId)
     {
-        var dashboardToDelete = await _appDbContext.Dashboards.FirstOrDefaultAsync(p => p.Id == dashboardId);
-        var tasksToDelete = await _appDbContext.Tasks.Where(t => t.DashboardId == dashboardId).ToListAsync();
+        throw new NotImplementedException();
+        //var dashboardToDelete = await _appDbContext.Dashboards.FirstOrDefaultAsync(p => p.Id == dashboardId);
+        //var tasksToDelete = await _appDbContext.Tasks.Where(t => t.DashboardId == dashboardId).ToListAsync();
 
-        _appDbContext.Tasks.RemoveRange(tasksToDelete);
-        _appDbContext.Dashboards.Remove(dashboardToDelete);
+        //_appDbContext.Tasks.RemoveRange(tasksToDelete);
+        //_appDbContext.Dashboards.Remove(dashboardToDelete);
 
-        try
-        {
-            await _appDbContext.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            // TODO exceptions
-            throw;
-        }
+        //try
+        //{
+        //    await _appDbContext.SaveChangesAsync();
+        //}
+        //catch (Exception ex)
+        //{
+        //    // TODO exceptions
+        //    throw;
+        //}
 
-        return true;
+        //return true;
     }
 
     public async Task<DashboardDto> GetDashboardAsync(Guid dashboardId)

@@ -3,9 +3,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Dtos.Project;
 using Services.Project;
+using Microsoft.AspNetCore.Authorization;
 
 // working with project could be easily drawn into one own microservice
-[ApiController]
+[ApiController, Authorize]
 [Route("api/[controller]")]
 public class ProjectController : ControllerBase
 {
@@ -14,6 +15,36 @@ public class ProjectController : ControllerBase
     public ProjectController(IProjectService projectService)
     {
         _projectService = projectService;
+    }
+
+    [HttpPost]
+    [Route(nameof(SetProjectIdentityAsync))]
+    public async Task<ActionResult> SetProjectIdentityAsync(Guid identityId)
+    {
+        try
+        {
+            await _projectService.SetProjectIdentityAsync(identityId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpDelete]
+    [Route(nameof(DeleteProjectIdentityAsync))]
+    public async Task<ActionResult> DeleteProjectIdentityAsync(Guid identityId)
+    {
+        try
+        {
+            await _projectService.DeleteProjectIdentityAsync(identityId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 
     [HttpGet]
@@ -52,8 +83,8 @@ public class ProjectController : ControllerBase
     {
         try
         {
-            await _projectService.CreateProjectAsync(projectDto);
-            return Ok();
+            var createdProjectDto = await _projectService.CreateProjectAsync(projectDto);
+            return Ok(createdProjectDto);
         }
         catch (Exception ex)
         {

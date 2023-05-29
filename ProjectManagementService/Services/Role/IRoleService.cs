@@ -14,4 +14,6 @@ public interface IRoleService
     Task<RoleDto> GetRoleAsync(Guid roleId);
 
     Task UpdateRoleAsync(RoleDto roleDto);
+
+    Task<bool> IsAdminAsync();
 }

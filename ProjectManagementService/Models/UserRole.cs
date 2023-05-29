@@ -6,6 +6,6 @@ using Data;
 public sealed class UserRole : DbEntity
 {
     [Required]
-    [MaxLength(20)]
+    [MaxLength(40)]
     public string Name { get; set; }
 }

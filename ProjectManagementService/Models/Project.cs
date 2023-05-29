@@ -10,8 +10,4 @@ public sealed class Project : DbEntity
 
     [MaxLength(200)]
     public string Description { get; set; }
-
-    // TODO do we need an estimation type here?
-    [Required]
-    public EstimationType Estimation { get; set; }
 }

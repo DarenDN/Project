@@ -34,7 +34,7 @@ public sealed class Task : DbEntity
     public TaskType Type { get; set; }
 
     [Required]
-    public TaskStatus Status { get; set; }
+    public TaskState State { get; set; }
 
     
 }

@@ -1,5 +1,6 @@
 ﻿namespace MeetingService.Controllers;
 
+using MeetingService.Services.MeetingService;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services.Interfaces;
@@ -63,7 +64,7 @@ public sealed class MeetingController : ControllerBase
         }
     }
 
-    public async Task<ActionResult> UpdateMeetingAsync(Meeting meeting, Guid projectId)
+    public async Task<ActionResult> UpdateMeetingAsync(ParticipantEvaluation meeting, Guid projectId)
     {
         // TODO try catch
         await _meetingService.UpdateMeetingAsync(meeting, projectId);

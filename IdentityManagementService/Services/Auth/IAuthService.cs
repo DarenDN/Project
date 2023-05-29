@@ -1,4 +1,4 @@
-﻿namespace IdentityManagementService.Services.IdentityManagement;
+﻿namespace IdentityManagementService.Services.Auth;
 
 using Dtos;
 

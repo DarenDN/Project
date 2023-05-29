@@ -5,12 +5,8 @@ using Microsoft.AspNetCore.SignalR;
 
 public class MeetingHub : Hub<IMeetingHub>
 {
-    public MeetingHub()
-    {
-    }
-
     // TODO methods to send states with a help of SignalR
-    public async Task MeetingUpdatedAsync(Meeting meeting, string group)
+    public async Task MeetingUpdatedAsync(ParticipantEvaluation meeting, string group)
     {
         await Clients.Group(group).MeetingUpdated(meeting);
     }

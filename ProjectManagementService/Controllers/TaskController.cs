@@ -76,14 +76,14 @@ public sealed class TaskController : ControllerBase
         }
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route(nameof(GetTasksAsync))]
-    public async Task<ActionResult> GetTasksAsync(Guid dashboardId)
+    public async Task<ActionResult> GetTasksAsync()
     {
         try
         {
-            var task = await _taskService.GetTasksAsync(dashboardId);
-            return Ok(task);
+            var tasks = await _taskService.GetTasksAsync();
+            return Ok(tasks);
         }
         catch (Exception ex)
         {
@@ -91,14 +91,28 @@ public sealed class TaskController : ControllerBase
         }
     }
 
-
-    [HttpPut]
-    [Route(nameof(ChangeStatusAsync))]
-    public async Task<ActionResult> ChangeStatusAsync(Guid taskId, Guid statusId)
+    [HttpGet]
+    [Route(nameof(GetSprintTasksAsync))]
+    public async Task<ActionResult> GetSprintTasksAsync()
     {
         try
         {
-            await _taskService.ChangeStatusAsync(taskId, statusId);
+            var tasks = await _taskService.GetSprintTasksAsync();
+            return Ok(tasks);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
+    [Route(nameof(ChangeStateAsync))]
+    public async Task<ActionResult> ChangeStateAsync(Guid taskId, Guid statusId)
+    {
+        try
+        {
+            await _taskService.ChangeStateAsync(taskId, statusId);
             return Ok();
         }
         catch (Exception ex)

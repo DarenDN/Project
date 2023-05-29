@@ -5,6 +5,7 @@ using Data;
 using Models;
 using Dtos.Sprint;
 using Task = System.Threading.Tasks.Task;
+using System.Collections.Generic;
 
 public sealed class SprintService : ISprintService
 {
@@ -51,21 +52,6 @@ public sealed class SprintService : ISprintService
         throw new NotImplementedException();
     }
 
-    public async Task<SprintDto> GetSprintAsync()
-    {
-        var projectId = await GetRequestingUsersProjectIdAsync();
-        var currentDate = DateTime.Now;
-
-        var sprint = await _applicationDbContext.Sprints.FirstOrDefaultAsync(
-            s => s.ProjectId == projectId
-            && s.DateEnd >= currentDate
-            && s.DateStart <= currentDate);
-
-        return sprint is null 
-            ? new SprintDto(sprint.Id, sprint.DateStart, sprint.DateEnd, sprint.Description)
-            : null;
-    }
-
     public async System.Threading.Tasks.Task UpdateSprintAsync()
     {
         throw new NotImplementedException();
@@ -95,5 +81,38 @@ public sealed class SprintService : ISprintService
         var projectsIdentity = await _applicationDbContext.ProjectsIdentities.FirstOrDefaultAsync(pi => pi.IdentityId == Guid.Parse(identityId));
 
         return projectsIdentity?.ProjectId;
+    }
+
+    public async Task<SprintDto> GetSprintAsync(Guid sprintId)
+    {
+        var sprint = await _applicationDbContext.Sprints.FirstOrDefaultAsync(
+            s => s.Id == sprintId);
+
+        if(sprint is null)
+        {
+            throw new ArgumentException(nameof(sprintId));
+        }
+
+        return new SprintDto(sprint.Id, sprint.DateStart, sprint.DateEnd, sprint.Description);
+    }
+
+    public async Task<SprintDto?> GetCurrentSprintAsync()
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var currentDate = DateTime.Now;
+
+        var sprint = await _applicationDbContext.Sprints.FirstOrDefaultAsync(
+            s => s.ProjectId == projectId
+            && s.DateEnd >= currentDate
+            && s.DateStart <= currentDate);
+
+        return sprint is null
+            ? new SprintDto(sprint.Id, sprint.DateStart, sprint.DateEnd, sprint.Description)
+            : null;
+    }
+
+    public async Task<List<SprintDto?>> GetSprintsAsync()
+    {
+        throw new NotImplementedException();
     }
 }

@@ -7,16 +7,21 @@ using Models;
 using Dtos.Role;
 using Task = System.Threading.Tasks.Task;
 using System.Security.Claims;
+using Microsoft.Extensions.Options;
+using ProjectManagementService.Configurations;
 
 public class RoleService : IRoleService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ApplicationDbContext _appDbContext;
+    private readonly RoleConfiguration _roleConfiguration;
 
-    public RoleService(IHttpContextAccessor httpContextAccessor, ApplicationDbContext appDbContext)
+
+    public RoleService(IHttpContextAccessor httpContextAccessor, ApplicationDbContext appDbContext, IOptions<RoleConfiguration> options)
     {
         _httpContextAccessor = httpContextAccessor;
         _appDbContext = appDbContext;
+        _roleConfiguration = options.Value;
     }
 
     public async Task CreateRoleAsync(CreateRoleDto roleDto)
@@ -176,5 +181,12 @@ public class RoleService : IRoleService
         {
             throw;
         }
+    }
+
+    public async Task<bool> IsAdminAsync()
+    {
+        var roleId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
+
+        return !string.IsNullOrWhiteSpace(roleId) && _roleConfiguration.Equals(roleId);
     }
 }

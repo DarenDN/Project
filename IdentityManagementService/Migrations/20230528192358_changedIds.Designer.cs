@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IdentityManagementService.Migrations
 {
     [DbContext(typeof(IdentityManagementDbContext))]
-    [Migration("20230430182414_initial")]
-    partial class initial
+    [Migration("20230528192358_changedIds")]
+    partial class changedIds
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -46,7 +46,7 @@ namespace IdentityManagementService.Migrations
                     b.Property<Guid?>("RefreshTokenId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserInfoId")
+                    b.Property<Guid?>("UserInfoId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -56,23 +56,6 @@ namespace IdentityManagementService.Migrations
                     b.HasIndex("UserInfoId");
 
                     b.ToTable("Identities");
-                });
-
-            modelBuilder.Entity("IdentityManagementService.Models.ProjectsRole", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ProjectsRoles");
                 });
 
             modelBuilder.Entity("IdentityManagementService.Models.RefreshToken", b =>
@@ -103,22 +86,18 @@ namespace IdentityManagementService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.Property<string>("MiddleName")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
@@ -128,30 +107,13 @@ namespace IdentityManagementService.Migrations
                     b.Property<DateTime>("RegisterTime")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<Guid>("RoleId")
+                    b.Property<Guid?>("RoleId")
+                        .IsRequired()
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
 
                     b.ToTable("UserInfos");
-                });
-
-            modelBuilder.Entity("IdentityManagementService.Models.UserRole", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("IdentityManagementService.Models.Identity", b =>
@@ -162,24 +124,11 @@ namespace IdentityManagementService.Migrations
 
                     b.HasOne("IdentityManagementService.Models.UserInfo", "UserInfo")
                         .WithMany()
-                        .HasForeignKey("UserInfoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserInfoId");
 
                     b.Navigation("RefreshToken");
 
                     b.Navigation("UserInfo");
-                });
-
-            modelBuilder.Entity("IdentityManagementService.Models.UserInfo", b =>
-                {
-                    b.HasOne("IdentityManagementService.Models.UserRole", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
                 });
 #pragma warning restore 612, 618
         }

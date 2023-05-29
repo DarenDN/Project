@@ -8,9 +8,10 @@ public interface ITaskService
     Task UpdateTaskAsync(TaskUpdateDto taskDto);
     Task DeleteTaskAsync(Guid taskId);
     Task<TaskDataDto> GetTaskAsync(Guid taskId);
-    Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync(Guid dashboardId);
+    Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync();
+    Task<IEnumerable<TaskShortInfoDto>> GetSprintTasksAsync();
 
-    Task ChangeStatusAsync(Guid taskId, Guid statusId);
+    Task ChangeStateAsync(Guid taskId, Guid statusId);
 
     Task ChangeTypeAsync(Guid taskId, Guid typeId);
 

@@ -7,6 +7,7 @@ using System.Text;
 using IdentityManagementService.Configurations;
 using IdentityManagementService.Data;
 using IdentityManagementService.Services.IdentityManagement;
+using IdentityManagementService.Services.Auth;
 
 const string AuthConnectionCfgSection = "AuthConnection";
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
@@ -35,7 +36,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IAuthService),
-    typeof(IdentityManagementService.Services.IdentityManagement.AuthService));
+    typeof(AuthService));
 builder.Services.AddScoped(typeof(IIdentityManagementService),
     typeof(IdentityManagementService.Services.IdentityManagement.IdentityManagementService));
 
