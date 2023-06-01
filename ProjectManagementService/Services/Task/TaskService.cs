@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.Extensions.Options;
 using Configurations;
 using Models;
+using ProjectManagementService.Dtos.Estimation;
 
 public sealed class TaskService : ITaskService
 {
@@ -26,14 +27,22 @@ public sealed class TaskService : ITaskService
     {
         var type = await _appDbContext.TaskTypes.FirstOrDefaultAsync(t => t.Id == newTaskDto.TypeId);
         var state = await GetDefaultTaskStateAsync();
+        var creator = GetRequestingIdentityId();
+        var projectId = await GetRequestingUsersProjectIdAsync(creator);
         var newTask = new Models.Task
         {
             Title = newTaskDto.Title,
             Description = newTaskDto.Description,
-            SprintId = newTaskDto.SprintId,
             State = state,
-            Type = type
+            Type = type,
+            CreatorId = creator.Value,
+            ProjectId = projectId.Value
         };
+
+        if (newTaskDto.SprintId.HasValue)
+        {
+            newTask.SprintId = newTaskDto.SprintId.Value;
+        }
 
         await _appDbContext.Tasks.AddAsync(newTask);
         await TrySaveChangesAsync();
@@ -69,24 +78,15 @@ public sealed class TaskService : ITaskService
 
     public async Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync()
     {
+        var ptojectId = await GetRequestingUsersProjectIdAsync();
         var tasks = await _appDbContext.Tasks
+            .Where(t => t.ProjectId == ptojectId)
             .Include(t => t.State)
             .Include(t => t.Type)
             .Select(t => new TaskShortInfoDto(t.Id, t.Title, t.State.Name, t.Type.Name, t.PerformerId, t.CreatorId))
             .ToListAsync();
 
         return tasks;
-    }
-
-    private async Task<Guid?> GetCurrentSprintIdAsync()
-    {
-        var projectId = await GetRequestingUsersProjectIdAsync();
-        var today = DateTime.Now;
-        var currentSprint = await _appDbContext.Sprints
-            .FirstOrDefaultAsync(s => s.ProjectId == projectId 
-                                             && s.DateStart <= today
-                                             && s.DateEnd >= today);
-        return currentSprint?.Id;
     }
 
     public async Task<TaskDataDto> GetTaskAsync(Guid taskId)
@@ -136,6 +136,98 @@ public sealed class TaskService : ITaskService
         await UpdateAndSaveTaskAsync(task);
     }
 
+    public async Task<IEnumerable<TaskShortInfoDto>> GetSprintTasksAsync()
+    {
+        var sprintTasks = new List<TaskShortInfoDto>();
+        var sprintId = await GetCurrentSprintIdAsync();
+        if (sprintId is not null)
+        {
+            sprintTasks = await _appDbContext.Tasks
+                .Where(t => t.SprintId == sprintId.Value)
+                .Include(t => t.State)
+                .Include(t => t.Type)
+                .Select(t => new TaskShortInfoDto(t.Id, t.Title, t.State.Name, t.Type.Name, t.PerformerId, t.CreatorId))
+                .ToListAsync();
+        }
+
+        return sprintTasks;
+    }
+
+    public async Task SetEstimationManyAsync(List<EstimationDto> estimationDtos)
+    {
+        var estimatedTasks = new List<Models.Task>();
+        foreach(var estimation in estimationDtos)
+        {
+            var task = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == estimation.TaskId);
+            task.EstimationInPoints = estimation.EstimationInPoints;
+            task.EstimationInTime = estimation.EstimationInTime;
+            estimatedTasks.Add(task);
+        }
+        _appDbContext.Tasks.UpdateRange(estimatedTasks);
+        await TrySaveChangesAsync();
+    }
+
+    public async Task SetEstimationSingleAsync(EstimationDto estimationDto)
+    {
+        var task = await GetTaskByIdAsync(estimationDto.TaskId);
+        task.EstimationInPoints = estimationDto.EstimationInPoints;
+        task.EstimationInTime = estimationDto.EstimationInTime;
+        _appDbContext.Tasks.Update(task);
+        await TrySaveChangesAsync();
+    }
+
+    public async Task SetStoryManyAsync(List<Guid> taskIds)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var currentSprint = await GetCurrentSprintIdAsync(projectId);
+        var tasks = await _appDbContext.Tasks.Where(t => taskIds.Contains(t.Id)).ToListAsync();
+        foreach(var task in tasks)
+        {
+            task.SprintId = currentSprint;
+        }
+        _appDbContext.Tasks.UpdateRange(tasks);
+        await TrySaveChangesAsync();
+    }
+
+    public async Task SetStorySingleAsync(Guid taskId)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var currentSprint = await GetCurrentSprintIdAsync(projectId);
+        var task = await GetTaskByIdAsync(taskId);
+        task.SprintId = currentSprint;
+        _appDbContext.Tasks.Update(task);
+        await TrySaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<TaskShortInfoDto>> GetTasksWithStatesAsync(List<Guid>? states)
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var tasksQuery = _appDbContext.Tasks
+                .Include(t => t.State)
+                .Include(t => t.Type)
+                .Where(t => t.ProjectId == projectId);
+
+        if(states is not null && states.Any())
+        {
+            tasksQuery = tasksQuery.Where(t=> states.Contains(t.State.Id));
+        }
+
+        return await tasksQuery
+                .Select(t => new TaskShortInfoDto(t.Id, t.Title, t.State.Name, t.Type.Name, t.PerformerId, t.CreatorId))
+                .ToListAsync();
+    }
+
+    private async Task<Guid?> GetCurrentSprintIdAsync(Guid? projectId = null)
+    {
+        projectId ??= await GetRequestingUsersProjectIdAsync();
+        var today = DateTime.Now;
+        var currentSprint = await _appDbContext.Sprints
+            .FirstOrDefaultAsync(s => s.ProjectId == projectId
+                                             && s.DateStart <= today
+                                             && s.DateEnd >= today);
+        return currentSprint?.Id;
+    }
+
     private async Task UpdateAndSaveTaskAsync(Models.Task task)
     {
         _appDbContext.Tasks.Update(task);
@@ -160,23 +252,6 @@ public sealed class TaskService : ITaskService
         return await _appDbContext.Tasks.FirstOrDefaultAsync(t=>t.Id == taskId);
     }
 
-    public async Task<IEnumerable<TaskShortInfoDto>> GetSprintTasksAsync()
-    {
-        var sprintTasks = new List<TaskShortInfoDto>();
-        var sprintId = await GetCurrentSprintIdAsync();
-        if (sprintId is not null)
-        {
-            sprintTasks = await _appDbContext.Tasks
-                .Where(t => t.SprintId == sprintId.Value)
-                .Include(t => t.State)
-                .Include(t => t.Type)
-                .Select(t => new TaskShortInfoDto(t.Id, t.Title, t.State.Name, t.Type.Name, t.PerformerId, t.CreatorId))
-                .ToListAsync();
-        }
-
-        return sprintTasks;
-    }
-
     private Guid? GetRequestingIdentityId()
     {
         var identityIdString = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -185,9 +260,9 @@ public sealed class TaskService : ITaskService
                             : null;
     }
 
-    private async Task<Guid?> GetRequestingUsersProjectIdAsync()
+    private async Task<Guid?> GetRequestingUsersProjectIdAsync(Guid? identityId = null)
     {
-        var identityId = GetRequestingIdentityId();
+        identityId ??= GetRequestingIdentityId();
         if (identityId is null)
         {
             return null;

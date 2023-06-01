@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Dtos.Task;
 using Services.Task;
 using Microsoft.AspNetCore.Authorization;
+using ProjectManagementService.Dtos.Estimation;
 
 [Route("api/[controller]"), Authorize]
 [ApiController]
@@ -106,6 +107,21 @@ public sealed class TaskController : ControllerBase
         }
     }
 
+    [HttpGet]
+    [Route(nameof(GetTasksWithStatesAsync))]
+    public async Task<ActionResult> GetTasksWithStatesAsync(List<Guid>? states)
+    {
+        try
+        {
+            var tasks = await _taskService.GetTasksWithStatesAsync(states);
+            return Ok(tasks);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
     [HttpPut]
     [Route(nameof(ChangeStateAsync))]
     public async Task<ActionResult> ChangeStateAsync(Guid taskId, Guid statusId)
@@ -143,6 +159,66 @@ public sealed class TaskController : ControllerBase
         try
         {
             await _taskService.ChangePerformerAsync(taskId, performerId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
+    [Route(nameof(SetEstimationManyAsync))]
+    public async Task<ActionResult> SetEstimationManyAsync(List<EstimationDto> estimationDtos)
+    {
+        try
+        {
+            await _taskService.SetEstimationManyAsync(estimationDtos);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
+    [Route(nameof(SetEstimationSingleAsync))]
+    public async Task<ActionResult> SetEstimationSingleAsync(EstimationDto estimationDto)
+    {
+        try
+        {
+            await _taskService.SetEstimationSingleAsync(estimationDto);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
+    [Route(nameof(SetStoryManyAsync))]
+    public async Task<ActionResult> SetStoryManyAsync(List<Guid> taskIds)
+    {
+        try
+        {
+            await _taskService.SetStoryManyAsync(taskIds);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
+    [Route(nameof(SetStorySingleAsync))]
+    public async Task<ActionResult> SetStorySingleAsync(Guid taskIds)
+    {
+        try
+        {
+            await _taskService.SetStorySingleAsync(taskIds);
             return Ok();
         }
         catch (Exception ex)

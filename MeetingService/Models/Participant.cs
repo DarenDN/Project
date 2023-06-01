@@ -1,7 +1,7 @@
 ﻿namespace MeetingService.Models;
 
-public sealed class Participant
+public class Participant
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
+    Guid Id { get; set; }
+    string ConnectionId { get; set; }
 }

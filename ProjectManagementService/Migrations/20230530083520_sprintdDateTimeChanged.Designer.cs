@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjectManagementService.Data;
@@ -12,9 +13,10 @@ using ProjectManagementService.Data;
 namespace ProjectManagementService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230530083520_sprintdDateTimeChanged")]
+    partial class sprintdDateTimeChanged
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,10 +117,10 @@ namespace ProjectManagementService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("DateEnd")
-                        .HasColumnType("date");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("DateStart")
-                        .HasColumnType("date");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -180,9 +182,6 @@ namespace ProjectManagementService.Migrations
                         .HasColumnType("interval");
 
                     b.Property<Guid?>("PerformerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("SprintId")

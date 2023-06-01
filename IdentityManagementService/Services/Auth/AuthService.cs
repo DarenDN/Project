@@ -121,7 +121,7 @@ public class AuthService : IAuthService
 
         if (refreshToken is null)
         {
-            throw new ArgumentNullException(nameof(refreshToken));
+            throw new SecurityTokenExpiredException();
         }
 
         var identity = await _appDbContext.Identities
@@ -131,7 +131,7 @@ public class AuthService : IAuthService
                 && i.RefreshToken.Token == refreshToken);
         if (identity is null)
         {
-            throw new ArgumentNullException();
+            throw new SecurityTokenExpiredException();
         }
 
         var oldRefreshToken = identity.RefreshToken;

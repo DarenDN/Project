@@ -1,6 +1,7 @@
 ﻿namespace ProjectManagementService.Models;
 
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Data;
 
 // split by models eg Task and TaskInfo
@@ -12,8 +13,10 @@ public sealed class Task : DbEntity
     public string Title { get; set; }
 
     [Required]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime CreateTime { get; set; } = DateTime.Now;
     [Required]
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime UpdateTime { get; set; } = DateTime.Now;
     [Required]
     public Guid CreatorId { get; set; }
@@ -29,6 +32,9 @@ public sealed class Task : DbEntity
     public UserStory? CorrespondingUserStory { get; set; } = null!;
 
     public Guid? SprintId { get; set; } = null!;
+
+    [Required]
+    public Guid ProjectId { get; set; }
 
     [Required]
     public TaskType Type { get; set; }
