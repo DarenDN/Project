@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using Hubs;
-using Dtos;
 using CacheService;
+using Dtos;
+using Enums;
+using System.Collections.Generic;
 
-public sealed class MeetingService
+public sealed class MeetingService : IMeetingService
 {
     private readonly ICacheService _cacheService;
     private readonly IHttpContextAccessor _httpContextAccesor;
@@ -23,7 +25,77 @@ public sealed class MeetingService
         _httpContextAccesor = httpContextAccesor;
     }
 
-    public async Task ChangeActiveTaskAsync(Guid taskId, string meetingCode)
+    public async Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string meetingCode)
+    {
+        var userId = GetRequestingUserId();
+        var connectionId = GetRequestingConnectionId();
+        await _cacheService.AddCasheUserConnectionAsync(meetingCode, connectionId, userId.Value);
+        var userCachedEvaluations = await _cacheService.GetUserCachedEvaluationsAsync(meetingCode, userId.Value);
+        await _meetingHubContext.Clients
+            .GroupExcept(
+                meetingCode,
+                connectionId)
+            .UserJoinedMeetingAsync(userCachedEvaluations);
+        var meetingState = await _cacheService.GetCacheMeetingStateAsync(meetingCode);
+        return meetingState;
+    }
+
+    public async Task<MeetingStateDto> GetCurrentMeetingStateAsync(string meetingCode)
+    {
+        var meetingState = await _cacheService.GetCacheMeetingStateAsync(meetingCode);
+        return meetingState;
+    }
+
+    public async Task UpdateUserEvaluationAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto)
+    {
+        var userId = GetRequestingUserId();
+        var connectionId = GetRequestingConnectionId();
+        await _cacheService.SetEvaluationAsync(meetingCode, userId.Value, evaluationDto);
+        var participantEvaluationDto = new ParticipantEvaluationDto(userId.Value, new EvaluationDto(evaluationDto.EvaluationPoints, evaluationDto.EvaluationTime));
+        await _meetingHubContext.Clients
+            .GroupExcept(
+                meetingCode,
+                connectionId)
+            .UpdateUserEvaluationAsync(participantEvaluationDto);
+    }
+
+    public async Task LeaveMeetingAndNotifyAsync(string meetingCode)
+    {
+        var userId = GetRequestingUserId();
+        await _cacheService.RemoveCasheUserConnectionAsync(meetingCode, userId.Value);
+        await _meetingHubContext.Clients
+            .GroupExcept(
+                meetingCode,
+                GetRequestingConnectionId())
+            .UserLeavedMeetingAsync(userId.Value);
+    }
+
+    public async Task DeleteMeetingAsync(string meetingCode, Guid projectId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<string> GetMeetingAsync(Guid projectId)
+    {
+        var meetingCode = await _cacheService.GetMeetingCodeOrNullAsync(projectId);
+        return meetingCode;
+    }
+
+    public async Task<string> CreateMeetingAndJoinAsync(Guid projectId, Dictionary<Guid, int> tasks)
+    {
+        return await CreateMeetingAndJoinAsync(projectId, ParseBacklogType(tasks));
+    }
+
+    public async Task<string> CreateMeetingAndJoinAsync(Guid projectId, Dictionary<Guid, BacklogType> tasks)
+    {
+        var userId = GetRequestingUserId();
+        var connectionId = GetRequestingConnectionId();
+        var code = await _cacheService.CreateCacheMeetingAsync(projectId, tasks);
+        await _cacheService.AddCasheUserConnectionAsync(code, connectionId, userId.Value);
+        return code;
+    }
+
+    public async Task ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId)
     {
         var currentTaskDto = await _cacheService.SetActiveTaskAsync(meetingCode, taskId);
         await _meetingHubContext.Clients
@@ -33,86 +105,63 @@ public sealed class MeetingService
             .ChangeActiveTaskAsync(currentTaskDto);
     }
 
-    public async Task ShowEvaluationsAsync(string group, Guid taskId)
+    public async Task ShowEvaluationsAsync(string meetingCode, Guid taskId)
     {
-        await _cacheService.SetTaskOpenedAsync(group, taskId);
+        await _cacheService.SetEvaluationsOpenAsync(meetingCode, taskId);
         await _meetingHubContext.Clients
             .GroupExcept(
-                group,
+                meetingCode,
                 GetRequestingConnectionId())
             .ShowEvaluationsAsync(taskId);
     }
 
-    public async Task ReevaluateAsync(string group, Guid taskId)
+    public async Task ReevaluateAsync(string meetingCode, Guid taskId)
     {
-        await _cacheService.DeleteTaskEvaluationsAsync(group, taskId);
-        // TODO TaskStateChangedAsync
+        await _cacheService.DeleteTaskEvaluationsAsync(meetingCode, taskId);
+
         await _meetingHubContext.Clients
             .GroupExcept(
-                group,
+                meetingCode,
                 GetRequestingConnectionId())
             .ReevaluateAsync(taskId);
     }
 
-    public async Task UpdateEvaluationAsync(string group, TaskEvaluationDto evaluationDto)
+    public async Task EvaluateTaskFinalAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto)
     {
-        var userId = GetRequestingUserId();
-        // TODO TaskStateChangedAsync
-        var currentTaskStateDto = await _cacheService.SetEvaluationAsync(group, userId.Value, evaluationDto);
+        await _cacheService.SetEvaluationFinalAsync(meetingCode, evaluationDto);
         await _meetingHubContext.Clients
             .GroupExcept(
-                group,
+                meetingCode,
                 GetRequestingConnectionId())
-            .EvaluateTaskAsync(currentTaskStateDto);
+            .EvaluateTaskFinalAsync(evaluationDto);
     }
 
-    public async Task EvaluateTaskFinalAsync(string group, TaskEvaluationDto evaluationDto)
+    public async Task ChangeTaskBacklogTypeAndNotifyAsync(string meetingCode, Guid taskId, BacklogType backlogType)
     {
-        var currentTaskStateDto = await _cacheService.SetEvaluationFinalAsync(group, evaluationDto);
-        // TODO TaskStateChangedAsync
+        await _cacheService.ChangeTaskBacklogTypeAsync(meetingCode, taskId, backlogType);
         await _meetingHubContext.Clients
             .GroupExcept(
-                group,
+                meetingCode,
                 GetRequestingConnectionId())
-            .EvaluateTaskFinalAsync(currentTaskStateDto);
+            .ChangeTaskBacklogTypeAsync(taskId, backlogType);
+
     }
 
-    public async Task RemoveFromSprintBacklogAsync(Guid taskId)
+    public async Task<IEnumerable<TaskSprintEvaluationInfo>> GetFinalEvaluationsAsync(string meetingCode)
     {
-        throw new NotImplementedException();
+        var finalTaskStatesAsync = await _cacheService.GetFinalEvaluationsAsync(meetingCode);
+        return finalTaskStatesAsync;
     }
 
-    public async Task AddToSprintBacklogAsync(Guid taskId)
+    private Dictionary<Guid, BacklogType> ParseBacklogType(Dictionary<Guid, string> taskBacklogDictionary)
     {
-        throw new NotImplementedException();
+        return taskBacklogDictionary
+            .Select(t => new { Key = t.Key, Value = Enum.Parse<BacklogType>(t.Value) })
+            .ToDictionary(key => key.Key, value => value.Value);
     }
-
-    public async Task JoinMeetingAsync(string group)
+    private Dictionary<Guid, BacklogType> ParseBacklogType(Dictionary<Guid, int> taskBacklogDictionary)
     {
-        var userId = GetRequestingUserId();
-        var connectionId = GetRequestingConnectionId();
-        await _cacheService.AddCasheUserConnectionAsync(group, connectionId, userId.Value);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                group,
-                connectionId)
-            .JoinMeetingAsync(userId.Value);
-    }
-
-    public async Task LeaveMeetingAsync(string group)
-    {
-        var userId = GetRequestingUserId();
-        await _cacheService.RemoveCasheUserConnectionAsync(group, userId.Value);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                group,
-                GetRequestingConnectionId())
-            .LeaveMeetingAsync(userId.Value);
-    }
-
-    public async Task DeleteMeetingAsync(Guid projectId)
-    {
-        throw new NotImplementedException();
+        return taskBacklogDictionary.ToDictionary(k=>k.Key, v=> (BacklogType)v.Value);
     }
 
     private string GetRequestingConnectionId()

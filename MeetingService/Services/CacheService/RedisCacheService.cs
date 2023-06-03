@@ -5,46 +5,61 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Models;
 using Dtos;
+using Enums;
 
 public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _distributedCache;
     private readonly DistributedCacheEntryOptions _distributedCacheEntryOptions = new DistributedCacheEntryOptions
     {
-        // TODO
-    }; 
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
+        SlidingExpiration = TimeSpan.FromHours(1),
+    };
     public RedisCacheService(IDistributedCache distributedCache)
     {
         _distributedCache = distributedCache;
     }
 
-    public async Task CreateCacheMeetingAsync(string meetingCode, List<Guid?> tasks)
+    public async Task<string?> GetMeetingCodeOrNullAsync(Guid projectId)
+    {
+        var meeting = await GetMeetingFromCacheAsync(projectId);
+        return meeting?.MeetingCode;
+    }
+
+    public async Task<string> CreateCacheMeetingAsync(Guid projectId, Dictionary<Guid, BacklogType> tasks)
     {
         var taskSelection = new TasksSelection
         {
             Code = Guid.NewGuid().ToString(),
-            ProjectBacklog = tasks.ToHashSet()
+            Backlog = tasks
         };
 
-        var evaluation = new Evaluations { Code = Guid.NewGuid().ToString() };
+        var evaluation = new Evaluations
+        {
+            Code = Guid.NewGuid().ToString()
+        };
+
         var meeting = new Meeting
         {
-            MeetingCode = meetingCode,
+            MeetingCode = projectId.ToString(),
             TaskSelectionCode = taskSelection.Code,
             EvaluationsCode = evaluation.Code
         };
+
         var tasksSave = new Task[]
         {
-            SaveMeetingChangesAsync(meetingCode, meeting),
+            SaveMeetingChangesAsync(meeting.MeetingCode, meeting),
             SaveEvaluationsChangesAsync(evaluation.Code, evaluation),
             SaveTaskSelectionChangesAsync(taskSelection.Code, taskSelection)
         };
+
         foreach (var taskSave in tasksSave)
         {
             taskSave.Start();
         }
         var awaiter = Task.WhenAll(tasksSave);
         await awaiter;
+        return meeting.MeetingCode;
     }
 
     public async Task DeleteCasheMeetingAsync(string meetingCode)
@@ -54,7 +69,7 @@ public class RedisCacheService : ICacheService
         {
              _distributedCache.RemoveAsync(meeting.EvaluationsCode),
              _distributedCache.RemoveAsync(meeting.TaskSelectionCode),
-             _distributedCache.RemoveAsync(meetingCode)
+             _distributedCache.RemoveAsync(meeting.MeetingCode)
         };
         foreach (var task in tasks)
         {
@@ -65,12 +80,18 @@ public class RedisCacheService : ICacheService
         await awaiter;
     }
 
-    public async Task UpdateCacheMeetingBacklogAsync(string meetingCode, List<Guid?> tasks)
+    public async Task UpdateMeetingBacklogAsync(string meetingCode, Dictionary<Guid, BacklogType> tasks)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var taskSelectionCode = meeting.TaskSelectionCode;
         var taskSelection = await GetTaskSelectionFromCacheAsync(taskSelectionCode);
-        taskSelection.ProjectBacklog = tasks.ToHashSet();
+        var backlog = taskSelection.Backlog.Keys;
+        var addToBacklog = tasks.Where(t => !backlog.Contains(t.Key));
+        foreach(var task in addToBacklog)
+        {
+            taskSelection.Backlog.Add(task.Key, task.Value);
+        }
+
         await SaveTaskSelectionChangesAsync(taskSelectionCode, taskSelection);
     }
 
@@ -78,14 +99,14 @@ public class RedisCacheService : ICacheService
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         meeting.Participants.Add(userId, connectionId);
-        await SaveMeetingChangesAsync(meetingCode, meeting);
+        await SaveMeetingChangesAsync(meeting.MeetingCode, meeting);
     }
 
     public async Task RemoveCasheUserConnectionAsync(string meetingCode, Guid userId)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         meeting.Participants.Remove(userId);
-        await SaveMeetingChangesAsync(meetingCode, meeting);
+        await SaveMeetingChangesAsync(meeting.MeetingCode, meeting);
     }
 
     public async Task<IEnumerable<string>> GetCasheUserConnectionAsync(string meetingCode)
@@ -109,7 +130,7 @@ public class RedisCacheService : ICacheService
         var tasksSelection = await GetTaskSelectionFromCacheAsync(taskSelectionCode);
         tasksSelection.ActiveTask = taskId;
         await SaveTaskSelectionChangesAsync(taskSelectionCode, tasksSelection);
-        var taskOpened = tasksSelection.TasksOpened.TryGetValue(taskId, out var opened)
+        var taskOpened = tasksSelection.TasksEvaluationsOpen.TryGetValue(taskId, out var opened)
             ? opened
             : false;
         var evaluationDto = evaluations.TaskFinalEvaluations.TryGetValue(taskId, out var evaluation)
@@ -123,35 +144,39 @@ public class RedisCacheService : ICacheService
                         Evaluation = evalsByUsers.Value.FirstOrDefault(e => e.Id == taskId)
                     })
             .ToDictionary(
-                    key => key.User, 
+                    key => key.User,
                     value => value.Evaluation == null
                                          ? null
                                          : new EvaluationDto(
-                                             value.Evaluation.EvaluationPoints, 
+                                             value.Evaluation.EvaluationPoints,
                                              value.Evaluation.EvaluationTime));
         var taskDto = new CurrentTaskStateDto(
-            taskId, 
-            taskOpened, 
+            taskId,
+            taskOpened,
             evaluationDto,
             evaluationByUsers);
 
-        return await GetCurrentTaskStateDtoAsync(taskId, meetingCode, tasksSelection, evaluations);
+        return await GetCurrentTaskStateDtoAsync(taskId, meeting.MeetingCode, tasksSelection, evaluations);
     }
 
-    public async Task SetTaskOpenedAsync(string meetingCode, Guid taskId)
+    public async Task SetEvaluationsOpenAsync(string meetingCode, Guid taskId)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
-        var selections = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
-        if (!selections.TasksOpened.ContainsKey(taskId))
+        var taskSelectionCode = meeting.TaskSelectionCode;
+        var selections = await GetTaskSelectionFromCacheAsync(taskSelectionCode);
+        if (!selections.TasksEvaluationsOpen.ContainsKey(taskId))
         {
-            selections.TasksOpened.Add(taskId, true);
-            return;
+            selections.TasksEvaluationsOpen.Add(taskId, true);
+        }
+        else
+        {
+            selections.TasksEvaluationsOpen[taskId] = true;
         }
 
-        selections.TasksOpened[taskId] = true;
+        await SaveTaskSelectionChangesAsync(taskSelectionCode, selections);
     }
 
-    public async Task<CurrentTaskStateDto> SetEvaluationAsync(string meetingCode, Guid userId, TaskEvaluationDto evaluationDto)
+    public async Task SetEvaluationAsync(string meetingCode, Guid userId, TaskEvaluationDto evaluationDto)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
@@ -186,26 +211,36 @@ public class RedisCacheService : ICacheService
                 } });
         }
         await SaveEvaluationsChangesAsync(meeting.EvaluationsCode, evaluations);
-
-        return await GetCurrentTaskStateDtoAsync(evaluationDto.TaskId, meetingCode, evaluations: evaluations);
     }
 
-    public async Task<CurrentTaskStateDto> SetEvaluationFinalAsync(string meetingCode, TaskEvaluationDto evaluationDto)
+    public async Task SetEvaluationFinalAsync(string meetingCode, TaskEvaluationDto evaluationDto)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var evaluationsCode = meeting.EvaluationsCode;
         var taskId = evaluationDto.TaskId;
         var evaluations = await GetEvaluationsFromCacheAsync(evaluationsCode);
-        evaluations.TaskFinalEvaluations.Add(
-            taskId, 
-            new TaskEvaluation 
-            { 
+        if(evaluations.TaskFinalEvaluations.ContainsKey(taskId))
+        {
+            evaluations.TaskFinalEvaluations[taskId] = new TaskEvaluation
+            {
+                Id = taskId,
+                EvaluationPoints = evaluationDto.EvaluationPoints,
+                EvaluationTime = evaluationDto.EvaluationTime
+            };
+        }
+        else
+        {
+            evaluations.TaskFinalEvaluations.Add(
+            taskId,
+            new TaskEvaluation
+            {
                 Id = taskId,
                 EvaluationPoints = evaluationDto.EvaluationPoints,
                 EvaluationTime = evaluationDto.EvaluationTime
             });
+        }
+        
         await SaveEvaluationsChangesAsync(evaluationsCode, evaluations);
-        return await GetCurrentTaskStateDtoAsync(taskId, meetingCode, evaluations: evaluations);
     }
 
     public async Task<MeetingStateDto> GetCacheMeetingStateAsync(string meetingCode)
@@ -213,14 +248,21 @@ public class RedisCacheService : ICacheService
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var taskSelection = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
         var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
+        var activeTaskId = taskSelection.ActiveTask.Value;
+        var finalEvaluation = taskSelection.ActiveTask is not null
+                && evaluations.TaskFinalEvaluations.ContainsKey(activeTaskId) 
+                ? evaluations.TaskFinalEvaluations[activeTaskId]
+                : null;
+
         var meetingStateDto = new MeetingStateDto(
             taskSelection.ActiveTask,
-            taskSelection.SprintBacklog,
-            taskSelection.ProjectBacklog,
+            finalEvaluation,
+            taskSelection.Backlog,
             meeting.Participants.Keys,
-            evaluations.TaskFinalEvaluations,
-            evaluations.EvaluationsByParticipant
+            evaluations.EvaluationsByParticipant.ToDictionary(key => key.Key, value => value.Value.FirstOrDefault(e=>e.Id == activeTaskId))
             );
+
+
         return meetingStateDto;
     }
 
@@ -231,7 +273,7 @@ public class RedisCacheService : ICacheService
         var selection = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
         evaluation.TaskFinalEvaluations.Remove(taskId);
         evaluation.EvaluationsByParticipant.Clear();
-        selection.TasksOpened.Remove(taskId);
+        selection.TasksEvaluationsOpen.Remove(taskId);
         var tasks = new Task[]
         {
             SaveEvaluationsChangesAsync(meeting.EvaluationsCode, evaluation),
@@ -245,6 +287,43 @@ public class RedisCacheService : ICacheService
         await awaiter;
     }
 
+    public async Task<ParticipantEvaluationDto> GetUserCachedEvaluationsAsync(string meetingCode, Guid userId)
+    {
+        var meeting = await GetMeetingFromCacheAsync(meetingCode);
+        var selection = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
+        var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
+        if(evaluations.EvaluationsByParticipant.TryGetValue(userId, out var evaluationsByUser))
+        {
+            var currentTaskEvaluation = evaluationsByUser.FirstOrDefault(e=>e.Id == selection.ActiveTask);
+            var participantEvaluation = new ParticipantEvaluationDto(
+                userId,
+                currentTaskEvaluation == null 
+                                    ? null
+                                    : new EvaluationDto(currentTaskEvaluation.EvaluationPoints, currentTaskEvaluation.EvaluationTime));
+            return participantEvaluation;
+        }
+        evaluations.EvaluationsByParticipant.Add(userId, new List<TaskEvaluation>());
+        return new ParticipantEvaluationDto(
+            userId, 
+            null);
+    }
+
+    public async Task ChangeTaskBacklogTypeAsync(string meetingCode, Guid taskId, BacklogType backlogType)
+    {
+        var meeting = await GetMeetingFromCacheAsync(meetingCode);
+        var taskSelectionsCode = meeting.TaskSelectionCode;
+        var selections = await GetTaskSelectionFromCacheAsync(taskSelectionsCode);
+        if(selections.Backlog.ContainsKey(taskId))
+        {
+            selections.Backlog[taskId] = backlogType;
+        }
+        else
+        {
+            selections.Backlog.Add(taskId, backlogType);
+        }
+        await SaveTaskSelectionChangesAsync(taskSelectionsCode, selections);
+    }
+
     private async Task<CurrentTaskStateDto> GetCurrentTaskStateDtoAsync(
         Guid taskId,
         string meetingCode,
@@ -254,7 +333,7 @@ public class RedisCacheService : ICacheService
         tasksSelection ??= await GetTaskSelectionFromCacheAsync(meetingCode);
         evaluations ??= await GetEvaluationsFromCacheAsync(meetingCode);
 
-        var taskOpened = tasksSelection.TasksOpened.TryGetValue(taskId, out var opened)
+        var taskOpened = tasksSelection.TasksEvaluationsOpen.TryGetValue(taskId, out var opened)
             ? opened
             : false;
         var evaluationDto = evaluations.TaskFinalEvaluations.TryGetValue(taskId, out var evaluation)
@@ -283,9 +362,18 @@ public class RedisCacheService : ICacheService
         return taskDto;
     }
 
+    private async Task<Meeting> GetMeetingFromCacheAsync(Guid projectId)
+    {
+        return await GetMeetingFromCacheAsync(projectId.ToString());
+    }
+
     private async Task<Meeting> GetMeetingFromCacheAsync(string meetingCode)
     {
         var meetingString = await _distributedCache.GetStringAsync(meetingCode);
+        if (string.IsNullOrWhiteSpace(meetingString))
+        {
+            return null;
+        }
         var meeting = JsonSerializer.Deserialize<Meeting>(meetingString);
         return meeting;
     }
@@ -306,16 +394,44 @@ public class RedisCacheService : ICacheService
 
     private async Task SaveMeetingChangesAsync(string meetingCode, Meeting meeting)
     {
+        await _distributedCache.RefreshAsync(meetingCode);
         await _distributedCache.SetStringAsync(meetingCode, JsonSerializer.Serialize(meeting), _distributedCacheEntryOptions);
     }
 
     private async Task SaveTaskSelectionChangesAsync(string taskSelectionCode, TasksSelection taskSelection)
     {
+        await _distributedCache.RefreshAsync(taskSelectionCode);
         await _distributedCache.SetStringAsync(taskSelectionCode, JsonSerializer.Serialize(taskSelection), _distributedCacheEntryOptions);
     }
 
     private async Task SaveEvaluationsChangesAsync(string evaluationCode, Evaluations evaluations)
     {
+        await _distributedCache.RefreshAsync(evaluationCode);
         await _distributedCache.SetStringAsync(evaluationCode, JsonSerializer.Serialize(evaluations), _distributedCacheEntryOptions);
+    }
+
+    public async Task<IEnumerable<TaskSprintEvaluationInfo>> GetFinalEvaluationsAsync(string meetingCode)
+    {
+        var meeting = await GetMeetingFromCacheAsync(meetingCode);
+        var selections = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
+        var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
+        var taskSprintEvaluationInfos = new List<TaskSprintEvaluationInfo>();
+        foreach (var selection in selections.Backlog)
+        {
+            if(selection.Value == BacklogType.Project)
+            {
+                taskSprintEvaluationInfos.Add(new TaskSprintEvaluationInfo(selection.Key, false, null, null));
+                continue;
+            }
+            
+            if(evaluations.TaskFinalEvaluations.TryGetValue(selection.Key, out var finalEvaluation) && finalEvaluation is not null)
+            {
+                taskSprintEvaluationInfos.Add(new TaskSprintEvaluationInfo(selection.Key, true, finalEvaluation.EvaluationPoints, finalEvaluation.EvaluationTime));
+                continue;
+            }
+
+            taskSprintEvaluationInfos.Add(new TaskSprintEvaluationInfo(selection.Key, true, null, null));
+        }
+        return taskSprintEvaluationInfos;
     }
 }

@@ -1,23 +1,21 @@
 ﻿namespace MeetingService.Hubs;
 
 using Dtos;
+using MeetingService.Enums;
 
 public interface IMeetingHub
 {
+    Task UserJoinedMeetingAsync(ParticipantEvaluationDto participantEvaluationDto);
+    Task UserLeavedMeetingAsync(Guid participantId);
+    Task DeleteMeetingAsync();
+
     // TODO Task TaskStateChangedAsync(CurrentTaskStateDto currentTaskDto)
     Task ChangeActiveTaskAsync(CurrentTaskStateDto currentTaskDto);
-    Task EvaluateTaskAsync(CurrentTaskStateDto evaluationDto);
-    Task EvaluateTaskFinalAsync(CurrentTaskStateDto finalEvaluation);
-    Task ReevaluateAsync(CurrentTaskStateDto taskId);
-    Task UpdateEvaluationAsync(Guid participantId, EvaluationDto evaluationDto);
+    Task ReevaluateAsync(Guid taskId);
     //
+    Task UpdateUserEvaluationAsync(ParticipantEvaluationDto participantEvaluationDto);
+    Task EvaluateTaskFinalAsync(TaskEvaluationDto evaluationDto);
     Task ShowEvaluationsAsync(Guid taskId);
 
-    Task RemoveFromSprintBacklogAsync(Guid taskId);
-    Task AddToSprintBacklogAsync(Guid taskId);
-
-    Task JoinMeetingAsync(Guid participantId);
-    Task LeaveMeetingAsync(Guid participantId);
-
-    Task DeleteMeetingAsync();
+    Task ChangeTaskBacklogTypeAsync(Guid taskId, BacklogType backlogType);
 }

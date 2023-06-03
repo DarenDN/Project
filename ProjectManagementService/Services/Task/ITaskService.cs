@@ -8,6 +8,8 @@ public interface ITaskService
     Task CreateTaskAsync(CreateTaskDto newTaskDto);
     Task UpdateTaskAsync(TaskUpdateDto taskDto);
     Task DeleteTaskAsync(Guid taskId);
+    Task<Dictionary<Guid, int>> GetTasksBacklogAsync();
+    Task UpdateTasksAsync(IEnumerable<TaskSprintEvaluationInfo> taskSprintInfos);
     Task<TaskDataDto> GetTaskAsync(Guid taskId);
     Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync();
     Task<IEnumerable<TaskShortInfoDto>> GetSprintTasksAsync();
