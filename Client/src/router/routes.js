@@ -18,6 +18,10 @@ const routes = [
       {
         path: "/home/dashboard",
         component: () => import("pages/DashboardPage.vue"),
+      },
+      {
+        path: "/home/emptySprint",
+        component: () => import("pages/EmptySprintPage.vue"),
       }
     ],
   },

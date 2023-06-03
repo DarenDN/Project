@@ -4,7 +4,7 @@
       <h6 class="column-header">{{ taskType }}</h6>
       <div class="content">
         <div
-          class="card-wparrer"
+          class="card-wrapper"
           v-for="task in tasks.filter((x) => x.type === taskType)"
           :key="task.name"
         >
@@ -27,10 +27,39 @@
       </div>
     </div>
   </div>
+
+  <q-fab
+    class="fab"
+    vertical-actions-align="center"
+    color="primary"
+    icon="keyboard_arrow_up"
+    direction="up"
+  >
+    <q-fab-action
+      color="primary"
+      @click="createDialog = true"
+      icon="add_circle"
+      label="Create new"
+    />
+  </q-fab>
+  <TaskCreationWindow v-model="createDialog"></TaskCreationWindow>
 </template>
 
 <script setup>
-const taskTypes = ["development", "review", "done"];
+import { ref } from "vue";
+import { store } from "stores/store";
+import { useRouter } from "vue-router";
+import TaskCreationWindow from 'src/components/windows/TaskCreationWindow.vue'
+
+const router = useRouter();
+
+const createDialog = ref(false);
+
+if (!store.sprint) {
+  router.push("/home/emptySprint");
+}
+
+const taskTypes = store?.sprint?.taskTypes || ['new', 'done'];
 const taskTitle = "Task title";
 const description = "some description, that makes no sense";
 
@@ -63,6 +92,18 @@ const tasks = [
     name: "kek7",
     type: "done",
   },
+  {
+    name: "kek8",
+    type: "new",
+  },
+  {
+    name: "kek9",
+    type: "keking",
+  },
+  {
+    name: "kek10",
+    type: "rofl",
+  },
 ];
 </script>
 
@@ -84,8 +125,13 @@ const tasks = [
 .column-header {
   margin: 5px;
 }
-.card-wparrer {
+.card-wrapper {
   width: 100%;
   padding: 20px;
+}
+.fab {
+  position: absolute;
+  bottom: 50px;
+  right: 50px;
 }
 </style>

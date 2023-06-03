@@ -1,8 +1,8 @@
 <template>
   <div class="container">
-    <h6 class="title">Sprint Name</h6>
+    <h6 class="title">{{ sprintName }}</h6>
     <div class="q-pa-md row items-start q-gutter-md">
-      <q-card class="card text-white" style="background-color: #1976d2">
+      <q-card class="card" bordered>
         <q-card-section>
           <div class="text-h6">Date created</div>
         </q-card-section>
@@ -12,7 +12,7 @@
         <q-card-section class="q-pt-none">{{ dateCreated }}</q-card-section>
       </q-card>
 
-      <q-card class="card text-white" style="background-color: #1976d2">
+      <q-card class="card" bordered>
         <q-card-section>
           <div class="text-h6">Start date</div>
         </q-card-section>
@@ -22,7 +22,7 @@
         <q-card-section class="q-pt-none"> {{ dateStart }}</q-card-section>
       </q-card>
 
-      <q-card class="card text-white" style="background-color: #1976d2">
+      <q-card class="card" bordered>
         <q-card-section>
           <div class="text-h6">End date</div>
         </q-card-section>
@@ -37,20 +37,27 @@
       <q-separator inset />
     </div>
     <p class="text-h6">
-      {{ description }}
+      {{ discription }}
     </p>
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import { store } from "stores/store";
+import { useRouter } from "vue-router";
 
-const description = ref(
-  "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Adipisci consequatur voluptatem recusandae suscipit, fugit blanditiis aut,accusamus facilis neque cupiditate similique! Maiores, totam natus exmolestiae repellendus deleniti eum delectus."
-);
-const dateCreated = ref("20.12.2023");
-const dateStart = ref("20.12.2023");
-const dateEnd = ref("20.12.2023");
+const router = useRouter();
+
+if (!store.sprint) {
+  router.push("/home/emptySprint");
+}
+
+const discription = ref(store?.sprint?.discription);
+const sprintName = ref(store?.sprint?.sprintName);
+const dateCreated = ref(store?.sprint?.dateCreated);
+const dateStart = ref(store?.sprint?.startDate);
+const dateEnd = ref(store?.sprint?.endDate);
 </script>
 <style scoped>
 .title {

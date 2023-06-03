@@ -186,6 +186,8 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { store } from "stores/store";
 
+store.reset();
+
 const $q = useQuasar();
 const router = useRouter();
 
@@ -208,7 +210,6 @@ const step = ref(1);
 
 function onSubmit() {
   store.newAccountHasBeenRegistered = registration.value;
-  store.afterAuthentication = true;
   router.push("/home");
 }
 

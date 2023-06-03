@@ -39,6 +39,15 @@
 </template>
 
 <script setup>
+import { store } from "stores/store";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+if (!store.sprint) {
+  router.push("/home/emptySprint");
+}
+
 const columns = [
   {
     name: "name",

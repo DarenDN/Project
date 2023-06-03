@@ -72,15 +72,8 @@
 
 <script setup>
 import { ref } from "vue";
-import { useQuasar, QSpinnerCube } from "quasar";
 import { store } from "stores/store";
-
-if (store.afterAuthentication) {
-  store.afterAuthentication = false;
-  //location.reload();
-}
-
-const q = useQuasar();
+import { mask } from "src/utils/mask";
 
 const morphGroupModel = ref("startpopup");
 function nextMorph() {
@@ -118,17 +111,10 @@ function finishPopup() {
 }
 
 function loadedAnimation() {
-  q.loading.hide();
+  mask.hide();
 }
 
-q.loading.show({
-  spinner: QSpinnerCube,
-  spinnerColor: "blue",
-  spinnerSize: 140,
-  backgroundColor: "black",
-  message: "Some important process is in progress. Hang on...",
-  messageColor: "white",
-});
+mask.show()
 
 setTimeout(() => {
   loadedAnimation();

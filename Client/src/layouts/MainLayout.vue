@@ -60,7 +60,7 @@
                   </div>
 
                   <q-btn
-                    @click="go"
+                    @click="logout()"
                     color="primary"
                     label="Logout"
                     push
@@ -151,16 +151,6 @@
                   flat
                   color="white"
                   text-color="black"
-                  icon="people_outline"
-                  label="Roles"
-                />
-                <q-btn
-                  align="left"
-                  class="menu-item"
-                  :ripple="false"
-                  flat
-                  color="white"
-                  text-color="black"
                   icon="checklist_rtl"
                   label="Sprints"
                 />
@@ -191,6 +181,8 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { store } from "stores/store";
+import { useQuasar } from "quasar";
+import { mask } from "src/utils/mask";
 
 const mainDrawer = ref(null);
 const adminPanel = ref(null);
@@ -200,17 +192,21 @@ const checkbox1 = ref(false);
 const checkbox2 = ref(false);
 const router = useRouter();
 
+const q = useQuasar();
+
+mask.init(q.loading);
+
 onMounted(() => {
-  store.setDrawer(mainDrawer.value);
-  store.setAdminPanel(adminPanel.value);
-  store.setSprintPanel(sprintPanel.value);
+  store.drawer = mainDrawer.value;
+  store.adminPanel = adminPanel.value;
+  store.sprintPanel = sprintPanel.value;
 });
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 
-function go() {
+function logout() {
   router.push("/login");
 }
 </script>

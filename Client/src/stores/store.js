@@ -1,18 +1,17 @@
 import { reactive } from "vue";
 
 export const store = reactive({
-  afterAuthentication: false,
   newAccountHasBeenRegistered: false,
+  sprint: null,
   drawer: null,
   adminPanel: null,
   sprintPanel: null,
-  setDrawer(drawer) {
-    this.drawer = drawer;
-  },
-  setAdminPanel(adminPanel) {
-    this.adminPanel = adminPanel;
-  },
-  setSprintPanel(sprintPanel) {
-    this.sprintPanel = sprintPanel;
-  },
+  
+  reset() {
+    this.newAccountHasBeenRegistered = false;
+    this.sprint = null;
+    this.drawer = null;
+    this.adminPanel = null;
+    this.sprintPanel = null;
+  }
 });
