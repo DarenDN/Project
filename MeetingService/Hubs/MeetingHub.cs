@@ -3,63 +3,59 @@
 using Dtos;
 using Models;
 using Microsoft.AspNetCore.SignalR;
+using MeetingService.Enums;
 
 public class MeetingHub : Hub<IMeetingHub>
 {
-    public async Task ChangeActiveTaskAsync(Guid taskId, string group)
+    public async Task ChangeActiveTaskAsync(string meetingCode, CurrentTaskStateDto currentTaskDto)
     {
-        await Clients.OthersInGroup(group).ChangeActiveTaskAsync(taskId);
+        await Clients.OthersInGroup(meetingCode).ChangeActiveTaskAsync(currentTaskDto);
     }
 
-    public async Task ShowEvaluationsAsync(string group)
+    public async Task ShowEvaluationsAsync(string meetingCode, Guid taskId)
     {
-        await Clients.OthersInGroup(group).ShowEvaluationsAsync();
+        await Clients.OthersInGroup(meetingCode).ShowEvaluationsAsync(taskId);
     }
 
-    public async Task ReevaluateAsync(Guid taskId, string group)
+    public async Task ReevaluateAsync(string meetingCode, Guid taskId)
     {
-        await Clients.OthersInGroup(group).ReevaluateAsync(taskId);
+        await Clients.OthersInGroup(meetingCode).ReevaluateAsync(taskId);
     }
 
-    public async Task EvaluateTaskAsync(Guid userId, EvaluationDto evaluationDto, string group)
+    public async Task UpdateUserEvaluationAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)
     {
-        await Clients.OthersInGroup(group).EvaluateTaskAsync(userId, evaluationDto);
+        await Clients.OthersInGroup(meetingCode).UpdateUserEvaluationAsync(participantEvaluationDto);
     }
 
-    public async Task EvaluateTaskFinalAsync(FinalEvaluation evaluationDto, string group)
+    public async Task EvaluateTaskFinalAsync(string meetingCode, TaskEvaluationDto evaluationDto)
     {
-        await Clients.OthersInGroup(group).EvaluateTaskFinalAsync(evaluationDto);
+        await Clients.OthersInGroup(meetingCode).EvaluateTaskFinalAsync(evaluationDto);
     }
 
-    public async Task RemoveFromSprintBacklogAsync(Guid taskId, string group)
+    public async Task ChangeTaskBacklogTypeAsync(string meetingCode, Guid taskId , BacklogType backlogType)
     {
-        await Clients.OthersInGroup(group).RemoveFromSprintBacklogAsync(taskId);
+        await Clients.OthersInGroup(meetingCode).ChangeTaskBacklogTypeAsync(taskId, backlogType);
     }
 
-    public async Task AddToSprintBacklogAsync(Guid taskId, string group)
+    public async Task JoinMeetingAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)
     {
-        await Clients.OthersInGroup(group).AddToSprintBacklogAsync(taskId);
+        await Groups.AddToGroupAsync(Context.ConnectionId, meetingCode);
+        await Clients.OthersInGroup(meetingCode).UserJoinedMeetingAsync(participantEvaluationDto);
     }
 
-    public async Task JoinMeetingAsync(Guid participantId, string group)
+    public async Task LeaveMeetingAsync(string meetingCode, Guid participantId)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, group);
-        await Clients.OthersInGroup(group).JoinMeetingAsync(participantId);
+        await Clients.OthersInGroup(meetingCode).UserLeavedMeetingAsync(participantId);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, meetingCode);
     }
 
-    public async Task LeaveMeetingAsync(Guid participantId, string group)
+    public async Task UpdateEvaluationAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)
     {
-        await Clients.OthersInGroup(group).LeaveMeetingAsync(participantId);
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+        await Clients.OthersInGroup(meetingCode).UpdateUserEvaluationAsync(participantEvaluationDto);
     }
 
-    public async Task UpdateEvaluationAsync(Guid participantId, EvaluationDto evaluationDto, string group)
+    public async Task DeleteMeetingAsync(string meetingCode)
     {
-        await Clients.OthersInGroup(group).UpdateEvaluationAsync(participantId, evaluationDto);
-    }
-
-    public async Task DeleteMeetingAsync(string group)
-    {
-        await Clients.OthersInGroup(group).DeleteMeetingAsync();
+        await Clients.OthersInGroup(meetingCode).DeleteMeetingAsync();
     }
 }

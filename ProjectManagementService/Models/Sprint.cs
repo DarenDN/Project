@@ -11,7 +11,9 @@ public sealed class Sprint : DbEntity
     [MaxLength(150)]
     public string Name { get; set; }
 
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; } = string.Empty;
+
+    //public bool SprintClosed { get; set; }
 
     [Required]
     public Guid ProjectId { get; set; }

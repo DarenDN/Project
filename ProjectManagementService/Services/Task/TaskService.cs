@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Configurations;
 using Models;
 using ProjectManagementService.Dtos.Estimation;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 public sealed class TaskService : ITaskService
 {
@@ -45,6 +46,53 @@ public sealed class TaskService : ITaskService
         }
 
         await _appDbContext.Tasks.AddAsync(newTask);
+        await TrySaveChangesAsync();
+    }
+
+    public async Task<Dictionary<Guid, int>> GetTasksBacklogAsync()
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var tasks = await _appDbContext.Tasks.Where(t=>t.ProjectId == projectId.Value).ToListAsync();
+        var currentSprintId = await GetCurrentSprintIdAsync();
+        var taskByBacklogs = tasks.ToDictionary(
+                key => key.Id, 
+                value => value.SprintId.HasValue && currentSprintId.HasValue && value.SprintId == currentSprintId 
+                    ? 1 
+                    :0);
+        return taskByBacklogs;
+    }
+
+    public async Task UpdateTasksAsync(IEnumerable<TaskSprintEvaluationInfo> taskSprintInfos)
+    {
+        var currentSprintId = await GetCurrentSprintIdAsync();
+        var updatedTasks = new List<Models.Task>();
+        foreach(var taskSprintInfo in taskSprintInfos)
+        {
+            var task = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskSprintInfo.TaskId);
+            if(task is null || !taskSprintInfo.InSprint)
+            {
+                continue;
+            }
+
+            // TODO change states ?
+            task.SprintId = currentSprintId;
+            task.EstimationInPoints = taskSprintInfo.EvaluationPoints;
+            task.EstimationInTime = taskSprintInfo.EvaluationTime;
+
+            if(taskSprintInfo.EvaluationPoints != null || taskSprintInfo.EvaluationTime != null)
+            {
+                task.State = await GetToWorkStateAsync();
+            }
+            else
+            {
+                task.State = await GetDefaultTaskStateAsync();
+            }
+
+            updatedTasks.Add(task);
+        }
+
+        _appDbContext.Tasks.UpdateRange(updatedTasks);
+
         await TrySaveChangesAsync();
     }
 
@@ -277,5 +325,17 @@ public sealed class TaskService : ITaskService
     {
         _stateCfg.BasicStates.TryGetValue(_stateCfg.DefaultState, out var basicTaskStateId);
         return await _appDbContext.TaskStates.FirstOrDefaultAsync(t => t.Id == basicTaskStateId);
+    }
+
+    private async Task<TaskState> GetToWorkStateAsync()
+    {
+        _stateCfg.BasicStates.TryGetValue(_stateCfg.ToWorkState, out var toWorkState);
+        return await _appDbContext.TaskStates.FirstOrDefaultAsync(t => t.Id == toWorkState);
+    }
+
+    private async Task<TaskState> GetEvaluationStateAsync()
+    {
+        _stateCfg.BasicStates.TryGetValue(_stateCfg.EvaluationState, out var evaluationState);
+        return await _appDbContext.TaskStates.FirstOrDefaultAsync(t => t.Id == evaluationState);
     }
 }

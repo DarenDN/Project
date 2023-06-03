@@ -8,6 +8,6 @@ public interface ISprintService
     Task<SprintDto> GetSprintAsync(Guid sprintId);
     Task<SprintDto?> GetCurrentSprintAsync();
     Task<IEnumerable<SprintDto?>> GetSprintsAsync();
-    Task DeleteSprintAsync(Guid sprintId);
-    Task UpdateSprintAsync();
+    Task DeleteSprintAsync(Guid? sprintId);
+    Task UpdateSprintAsync(UpdateSprintDto updateSprintDto);
 }

@@ -51,14 +51,20 @@ public sealed class SprintService : ISprintService
         await TrySaveChangesAsync();
     }
 
-    public async System.Threading.Tasks.Task DeleteSprintAsync(Guid sprintId)
+    public async System.Threading.Tasks.Task DeleteSprintAsync(Guid? sprintId)
     {
         throw new NotImplementedException();
     }
 
-    public async System.Threading.Tasks.Task UpdateSprintAsync()
+    public async System.Threading.Tasks.Task UpdateSprintAsync(UpdateSprintDto updateSprintDto)
     {
-        throw new NotImplementedException();
+        var sprint = await _applicationDbContext.Sprints.FirstOrDefaultAsync(
+            s => s.Id == updateSprintDto.SprintId);
+
+        sprint.Name = updateSprintDto.Title;
+        sprint.Description = updateSprintDto.Description;
+        _applicationDbContext.Sprints.Update(sprint);
+        await TrySaveChangesAsync();
     }
 
     public async Task<SprintDto> GetSprintAsync(Guid sprintId)

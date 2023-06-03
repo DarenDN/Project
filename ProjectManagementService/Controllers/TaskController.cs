@@ -33,6 +33,21 @@ public sealed class TaskController : ControllerBase
     }
 
     [HttpPut]
+    [Route(nameof(UpdateTasksAsync))]
+    public async Task<ActionResult> UpdateTasksAsync(List<TaskSprintEvaluationInfo> taskInfo)
+    {
+        try
+        {
+            await _taskService.UpdateTasksAsync(taskInfo);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
     [Route(nameof(UpdateTaskAsync))]
     public async Task<ActionResult> UpdateTaskAsync(TaskUpdateDto taskDto)
     {
@@ -78,13 +93,13 @@ public sealed class TaskController : ControllerBase
     }
 
     [HttpGet]
-    [Route(nameof(GetTasksAsync))]
-    public async Task<ActionResult> GetTasksAsync()
+    [Route(nameof(GetTasksBacklogAsync))]
+    public async Task<ActionResult> GetTasksBacklogAsync()
     {
         try
         {
-            var tasks = await _taskService.GetTasksAsync();
-            return Ok(tasks);
+            var tasksBacklog = await _taskService.GetTasksBacklogAsync();
+            return Ok(tasksBacklog);
         }
         catch (Exception ex)
         {

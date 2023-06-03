@@ -3,6 +3,8 @@ using MeetingService.Services.CacheService;
 using MeetingService.Services.MeetingService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
@@ -40,7 +42,20 @@ builder.Services.AddSignalR(cfg =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Description = "Auth header",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    opt.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
 var app = builder.Build();
 
@@ -51,10 +66,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.UseEndpoints(e =>
 {
     e.MapHub<MeetingHub>(app.Configuration.GetValue<string>(SignalRCfgRouteSection));
@@ -63,30 +78,3 @@ app.UseEndpoints(e =>
 app.MapControllers();
 
 await app.RunAsync();
-
-
-// TODO
-/*
- * Одна "доска" для оценки
- * 1. На доске есть возможность выбора того, что будет оцениваться, т.е. либо эпик (сторис), либо задача
- * 1.1. 
- * 
- * 2. На доске Несколько пользователей
- * У каждого пользователя варианты оценки
- * Для всех текущая оценка закрыта до момента, когда все проголосуют и админ митинга прожмет "вскрытие" результатов
- * 
- * Доска как объект состоит из: списка пользователей с их текущей оценкой, текущего объекта оценивания
- * Пользователь + оценка = Дтошка Юзер + оценка
- * 
- * 3. Что видит юзер
- * Текущий объект оценивания
- * Сколько участников
- * Участников и их имена/ники
- * Скрытую/открытую оценку
- * 
- * -. Возможность выбора оценки: время или поинты сложности - второстепенное, дефолт будет поинты атм
- * -. Клик на текущий объект оценивания откроет вкладку с инфой, т.е. если это задача - откроется задача, если эпик - откроется эпик
- * 
- * 
- * 
- */
