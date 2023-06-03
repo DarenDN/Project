@@ -85,19 +85,19 @@
           </div>
 
           <div class="form-section">
-            <q-input v-model="currentTaskType" filled label="Add task type">
+            <q-input v-model="currentTaskStatus" filled label="Add task status">
               <template v-slot:append>
-                <q-btn round dense flat icon="add" @click="addTaskType()" />
+                <q-btn round dense flat icon="add" @click="addTaskStatus()" />
               </template>
             </q-input>
 
-            <div class="form-section task-types">
+            <div class="form-section task-statuses">
               <q-badge
-                v-for="taskType in taskTypes"
-                :key="taskType"
+                v-for="taskStatus in taskStatuses"
+                :key="taskStatus"
                 outline
                 color="primary"
-                :label="taskType"
+                :label="taskStatus"
               />
             </div>
           </div>
@@ -132,19 +132,19 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-const taskTypes = ref(["new", "done"]);
-const sprintName = ref(null);
-const startDate = ref(null);
-const endDate = ref(null);
-const discription = ref(null);
-const currentTaskType = ref(null);
+const taskStatuses = ref(["new", "done"]);
+const sprintName = ref(store?.sprint?.sprintName);
+const startDate = ref(store?.sprint?.startDate);
+const endDate = ref(store?.sprint?.endDate);
+const discription = ref(store?.sprint?.discription || "Type sprint discription here");
+const currentTaskStatus = ref(null);
 
-function addTaskType() {
-  if (currentTaskType.value == null || currentTaskType.value.length === 0)
+function addTaskStatus() {
+  if (currentTaskStatus.value == null || currentTaskStatus.value.length === 0)
     return;
 
-  taskTypes.value.push(currentTaskType.value);
-  currentTaskType.value = null;
+  taskStatuses.value.push(currentTaskStatus.value);
+  currentTaskStatus.value = null;
 }
 
 function onSubmit() {
@@ -158,7 +158,7 @@ function onSubmit() {
       endDate: endDate.value,
       dateCreated: "2000/01/01",
       discription,
-      taskTypes: taskTypes.value
+      taskStatuses: taskStatuses.value
     };
     router.push("/home/sprint-info");
     mask.hide();
@@ -170,7 +170,7 @@ function onSubmit() {
 .form-section {
   margin: 5px;
 }
-.task-types > div {
+.task-statuses > div {
   margin-left: 8px;
   margin-bottom: 3px;
 }

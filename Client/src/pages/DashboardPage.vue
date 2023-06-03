@@ -1,11 +1,11 @@
 <template>
   <div class="container">
-    <div class="column" v-for="taskType in taskTypes" :key="taskType">
-      <h6 class="column-header">{{ taskType }}</h6>
+    <div class="column" v-for="taskStatus in taskStatuses" :key="taskStatus">
+      <h6 class="column-header">{{ taskStatus }}</h6>
       <div class="content">
         <div
           class="card-wrapper"
-          v-for="task in tasks.filter((x) => x.type === taskType)"
+          v-for="task in tasks.filter((x) => x.status === taskStatus)"
           :key="task.name"
         >
           <q-card
@@ -59,50 +59,50 @@ if (!store.sprint) {
   router.push("/home/emptySprint");
 }
 
-const taskTypes = store?.sprint?.taskTypes || ['new', 'done'];
+const taskStatuses = store?.sprint?.taskStatuses || ['new', 'done'];
 const taskTitle = "Task title";
 const description = "some description, that makes no sense";
 
 const tasks = [
   {
     name: "kek",
-    type: "development",
+    status: "development",
   },
   {
     name: "kek2",
-    type: "review",
+    status: "review",
   },
   {
     name: "kek3",
-    type: "review",
+    status: "review",
   },
   {
     name: "kek4",
-    type: "development",
+    status: "development",
   },
   {
     name: "kek5",
-    type: "done",
+    status: "done",
   },
   {
     name: "kek6",
-    type: "done",
+    status: "done",
   },
   {
     name: "kek7",
-    type: "done",
+    status: "done",
   },
   {
     name: "kek8",
-    type: "new",
+    status: "new",
   },
   {
     name: "kek9",
-    type: "keking",
+    status: "keking",
   },
   {
     name: "kek10",
-    type: "rofl",
+    status: "rofl",
   },
 ];
 </script>
