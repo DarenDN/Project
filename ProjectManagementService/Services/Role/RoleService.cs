@@ -187,6 +187,7 @@ public class RoleService : IRoleService
     {
         var roleId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Role);
 
-        return !string.IsNullOrWhiteSpace(roleId) && _roleConfiguration.Equals(roleId);
+        return !string.IsNullOrWhiteSpace(roleId) 
+            && _roleConfiguration.BasicRoles[_roleConfiguration.AdminRole].ToString().Equals(roleId);
     }
 }

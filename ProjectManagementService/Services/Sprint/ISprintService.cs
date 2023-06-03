@@ -7,7 +7,7 @@ public interface ISprintService
     Task CreateSprintAsync(CreateSprintDto createSprintDto);
     Task<SprintDto> GetSprintAsync(Guid sprintId);
     Task<SprintDto?> GetCurrentSprintAsync();
-    Task<List<SprintDto?>> GetSprintsAsync();
+    Task<IEnumerable<SprintDto?>> GetSprintsAsync();
     Task DeleteSprintAsync(Guid sprintId);
     Task UpdateSprintAsync();
 }

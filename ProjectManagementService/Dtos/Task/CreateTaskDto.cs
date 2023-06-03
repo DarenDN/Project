@@ -2,6 +2,6 @@
 
 public sealed record CreateTaskDto(
     string Title, 
-    string Description,
+    string? Description,
     Guid TypeId, 
     Guid? SprintId);

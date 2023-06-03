@@ -2,6 +2,7 @@
 
 using IdentityManagementService.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Services.Auth;
 
 [ApiController]
@@ -62,6 +63,10 @@ public class AuthController : ControllerBase
         {
             var newAccessToken = await _authService.RefreshTokensAsync();
             return Ok(newAccessToken);
+        }
+        catch(SecurityTokenExpiredException)
+        {
+            return Unauthorized();
         }
         catch (Exception ex)
         {

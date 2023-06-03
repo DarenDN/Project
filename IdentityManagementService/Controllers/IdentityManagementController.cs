@@ -94,12 +94,42 @@ public sealed class IdentityManagementController : ControllerBase
     }
 
     [HttpGet, Authorize]
-    [Route(nameof(GetUserAsync))]
-    public async Task<ActionResult> GetUserAsync()
+    [Route(nameof(GetUserInfoAsync))]
+    public async Task<ActionResult> GetUserInfoAsync(Guid? identityId)
     {
         try
         {
-            var user = await _identityManagmentService.GetUserAsync();
+            var user = await _identityManagmentService.GetUserAsync(identityId);
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet, Authorize]
+    [Route(nameof(GetShortUserInfoAsync))]
+    public async Task<ActionResult> GetShortUserInfoAsync(Guid? identityId)
+    {
+        try
+        {
+            var user = await _identityManagmentService.GetShortUserInfoAsync(identityId);
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet, Authorize]
+    [Route(nameof(GetShortUserInfosAsync))]
+    public async Task<ActionResult> GetShortUserInfosAsync(List<Guid?>? identityIds)
+    {
+        try
+        {
+            var user = await _identityManagmentService.GetShortUserInfosAsync(identityIds);
             return Ok(user);
         }
         catch (Exception ex)

@@ -15,7 +15,9 @@ public interface IIdentityManagementService
 
     Task<UserIdentityDto> GetUserAsync(Guid? identityId);
 
-    Task<CurrentUserInfoDto> GetUserAsync();
+    Task<ShortUserInfoDto> GetUserAsync();
+    Task<ShortUserInfoDto> GetShortUserInfoAsync(Guid? identityId = null);
+    Task<IEnumerable<ShortUserInfoDto>> GetShortUserInfosAsync(IEnumerable<Guid?> identityIds);
 
     Task UpdateUserAsync();
 

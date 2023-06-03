@@ -17,6 +17,7 @@ using ProjectManagementService.Services.State;
 using ProjectManagementService.Models;
 using Microsoft.Extensions.Options;
 using System.Data;
+using ProjectManagementService.Services.Type;
 
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
 
@@ -50,6 +51,7 @@ builder.Services.AddScoped(typeof(IUserStoryService), typeof(UserStoryService));
 builder.Services.AddScoped(typeof(IBurndownChartService), typeof(BurndownChartService));
 builder.Services.AddScoped(typeof(ISprintService), typeof(SprintService));
 builder.Services.AddScoped(typeof(IStateService), typeof(StateService));
+builder.Services.AddScoped(typeof(ITypeService), typeof(TypeService));
 
 builder.Services.AddControllers();
 
@@ -61,7 +63,9 @@ builder.Services.AddSwaggerGen(opt =>
         Description = "Auth header",
         In = ParameterLocation.Header,
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
 
     opt.OperationFilter<SecurityRequirementsOperationFilter>();
