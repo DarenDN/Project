@@ -1,14 +1,14 @@
 <template>
   <div class="container">
-    <h5 class="title">{{ store.currentTask.taskName }}</h5>
+    <h5 class="title">{{ store?.currentTask?.taskName }}</h5>
     <div style="display: flex">
       <q-avatar
-        :size=xs
+        :size="xs"
         color="primary"
         text-color="white"
         icon="perm_identity"
       />
-      <h6 class="title">Created by {{ store.currentTask.author }}</h6>
+      <h6 class="title">Created by {{ store?.currentTask?.author }}</h6>
     </div>
 
     <div class="q-pa-md row items-start q-gutter-md">
@@ -20,7 +20,7 @@
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store.currentTask.type
+          store?.currentTask?.type
         }}</q-card-section>
       </q-card>
 
@@ -32,7 +32,7 @@
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store.currentTask.status
+          store?.currentTask?.status
         }}</q-card-section>
       </q-card>
 
@@ -44,7 +44,7 @@
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store.currentTask.timeEstimate
+          store?.currentTask?.timeEstimate
         }}</q-card-section>
       </q-card>
 
@@ -56,7 +56,7 @@
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store.currentTask.performer
+          store?.currentTask?.performer
         }}</q-card-section>
       </q-card>
     </div>
@@ -66,7 +66,7 @@
     </div>
     <h6 class="title">Description</h6>
     <p class="description">
-      {{ store.currentTask.description }}
+      {{ store?.currentTask?.description }}
     </p>
   </div>
 
@@ -96,7 +96,18 @@
 <script setup>
 import { ref } from "vue";
 import { store } from "stores/store";
+import { useRouter } from "vue-router";
 import TaskCreationWindow from "src/components/windows/TaskCreationWindow.vue";
+
+const router = useRouter();
+
+if (!store.sprint) {
+  router.push("/home/emptySprint");
+}
+
+if (!store.currentTask) {
+  router.push("/home/dashboard");
+}
 
 const createDialog = ref(false);
 </script>
