@@ -232,7 +232,7 @@ function checkPasswords(firstPassword, secondPassword) {
   if (result1 !== true) return result1
   if (result2 !== true) return result2
 
-  if (firstPassword === secondPassword) return "Passwords are not the same"
+  if (firstPassword !== secondPassword) return "Passwords are not the same"
 
   return true;
 }

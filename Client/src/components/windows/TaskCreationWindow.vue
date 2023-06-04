@@ -40,10 +40,10 @@
 
           <div class="form-section">
             <q-input
-              v-model="discription"
+              v-model="description"
               filled
               type="textarea"
-              label="Discription"
+              label="description"
             />
           </div>
 
@@ -68,7 +68,7 @@ const taskTypes = ["bug", "feature"];
 const currentTaskType = ref(taskTypes[0]);
 const addToCurrentSprint = ref(false);
 const taskName = ref(null);
-const discription = ref(null);
+const description = ref(null);
 
 function onSubmit() {
   // TODO: update the store

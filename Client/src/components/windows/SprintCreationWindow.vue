@@ -104,10 +104,10 @@
 
           <div class="form-section">
             <q-input
-              v-model="discription"
+              v-model="description"
               filled
               type="textarea"
-              label="Discription"
+              label="description"
             />
           </div>
 
@@ -136,7 +136,7 @@ const taskStatuses = ref(["new", "done"]);
 const sprintName = ref(store?.sprint?.sprintName);
 const startDate = ref(store?.sprint?.startDate);
 const endDate = ref(store?.sprint?.endDate);
-const discription = ref(store?.sprint?.discription || "Type sprint discription here");
+const description = ref(store?.sprint?.description || "Type sprint description here");
 const currentTaskStatus = ref(null);
 
 function addTaskStatus() {
@@ -157,7 +157,7 @@ function onSubmit() {
       startDate: startDate.value,
       endDate: endDate.value,
       dateCreated: "2000/01/01",
-      discription,
+      description,
       taskStatuses: taskStatuses.value
     };
     router.push("/home/sprint-info");

@@ -17,7 +17,11 @@ const routes = [
       },
       {
         path: "/home/dashboard",
-        component: () => import("pages/DashboardPage.vue"),
+        component: () => import("pages/DashboardPage.vue")
+      },
+      {
+        path: "/home/dashboard/task",
+        component: () => import("pages/TaskPage.vue"),
       },
       {
         path: "/home/emptySprint",

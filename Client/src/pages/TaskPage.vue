@@ -1,35 +1,63 @@
 <template>
   <div class="container">
-    <h5 class="title">{{ store?.sprint?.sprintName }}</h5>
+    <h5 class="title">{{ store?.currentTask?.taskName }}</h5>
+    <div style="display: flex">
+      <q-avatar
+        :size="xs"
+        color="primary"
+        text-color="white"
+        icon="perm_identity"
+      />
+      <h6 class="title">Created by {{ store?.currentTask?.author }}</h6>
+    </div>
+
     <div class="q-pa-md row items-start q-gutter-md">
       <q-card class="card" bordered>
         <q-card-section>
-          <div class="text-h6">Date created</div>
+          <div class="text-h6">Type</div>
         </q-card-section>
 
         <q-separator class="card-separator" inset />
 
-        <q-card-section class="q-pt-none">{{ dateCreated }}</q-card-section>
+        <q-card-section class="q-pt-none">{{
+          store?.currentTask?.type
+        }}</q-card-section>
       </q-card>
 
       <q-card class="card" bordered>
         <q-card-section>
-          <div class="text-h6">Start date</div>
+          <div class="text-h6">Status</div>
         </q-card-section>
 
         <q-separator class="card-separator" inset />
 
-        <q-card-section class="q-pt-none"> {{ store?.sprint?.startDate }}</q-card-section>
+        <q-card-section class="q-pt-none">{{
+          store?.currentTask?.status
+        }}</q-card-section>
       </q-card>
 
       <q-card class="card" bordered>
         <q-card-section>
-          <div class="text-h6">End date</div>
+          <div class="text-h6">Estimate</div>
         </q-card-section>
 
         <q-separator class="card-separator" inset />
 
-        <q-card-section class="q-pt-none"> {{ store?.sprint?.endDate }}</q-card-section>
+        <q-card-section class="q-pt-none">{{
+          store?.currentTask?.timeEstimate
+        }}</q-card-section>
+      </q-card>
+
+      <q-card class="card" bordered>
+        <q-card-section>
+          <div class="text-h6">Performer</div>
+        </q-card-section>
+
+        <q-separator class="card-separator" inset />
+
+        <q-card-section class="q-pt-none">{{
+          store?.currentTask?.performer
+        }}</q-card-section>
       </q-card>
     </div>
 
@@ -37,9 +65,9 @@
       <q-separator inset />
     </div>
     <h6 class="title">Description</h6>
-    <div class="description">
-      {{ store?.sprint?.description }}
-    </div>
+    <p class="description">
+      {{ store?.currentTask?.description }}
+    </p>
   </div>
 
   <q-fab
@@ -56,20 +84,20 @@
       label="Edit sprint"
     />
     <q-fab-action
-      color="primary"
-      @click="finishSprint()"
+      color="secondary"
+      @click="console.log('set as mine')"
       icon="check_circle_outline"
-      label="Finish sprint"
+      label="Set as mine"
     />
   </q-fab>
-  <SprintCreationWindow v-model="createDialog"></SprintCreationWindow>
+  <TaskCreationWindow v-model="createDialog"></TaskCreationWindow>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { store } from "stores/store";
 import { useRouter } from "vue-router";
-import SprintCreationWindow from 'src/components/windows/SprintCreationWindow.vue'
+import TaskCreationWindow from "src/components/windows/TaskCreationWindow.vue";
 
 const router = useRouter();
 
@@ -77,14 +105,11 @@ if (!store.sprint) {
   router.push("/home/emptySprint");
 }
 
-const dateCreated = ref(store?.sprint?.dateCreated);
-const createDialog = ref(false);
-
-function finishSprint() {
-  store.sprint = null;
-  router.push("/home/emptySprint");
+if (!store.currentTask) {
+  router.push("/home/dashboard");
 }
 
+const createDialog = ref(false);
 </script>
 <style scoped>
 .title {
@@ -100,7 +125,7 @@ function finishSprint() {
   margin: 5px;
 }
 .card {
-  width: 200px;
+  width: 150px;
   text-align: center;
 }
 .fab {
