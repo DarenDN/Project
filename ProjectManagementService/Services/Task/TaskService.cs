@@ -69,24 +69,27 @@ public sealed class TaskService : ITaskService
         foreach(var taskSprintInfo in taskSprintInfos)
         {
             var task = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskSprintInfo.TaskId);
-            if(task is null || !taskSprintInfo.InSprint)
+            if(task is null )
             {
                 continue;
             }
 
-            // TODO change states ?
-            task.SprintId = currentSprintId;
-            task.EstimationInPoints = taskSprintInfo.EvaluationPoints;
-            task.EstimationInTime = taskSprintInfo.EvaluationTime;
-
-            if(taskSprintInfo.EvaluationPoints != null || taskSprintInfo.EvaluationTime != null)
+            if(taskSprintInfo.InSprint)
             {
-                task.State = await GetToWorkStateAsync();
+                task.SprintId = currentSprintId;
+                task.EstimationInPoints = taskSprintInfo.EvaluationPoints;
+                task.EstimationInTime = taskSprintInfo.EvaluationTime;
             }
             else
             {
-                task.State = await GetDefaultTaskStateAsync();
+                task.SprintId = null;
+                task.EstimationInPoints = null;
+                task.EstimationInTime = null;
             }
+
+            task.State = taskSprintInfo.EvaluationPoints != null || taskSprintInfo.EvaluationTime != null
+                ? await GetToWorkStateAsync()
+                : await GetDefaultTaskStateAsync();
 
             updatedTasks.Add(task);
         }

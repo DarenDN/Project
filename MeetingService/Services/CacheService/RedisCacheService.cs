@@ -28,6 +28,11 @@ public class RedisCacheService : ICacheService
 
     public async Task<string> CreateCacheMeetingAsync(Guid projectId, Dictionary<Guid, BacklogType> tasks)
     {// TODO check if one already exists
+        if(!string.IsNullOrWhiteSpace(await GetMeetingCodeOrNullAsync(projectId)))
+        {
+            throw new ArgumentException($"Key {nameof(projectId)} already exists");
+        }
+
         var taskSelection = new TasksSelection
         {
             Code = Guid.NewGuid().ToString(),
