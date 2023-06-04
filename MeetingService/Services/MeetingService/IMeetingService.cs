@@ -6,7 +6,7 @@ using Enums;
 public interface IMeetingService
 {
     Task<IEnumerable<TaskSprintEvaluationInfo>> GetFinalEvaluationsAsync(string meetingCode);
-    Task ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId);
+    Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId);
     Task ShowEvaluationsAsync(string meetingCode, Guid taskId);
     Task ReevaluateAsync(string meetingCode, Guid taskId);
     Task<string> GetMeetingAsync(Guid projectId);

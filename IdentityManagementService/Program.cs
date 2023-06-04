@@ -8,6 +8,7 @@ using IdentityManagementService.Configurations;
 using IdentityManagementService.Data;
 using IdentityManagementService.Services.IdentityManagement;
 using IdentityManagementService.Services.Auth;
+using Microsoft.OpenApi.Any;
 
 const string AuthConnectionCfgSection = "AuthConnection";
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
@@ -45,6 +46,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
+    opt.MapType<TimeSpan>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Example = new OpenApiString("000.00:00:00")
+    });
+
     opt.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
         Description = "Auth header",

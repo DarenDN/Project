@@ -3,6 +3,7 @@ using MeetingService.Services.CacheService;
 using MeetingService.Services.MeetingService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
@@ -44,6 +45,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
+    opt.MapType<TimeSpan>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Example = new OpenApiString("000.00:00:00")
+    });
+
     opt.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
         Description = "Auth header",

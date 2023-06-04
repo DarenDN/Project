@@ -95,7 +95,7 @@ public sealed class MeetingService : IMeetingService
         return code;
     }
 
-    public async Task ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId)
+    public async Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId)
     {
         var currentTaskDto = await _cacheService.SetActiveTaskAsync(meetingCode, taskId);
         await _meetingHubContext.Clients
@@ -103,6 +103,7 @@ public sealed class MeetingService : IMeetingService
                 meetingCode,
                 GetRequestingConnectionId())
             .ChangeActiveTaskAsync(currentTaskDto);
+        return currentTaskDto;
     }
 
     public async Task ShowEvaluationsAsync(string meetingCode, Guid taskId)

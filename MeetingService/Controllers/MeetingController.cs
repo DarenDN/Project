@@ -103,8 +103,8 @@ public sealed class MeetingController : ControllerBase
     {
         try
         {
-            await _meetingService.ChangeActiveTaskAndNotifyAsync(meetingCode, taskId);
-            return Ok();
+            var currentTaskState = await _meetingService.ChangeActiveTaskAndNotifyAsync(meetingCode, taskId);
+            return Ok(currentTaskState);
         }
         catch (Exception ex)
         {
