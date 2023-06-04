@@ -6,6 +6,7 @@ export const store = reactive({
   drawer: null,
   adminPanel: null,
   sprintPanel: null,
+  currentTask: null,
   
   reset() {
     this.newAccountHasBeenRegistered = false;
@@ -13,5 +14,6 @@ export const store = reactive({
     this.drawer = null;
     this.adminPanel = null;
     this.sprintPanel = null;
+    this.currentTask = null;
   }
 });
