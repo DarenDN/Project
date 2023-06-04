@@ -66,11 +66,7 @@ builder.Services.AddSwaggerGen(opt =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.MapControllers();
 
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -82,6 +78,10 @@ app.UseEndpoints(e =>
     e.MapHub<MeetingHub>(app.Configuration.GetValue<string>(SignalRCfgRouteSection));
 });
 
-app.MapControllers();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 await app.RunAsync();

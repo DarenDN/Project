@@ -18,8 +18,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 {
+#if DEBUG
     options.UseNpgsql(
         builder.Configuration.GetConnectionString(AuthConnectionCfgSection));
+#else
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("AuthConnectionDocker"));
+#endif
 });
 
 builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("SecurityConfiguration"));

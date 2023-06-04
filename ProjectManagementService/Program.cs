@@ -30,7 +30,11 @@ builder.Services.Configure<TypeConfiguration>(builder.Configuration.GetSection(T
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
+#if DEBUG
     options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection"));
+#else
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnectionDocker"));
+#endif
 });
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters

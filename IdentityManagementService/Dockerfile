@@ -2,20 +2,23 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
-EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["AutentificationService.csproj", "."]
-RUN dotnet restore "./AutentificationService.csproj"
+COPY ["IdentityManagementService.csproj", "."]
+RUN dotnet restore "./IdentityManagementService.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "AutentificationService.csproj" -c Release -o /app/build
+RUN dotnet build "IdentityManagementService.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "AutentificationService.csproj" -c Release -o /app/publish
+RUN dotnet publish "IdentityManagementService.csproj" -c Release -o /app/publish
+
+RUN dotnet tool install --global dotnet-ef
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "AutentificationService.dll"]
+ENTRYPOINT ["dotnet", "IdentityManagementService.dll"]
+
+CMD ["dotnet", "ef", "database", "update"]
