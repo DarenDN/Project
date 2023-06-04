@@ -22,7 +22,7 @@ services:
       context: ./ProjectManagementService
       dockerfile: Dockerfile
     ports:
-      - "5001:80"
+      - "5013:5013"
     depends_on:
       - postgres
     command: ["dotnet", "ef", "database", "update"]
@@ -35,7 +35,7 @@ services:
       context: ./IdentityManagementService
       dockerfile: Dockerfile
     ports:
-      - "5011:81"
+      - "5003:5003"
     depends_on:
       - postgres
     command: ["dotnet", "ef", "database", "update"]
@@ -48,7 +48,7 @@ services:
       context: ./MeetingService
       dockerfile: Dockerfile
     ports:
-      - "5101:82"
+      - "5103:5103"
     depends_on:
       - redis
       
