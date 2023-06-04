@@ -16,15 +16,14 @@ const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString = (Environment.GetEnvironmentVariable("MY_ENV_VAR") != "DOCKER")
+    ? builder.Configuration.GetConnectionString(AuthConnectionCfgSection)
+    : builder.Configuration.GetConnectionString($"{AuthConnectionCfgSection}Docker");
+
 builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 {
-#if DEBUG
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString(AuthConnectionCfgSection));
-#else
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("AuthConnectionDocker"));
-#endif
+        builder.Configuration.GetConnectionString(connectionString));
 });
 
 builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("SecurityConfiguration"));

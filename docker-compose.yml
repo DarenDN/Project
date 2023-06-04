@@ -8,11 +8,16 @@ services:
       
   postgres:
     image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
       
   projectmanagementservice:
     image: ${DOCKER_REGISTRY-}projectmanagementservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=DevelopmentDocker
     build:
       context: ./ProjectManagementService
       dockerfile: Dockerfile
@@ -24,6 +29,8 @@ services:
       
   identitymanagementservice:
     image: ${DOCKER_REGISTRY-}identitymanagementservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=DevelopmentDocker
     build:
       context: ./IdentityManagementService
       dockerfile: Dockerfile
@@ -35,6 +42,8 @@ services:
       
   meetingservice:
     image: ${DOCKER_REGISTRY-}meetingservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=DevelopmentDocker
     build:
       context: ./MeetingService
       dockerfile: Dockerfile

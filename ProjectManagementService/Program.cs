@@ -28,14 +28,15 @@ builder.Services.Configure<RoleConfiguration>(builder.Configuration.GetSection(R
 builder.Services.Configure<StateConfiguration>(builder.Configuration.GetSection(StateConfiguration.ConfigurationName));
 builder.Services.Configure<TypeConfiguration>(builder.Configuration.GetSection(TypeConfiguration.ConfigurationName));
 
+var connectionString = (Environment.GetEnvironmentVariable("MY_ENV_VAR") != "DOCKER")
+    ? builder.Configuration.GetConnectionString("DataConnection")
+    : builder.Configuration.GetConnectionString("DataConnectionDocker");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-#if DEBUG
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection"));
-#else
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnectionDocker"));
-#endif
+    options.UseNpgsql(connectionString);
 });
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters
     {
