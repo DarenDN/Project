@@ -24,8 +24,24 @@ const routes = [
         component: () => import("pages/TaskPage.vue"),
       },
       {
-        path: "/home/emptySprint",
+        path: "/home/empty-sprint",
         component: () => import("pages/EmptySprintPage.vue"),
+      },
+      {
+        path: "/home/project-info",
+        component: () => import("pages/ProjectInfoPage.vue"),
+      },
+      {
+        path: "/home/project-backlog",
+        component: () => import("pages/ProjectBacklogPage.vue"),
+      },
+      {
+        path: "/home/users",
+        component: () => import("pages/UsersPage.vue"),
+      },
+      {
+        path: "/home/meeting",
+        component: () => import("pages/MeetingPage.vue"),
       }
     ],
   },

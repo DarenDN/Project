@@ -77,7 +77,7 @@
 
     <q-drawer ref="mainDrawer" v-model="leftDrawerOpen" bordered>
       <div class="q-pa-md" style="max-width: 350px">
-        <h6 class="project-name">Project Name</h6>
+        <h6 class="project-name"> {{ store?.project?.projectName }}</h6>
         <q-list bordered class="rounded-borders">
           <q-expansion-item
             switch-toggle-side
@@ -128,6 +128,41 @@
           <q-expansion-item
             switch-toggle-side
             expand-separator
+            icon="event_available"
+            label="Project"
+            ref="projectPanel"
+          >
+            <q-card>
+              <q-card-section>
+                <q-btn
+                  align="left"
+                  class="menu-item"
+                  :ripple="false"
+                  flat
+                  color="white"
+                  text-color="black"
+                  icon="info"
+                  label="Project info"
+                  to="/home/project-info"
+                />
+                <q-btn
+                  align="left"
+                  class="menu-item"
+                  :ripple="false"
+                  flat
+                  color="white"
+                  text-color="black"
+                  icon="checklist_rtl"
+                  label="Project backlog"
+                  to="/home/project-backlog"
+                />
+              </q-card-section>
+            </q-card>
+          </q-expansion-item>
+
+          <q-expansion-item
+            switch-toggle-side
+            expand-separator
             icon="manage_accounts"
             label="Admin board"
             ref="adminPanel"
@@ -143,26 +178,7 @@
                   text-color="black"
                   icon="person"
                   label="Users"
-                />
-                <q-btn
-                  align="left"
-                  class="menu-item"
-                  :ripple="false"
-                  flat
-                  color="white"
-                  text-color="black"
-                  icon="checklist_rtl"
-                  label="Sprints"
-                />
-                <q-btn
-                  align="left"
-                  class="menu-item"
-                  :ripple="false"
-                  flat
-                  color="white"
-                  text-color="black"
-                  icon="download_done"
-                  label="Backlog"
+                  to="/home/users"
                 />
               </q-card-section>
             </q-card>
@@ -187,6 +203,7 @@ import { mask } from "src/utils/mask";
 const mainDrawer = ref(null);
 const adminPanel = ref(null);
 const sprintPanel = ref(null);
+const projectPanel = ref(null);
 const leftDrawerOpen = ref(false);
 const checkbox1 = ref(false);
 const checkbox2 = ref(false);
@@ -200,6 +217,7 @@ onMounted(() => {
   store.drawer = mainDrawer.value;
   store.adminPanel = adminPanel.value;
   store.sprintPanel = sprintPanel.value;
+  store.projectPanel = projectPanel.value;
 });
 
 function toggleLeftDrawer() {

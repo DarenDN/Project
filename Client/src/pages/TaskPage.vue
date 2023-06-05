@@ -102,7 +102,7 @@ import TaskCreationWindow from "src/components/windows/TaskCreationWindow.vue";
 const router = useRouter();
 
 if (!store.sprint) {
-  router.push("/home/emptySprint");
+  router.push("/home/empty-sprint");
 }
 
 if (!store.currentTask) {
