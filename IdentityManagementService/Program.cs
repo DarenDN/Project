@@ -22,8 +22,11 @@ var connectionString = (Environment.GetEnvironmentVariable("MY_ENV_VAR") != "DOC
 
 builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 {
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString(connectionString));
+#if DEBUG
+    options.UseNpgsql(builder.Configuration.GetConnectionString(AuthConnectionCfgSection));
+#else
+    options.UseNpgsql(builder.Configuration.GetConnectionString($"{AuthConnectionCfgSection}Docker"));
+#endif
 });
 
 builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("SecurityConfiguration"));

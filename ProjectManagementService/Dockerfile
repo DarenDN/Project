@@ -1,6 +1,9 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+ENV ASPNETCORE_ENVIRONMENT=Development
+EXPOSE 5012
+EXPOSE 5013
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
@@ -11,10 +14,11 @@ COPY . .
 WORKDIR "/src/."
 RUN dotnet build "ProjectManagementService.csproj" -c Release -o /app/build
 
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
 FROM build AS publish
 RUN dotnet publish "ProjectManagementService.csproj" -c Release -o /app/publish
-
-RUN dotnet tool install --global dotnet-ef
 
 FROM base AS final
 WORKDIR /app

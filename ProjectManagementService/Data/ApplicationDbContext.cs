@@ -7,12 +7,8 @@ using ProjectManagementService.Configurations;
 
 public sealed class ApplicationDbContext : DbContext
 {
-    private readonly RoleConfiguration _roleCfg;
-    private readonly StateConfiguration _stateCfg;
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IOptions<RoleConfiguration> optionsRoleCfg, IOptions<StateConfiguration> optionsStateCfg) : base(options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
-        _roleCfg = optionsRoleCfg.Value;
-        _stateCfg = optionsStateCfg.Value;
     }
 
     public DbSet<Models.Task> Tasks { get; set; }
@@ -26,14 +22,4 @@ public sealed class ApplicationDbContext : DbContext
     public DbSet<UserStory> UserStories { get; set; }
     public DbSet<Sprint> Sprints { get; set; }
     public DbSet<StateRelationship> StateRelationships { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        //CreateDefaults(modelBuilder);
-    }
-
-    private void CreateDefaults(ModelBuilder modelBuilder)
-    {
-    }
 }
