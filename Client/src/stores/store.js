@@ -6,6 +6,7 @@ export const store = reactive({
   drawer: null,
   adminPanel: null,
   sprintPanel: null,
+  projectPanel: null,
   currentTask: null,
   user: null,
   
@@ -15,6 +16,7 @@ export const store = reactive({
     this.drawer = null;
     this.adminPanel = null;
     this.sprintPanel = null;
+    this.projectPanel = null;
     this.currentTask = null;
     this.user = null;
   }

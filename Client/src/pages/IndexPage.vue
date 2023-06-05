@@ -118,6 +118,15 @@ mask.show()
 
 setTimeout(() => {
   loadedAnimation();
+
+
+  // TODO: test data
+
+  store.project = {};
+  store.project.projectName = "Test project"
+  store.project.dateCreated = "2020/12/12"
+  store.project.description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias mollitia harum quaerat necessitatibus porro, corporis est? Porro, nobis dolorum? Quas saepe aut eaque natus at eveniet voluptatum veritatis officiis tempora!"
+
   if (store.newAccountHasBeenRegistered) {
     store.newAccountHasBeenRegistered = false // to make sure that user wont see it again after relogin
     startPopup();

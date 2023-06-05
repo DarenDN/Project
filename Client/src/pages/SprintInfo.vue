@@ -74,7 +74,7 @@ import SprintCreationWindow from 'src/components/windows/SprintCreationWindow.vu
 const router = useRouter();
 
 if (!store.sprint) {
-  router.push("/home/emptySprint");
+  router.push("/home/empty-sprint");
 }
 
 const dateCreated = ref(store?.sprint?.dateCreated);
@@ -82,7 +82,7 @@ const createDialog = ref(false);
 
 function finishSprint() {
   store.sprint = null;
-  router.push("/home/emptySprint");
+  router.push("/home/empty-sprint");
 }
 
 </script>

@@ -57,7 +57,7 @@ const router = useRouter();
 const createDialog = ref(false);
 
 if (!store.sprint) {
-  router.push("/home/emptySprint");
+  router.push("/home/empty-sprint");
 }
 
 const taskStatuses = store?.sprint?.taskStatuses || ["new", "done"];
