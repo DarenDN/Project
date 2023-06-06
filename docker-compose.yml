@@ -29,23 +29,6 @@ services:
     networks:
       - projectmanagementservice-network
       
-  projectmanagementservice:
-    container_name: projectmanagementservice
-    image: ${DOCKER_REGISTRY-}projectmanagementservice
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-    build:
-      context: ./ProjectManagementService
-      dockerfile: Dockerfile
-    ports:
-      - "5012:5012"
-      - "5013:5013"
-    depends_on:
-      - postgres
-    networks:
-      - projectmanagementservice-network
-    command: ["dotnet", "ef", "database", "update"]
-      
   identitymanagementservice:
     container_name: identitymanagementservice
     image: ${DOCKER_REGISTRY-}identitymanagementservice
@@ -55,8 +38,23 @@ services:
       context: ./IdentityManagementService
       dockerfile: Dockerfile
     ports:
-      - "5002:5002"
-      - "5003:5003"
+      - "5002:80"
+    depends_on:
+      - postgres
+    networks:
+      - projectmanagementservice-network
+    command: ["dotnet", "ef", "database", "update"]
+      
+  projectmanagementservice:
+    container_name: projectmanagementservice
+    image: ${DOCKER_REGISTRY-}projectmanagementservice
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    build:
+      context: ./ProjectManagementService
+      dockerfile: Dockerfile
+    ports:
+      - "5012:80"
     depends_on:
       - postgres
     networks:
@@ -72,8 +70,7 @@ services:
       context: ./MeetingService
       dockerfile: Dockerfile
     ports:
-      - "5103:5103"
-      - "5102:5102"
+      - "5102:80"
     depends_on:
       - redis
     networks:

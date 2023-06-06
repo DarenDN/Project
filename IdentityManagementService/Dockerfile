@@ -1,9 +1,6 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-ENV ASPNETCORE_ENVIRONMENT=Development
-EXPOSE 5002
-EXPOSE 5003
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
@@ -15,7 +12,8 @@ WORKDIR "/src/."
 RUN dotnet build "IdentityManagementService.csproj" -c Release -o /app/build
 
 RUN dotnet tool install --global dotnet-ef
-ENV PATH="${PATH}:/root/.dotnet/tools"
+#ENV PATH="${PATH}:/root/.dotnet/tools"
+#RUN dotnet ef database update
 
 FROM build AS publish
 RUN dotnet publish "IdentityManagementService.csproj" -c Release -o /app/publish
