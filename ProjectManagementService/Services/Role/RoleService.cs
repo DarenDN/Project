@@ -74,19 +74,7 @@ public class RoleService : IRoleService
     /// <exception cref="ArgumentNullException"></exception>
     public async Task<IEnumerable<RoleDto>> GetRolesAsync()
     {
-        var projectId = await GetRequestingUsersProjectIdAsync();
-
-        if (projectId is null)
-        {
-            throw new ArgumentNullException(nameof(projectId));
-        }
-
         var roles = await _appDbContext.UserRoles
-            .Join(_appDbContext.ProjectsRoles.Where(r => r.ProjectId == projectId),
-                userRole => userRole.Id,
-                projRole => projRole.RoleId,
-                (userRole, projRole) => userRole)
-            .Distinct()
             .Select(r => new RoleDto(r.Id, r.Name))
             .ToListAsync();
 

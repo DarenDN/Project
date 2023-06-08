@@ -66,7 +66,6 @@ public sealed class ProjectService : IProjectService
         }
 
         await ChainIdentityToProjectAsync(newProject.Id, identityId.Value);
-        await SetUpBaseRolseAsync(newProject.Id);
         var adminRoleId = await GetAdminRoleAsync();
 
         try
@@ -100,18 +99,6 @@ public sealed class ProjectService : IProjectService
         {
             // TODO exceptions
             throw;
-        }
-    }
-
-    private async Task SetUpBaseRolseAsync(Guid projectId)
-    {
-        foreach(var role in _roleConfiguration.BasicRoles)
-        {
-            var roleId = role.Value;
-            if(!await _appDbContext.ProjectsRoles.AnyAsync(pr => pr.ProjectId == projectId && pr.RoleId == roleId))
-            {
-                await _appDbContext.ProjectsRoles.AddAsync(new ProjectsRole {ProjectId = projectId, RoleId = roleId });
-            }
         }
     }
 

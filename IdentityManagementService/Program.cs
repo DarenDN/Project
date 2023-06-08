@@ -9,18 +9,14 @@ using IdentityManagementService.Data;
 using IdentityManagementService.Services.IdentityManagement;
 using IdentityManagementService.Services.Auth;
 using Microsoft.OpenApi.Any;
-using Microsoft.Extensions.Hosting;
-using System;
 
 const string AuthConnectionCfgSection = "AuthConnection";
-const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
+const string TestUserConfiguration = "testUsersCfg.json";
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = (Environment.GetEnvironmentVariable("MY_ENV_VAR") != "DOCKER")
-    ? builder.Configuration.GetConnectionString(AuthConnectionCfgSection)
-    : builder.Configuration.GetConnectionString($"{AuthConnectionCfgSection}Docker");
+builder.Configuration.AddJsonFile(TestUserConfiguration);
 
 builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 {
@@ -31,7 +27,7 @@ builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 #endif
 });
 
-builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("SecurityConfiguration"));
+builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection(SecurityConfiguration.ConfigurationName));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters
@@ -39,7 +35,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.Unicode.GetBytes(
-                builder.Configuration.GetValue<string>(SecurityCfgTokenSection))),
+                builder.Configuration.GetValue<string>($"{SecurityConfiguration.ConfigurationName}:Token"))),
         ValidateIssuer = false,
         ValidateAudience = false
     });

@@ -1,0 +1,56 @@
+{
+  "TestUsersConfiguration": {
+    "TestUsers": [
+      {
+        "Id": "41e3060b-c024-4b94-9eec-de26f72b839a",
+        "FirstName": "Александра",
+        "LastName": "Иванова",
+        "MiddleName": "Петровна",
+        "Login": "admin",
+        "Password": "admin",
+        "ProjectId": "fa98f72f-4cce-4350-a306-6d1c61bc7b06",
+        "RoleId": "ef7d3fc3-611f-46b0-98fd-5bf8e1005dec"
+      },
+      {
+        "Id": "6c3e73ab-5636-486e-8754-c591e915fa5f",
+        "FirstName": "Михаил",
+        "LastName": "Соколов",
+        "MiddleName": "Андреевич",
+        "Login": "string",
+        "Password": "string",
+        "ProjectId": "fa98f72f-4cce-4350-a306-6d1c61bc7b06",
+        "RoleId": "b68e2f0d-c7e8-4ba2-b5ff-093ac717cb9d"
+      },
+      {
+        "Id": "4195c605-c167-4ac3-ad1b-bc3cc4afd008",
+        "FirstName": "Екатерина",
+        "LastName": "Кузнецова",
+        "MiddleName": "Дмитриевна",
+        "Login": "login",
+        "Password": "password",
+        "ProjectId": "fa98f72f-4cce-4350-a306-6d1c61bc7b06",
+        "RoleId": "b68e2f0d-c7e8-4ba2-b5ff-093ac717cb9d"
+      },
+      {
+        "Id": "93c87ea0-797e-4f7a-a99e-cc71a0267164",
+        "FirstName": "Антон",
+        "LastName": "Васильев",
+        "MiddleName": "Игоревич",
+        "Login": "anton_vasiliev",
+        "Password": "anton_vasilievkek228",
+        "ProjectId": "fa98f72f-4cce-4350-a306-6d1c61bc7b06",
+        "RoleId": "b68e2f0d-c7e8-4ba2-b5ff-093ac717cb9d"
+      },
+      {
+        "Id": "51783eb8-c5fb-4eba-bee0-2bdaa9aefe93",
+        "FirstName": "Ольга",
+        "LastName": "Новикова",
+        "MiddleName": "Александровна",
+        "Login": "olga_novikova",
+        "Password": "novik0wa",
+        "ProjectId": "fa98f72f-4cce-4350-a306-6d1c61bc7b06",
+        "RoleId": "b68e2f0d-c7e8-4ba2-b5ff-093ac717cb9d"
+      }
+    ]
+  }
+}

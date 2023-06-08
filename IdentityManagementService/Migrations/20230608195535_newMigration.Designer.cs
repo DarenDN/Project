@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IdentityManagementService.Migrations
 {
     [DbContext(typeof(IdentityManagementDbContext))]
-    [Migration("20230604160313_lastUpdate")]
-    partial class lastUpdate
+    [Migration("20230608195535_newMigration")]
+    partial class newMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

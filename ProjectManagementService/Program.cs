@@ -21,12 +21,18 @@ using ProjectManagementService.Services.Type;
 using Microsoft.OpenApi.Any;
 
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
+const string DefaultDataCfg = "defaultData.json";
+const string TestDataCfg = "testData.json";
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile(DefaultDataCfg);
+builder.Configuration.AddJsonFile(TestDataCfg);
 
 builder.Services.Configure<RoleConfiguration>(builder.Configuration.GetSection(RoleConfiguration.ConfigurationName));
 builder.Services.Configure<StateConfiguration>(builder.Configuration.GetSection(StateConfiguration.ConfigurationName));
 builder.Services.Configure<TypeConfiguration>(builder.Configuration.GetSection(TypeConfiguration.ConfigurationName));
+//builder.Services.Configure<TestDataConfiguration>(builder.Configuration.GetSection(TestDataConfiguration.ConfigurationName));
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {

@@ -13,14 +13,14 @@ using ProjectManagementService.Data;
 namespace ProjectManagementService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230528191917_initial")]
-    partial class initial
+    [Migration("20230608195429_newMigrations")]
+    partial class newMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.12")
+                .HasAnnotation("ProductVersion", "6.0.16")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -58,10 +58,13 @@ namespace ProjectManagementService.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -114,13 +117,12 @@ namespace ProjectManagementService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("DateEnd")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<DateTime>("DateStart")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -136,6 +138,23 @@ namespace ProjectManagementService.Migrations
                     b.ToTable("Sprints");
                 });
 
+            modelBuilder.Entity("ProjectManagementService.Models.StateRelationship", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StateCurrent")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StateNext")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StateRelationships");
+                });
+
             modelBuilder.Entity("ProjectManagementService.Models.Task", b =>
                 {
                     b.Property<Guid>("Id")
@@ -146,7 +165,7 @@ namespace ProjectManagementService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid>("CreatorId")
                         .HasColumnType("uuid");
@@ -164,10 +183,13 @@ namespace ProjectManagementService.Migrations
                     b.Property<Guid?>("PerformerId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("SprintId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("StatusId")
+                    b.Property<Guid>("StateId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Title")
@@ -179,20 +201,20 @@ namespace ProjectManagementService.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdateTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CorrespondingUserStoryId");
 
-                    b.HasIndex("StatusId");
+                    b.HasIndex("StateId");
 
                     b.HasIndex("TypeId");
 
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("ProjectManagementService.Models.TaskStatus", b =>
+            modelBuilder.Entity("ProjectManagementService.Models.TaskState", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -200,12 +222,12 @@ namespace ProjectManagementService.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TaskStatuses");
+                    b.ToTable("TaskStates");
                 });
 
             modelBuilder.Entity("ProjectManagementService.Models.TaskType", b =>
@@ -216,8 +238,8 @@ namespace ProjectManagementService.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.HasKey("Id");
 
@@ -232,8 +254,8 @@ namespace ProjectManagementService.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.HasKey("Id");
 
@@ -290,9 +312,9 @@ namespace ProjectManagementService.Migrations
                         .WithMany()
                         .HasForeignKey("CorrespondingUserStoryId");
 
-                    b.HasOne("ProjectManagementService.Models.TaskStatus", "State")
+                    b.HasOne("ProjectManagementService.Models.TaskState", "State")
                         .WithMany()
-                        .HasForeignKey("StatusId")
+                        .HasForeignKey("StateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

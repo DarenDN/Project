@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ProjectManagementService.Migrations
 {
-    public partial class initial : Migration
+    public partial class newMigrations : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -16,7 +16,8 @@ namespace ProjectManagementService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    Description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
+                    Description = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
+                    Created = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -55,10 +56,10 @@ namespace ProjectManagementService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
-                    DateStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DateStart = table.Column<DateTime>(type: "date", nullable: false),
+                    DateEnd = table.Column<DateTime>(type: "date", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,15 +67,28 @@ namespace ProjectManagementService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskStatuses",
+                name: "StateRelationships",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                    StateCurrent = table.Column<Guid>(type: "uuid", nullable: false),
+                    StateNext = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskStatuses", x => x.Id);
+                    table.PrimaryKey("PK_StateRelationships", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaskStates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaskStates", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -82,7 +96,7 @@ namespace ProjectManagementService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                    Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -94,7 +108,7 @@ namespace ProjectManagementService.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                    Name = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -150,8 +164,8 @@ namespace ProjectManagementService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     CreatorId = table.Column<Guid>(type: "uuid", nullable: false),
                     PerformerId = table.Column<Guid>(type: "uuid", nullable: true),
                     Description = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: true),
@@ -159,16 +173,17 @@ namespace ProjectManagementService.Migrations
                     EstimationInPoints = table.Column<int>(type: "integer", nullable: true),
                     CorrespondingUserStoryId = table.Column<Guid>(type: "uuid", nullable: true),
                     SprintId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     TypeId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StatusId = table.Column<Guid>(type: "uuid", nullable: false)
+                    StateId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_TaskStatuses_StatusId",
-                        column: x => x.StatusId,
-                        principalTable: "TaskStatuses",
+                        name: "FK_Tasks_TaskStates_StateId",
+                        column: x => x.StateId,
+                        principalTable: "TaskStates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -195,9 +210,9 @@ namespace ProjectManagementService.Migrations
                 column: "CorrespondingUserStoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_StatusId",
+                name: "IX_Tasks_StateId",
                 table: "Tasks",
-                column: "StatusId");
+                column: "StateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_TypeId",
@@ -222,6 +237,9 @@ namespace ProjectManagementService.Migrations
                 name: "ProjectsRoles");
 
             migrationBuilder.DropTable(
+                name: "StateRelationships");
+
+            migrationBuilder.DropTable(
                 name: "Tasks");
 
             migrationBuilder.DropTable(
@@ -231,7 +249,7 @@ namespace ProjectManagementService.Migrations
                 name: "Projects");
 
             migrationBuilder.DropTable(
-                name: "TaskStatuses");
+                name: "TaskStates");
 
             migrationBuilder.DropTable(
                 name: "TaskTypes");
