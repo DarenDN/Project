@@ -37,7 +37,7 @@ public sealed class SprintController : ControllerBase
     {
         try
         {
-            var sprint = await _sprintService.GetCurrentSprintAsync();
+            var sprint = await _sprintService.GetCurrentSprintDtoAsync();
             return Ok(sprint);
         }
         catch (Exception ex)

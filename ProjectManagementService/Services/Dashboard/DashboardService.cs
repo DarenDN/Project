@@ -9,11 +9,11 @@ using ProjectManagementService.Dtos.Dashboard;
 
 public sealed class DashboardService : IDashboardService
 {
-    private readonly ApplicationDbContext _appDbContext;
+    private readonly Data.AppDbContext _appDbContext;
     private readonly ILogger _logger;
     private IHttpContextAccessor _httpContextAccessor;
 
-    public DashboardService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor)
+    public DashboardService(Data.AppDbContext appDbContext, IHttpContextAccessor httpContextAccessor)
     {
         _appDbContext = appDbContext;
         _httpContextAccessor = httpContextAccessor;

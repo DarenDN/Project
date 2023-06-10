@@ -1,24 +1,22 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Any;
 using Swashbuckle.AspNetCore.Filters;
-using System.Text;
 using IdentityManagementService.Configurations;
 using IdentityManagementService.Data;
-using IdentityManagementService.Services.IdentityManagement;
 using IdentityManagementService.Services.Auth;
-using Microsoft.OpenApi.Any;
 
 const string AuthConnectionCfgSection = "AuthConnection";
 const string TestUserConfiguration = "testUsersCfg.json";
-
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile(TestUserConfiguration);
 
-builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
 #if DEBUG
     options.UseNpgsql(builder.Configuration.GetConnectionString(AuthConnectionCfgSection));
@@ -28,6 +26,7 @@ builder.Services.AddDbContext<IdentityManagementDbContext>(options =>
 });
 
 builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection(SecurityConfiguration.ConfigurationName));
+builder.Services.Configure<TestUsersConfiguration>(builder.Configuration.GetSection(TestUsersConfiguration.ConfigurationName));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters
@@ -43,7 +42,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped(typeof(IAuthService),
     typeof(AuthService));
-builder.Services.AddScoped(typeof(IIdentityManagementService),
+builder.Services.AddScoped(typeof(IdentityManagementService.Services.IdentityManagement.IIdentityManagementService),
     typeof(IdentityManagementService.Services.IdentityManagement.IdentityManagementService));
 
 builder.Services.AddControllers();
@@ -83,9 +82,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "app v1"));
 }
 
-using (var scope = app.Services.CreateScope())
+if(bool.TryParse(Environment.GetEnvironmentVariable("MIGRATE"), out var migrate) && migrate)
 {
-    await scope.ServiceProvider.GetRequiredService<IdentityManagementDbContext>().Database.MigrateAsync();
+    using (var scope = app.Services.CreateScope())
+    {
+        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    }
 }
 
 app.Run();

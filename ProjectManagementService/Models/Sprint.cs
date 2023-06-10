@@ -13,8 +13,6 @@ public sealed class Sprint : DbEntity
 
     public string? Description { get; set; } = string.Empty;
 
-    //public bool SprintClosed { get; set; }
-
     [Required]
     public Guid ProjectId { get; set; }
 
@@ -25,4 +23,6 @@ public sealed class Sprint : DbEntity
     [Required]
     [Column(TypeName = "date")]
     public DateTime DateEnd { get; set;}
+
+    public bool? Finished { get; set; } = false;
 }

@@ -13,11 +13,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 public sealed class TaskService : ITaskService
 {
-    private readonly ApplicationDbContext _appDbContext;
+    private readonly Data.AppDbContext _appDbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly StateConfiguration _stateCfg;
 
-    public TaskService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor, IOptions<StateConfiguration> options)
+    public TaskService(Data.AppDbContext appDbContext, IHttpContextAccessor httpContextAccessor, IOptions<StateConfiguration> options)
     {
         _appDbContext = appDbContext;
         this._httpContextAccessor = httpContextAccessor;

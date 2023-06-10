@@ -12,11 +12,11 @@ using ProjectManagementService.Configurations;
 
 public sealed class ProjectService : IProjectService
 {
-    private readonly ApplicationDbContext _appDbContext;
+    private readonly Data.AppDbContext _appDbContext;
     private IHttpContextAccessor _httpContextAccessor;
     private readonly RoleConfiguration _roleConfiguration;
 
-    public ProjectService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor, IOptions<RoleConfiguration> options)
+    public ProjectService(Data.AppDbContext appDbContext, IHttpContextAccessor httpContextAccessor, IOptions<RoleConfiguration> options)
     {
         _appDbContext = appDbContext;
         _httpContextAccessor = httpContextAccessor;

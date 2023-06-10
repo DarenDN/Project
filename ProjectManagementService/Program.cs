@@ -3,8 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Any;
+using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Filters;
-using ProjectManagementService.Data;
 using ProjectManagementService.Services.Dashboard;
 using ProjectManagementService.Services.Sprint;
 using ProjectManagementService.Services.Project;
@@ -15,10 +16,8 @@ using ProjectManagementService.Services.BurndownChart;
 using ProjectManagementService.Configurations;
 using ProjectManagementService.Services.State;
 using ProjectManagementService.Models;
-using Microsoft.Extensions.Options;
-using System.Data;
 using ProjectManagementService.Services.Type;
-using Microsoft.OpenApi.Any;
+using ProjectManagementService.Data;
 
 const string SecurityCfgTokenSection = "SecurityConfiguration:Token";
 const string DefaultDataCfg = "defaultData.json";
@@ -34,7 +33,7 @@ builder.Services.Configure<StateConfiguration>(builder.Configuration.GetSection(
 builder.Services.Configure<TypeConfiguration>(builder.Configuration.GetSection(TypeConfiguration.ConfigurationName));
 //builder.Services.Configure<TestDataConfiguration>(builder.Configuration.GetSection(TestDataConfiguration.ConfigurationName));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
 #if DEBUG
     options.UseNpgsql(builder.Configuration.GetConnectionString("DataConnection"));
@@ -103,97 +102,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "app v1"));
 }
 
-//using (var serviceProvider = app.Services.CreateAsyncScope())
-//{
-//    await FillBasicDataAsync(serviceProvider.ServiceProvider).ConfigureAwait(true);
-//}
-
-using (var scope = app.Services.CreateScope())
+if (bool.TryParse(Environment.GetEnvironmentVariable("MIGRATE"), out var migrate) && migrate)
 {
-    await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync();
+    using (var scope = app.Services.CreateScope())
+    {
+        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    }
 }
 
 app.Run();
-
-async System.Threading.Tasks.Task FillBasicDataAsync(IServiceProvider serviceProvider)
-{
-    var appDbContext = serviceProvider.GetService<ApplicationDbContext>();
-    var roleCfg = serviceProvider.GetService<IOptions<RoleConfiguration>>().Value;
-    var stateCfg = serviceProvider.GetService<IOptions<StateConfiguration>>().Value;
-    var typeCfg = serviceProvider.GetService<IOptions<TypeConfiguration>>().Value;
-
-    foreach(var role in roleCfg.BasicRoles)
-    {
-        var existingRole = await appDbContext.UserRoles.FirstOrDefaultAsync(r => r.Id == role.Value);
-        if (existingRole is null)
-        {
-            await appDbContext.UserRoles.AddAsync(new UserRole { Id = role.Value, Name = role.Key });
-            foreach (var project in appDbContext.Projects)
-            {
-                await appDbContext.ProjectsRoles.AddAsync(new ProjectsRole { ProjectId = project.Id, RoleId = role.Value });
-            }
-        }
-        else if (!string.Equals(existingRole.Name, role.Key))
-        {
-            existingRole.Name = role.Key;
-            appDbContext.UserRoles.Update(existingRole);
-        }
-    }
-
-    foreach(var state in stateCfg.BasicStates)
-    {
-        var existingState = await appDbContext.TaskStates.FirstOrDefaultAsync(r => r.Id == state.Value);
-        if (existingState is null)
-        {
-            await appDbContext.TaskStates.AddAsync(new TaskState { Id = state.Value, Name = state.Key });
-        }
-        else if (!string.Equals(existingState.Name, state.Key))
-        {
-            existingState.Name = state.Key;
-            appDbContext.TaskStates.Update(existingState);
-        }
-    }
-
-    var newStateRelationships = new List<StateRelationship>();
-    var stateFields = stateCfg.BasicStates;
-
-    foreach (var relationship in stateCfg.BasicRelationships)
-    {
-        stateFields.TryGetValue(relationship.Key, out var mainGuid);
-        foreach (var nextState in relationship.Value)
-        {
-            stateFields.TryGetValue(nextState, out var nextGuid);
-            if (await appDbContext.StateRelationships.AnyAsync(sr => sr.StateCurrent == mainGuid && sr.StateNext == nextGuid))
-            {
-                continue;
-            }
-
-            newStateRelationships.Add(new StateRelationship
-            {
-                StateCurrent = mainGuid,
-                StateNext = nextGuid
-            });
-        }
-    }
-
-    if (newStateRelationships.Any())
-    {
-        await appDbContext.StateRelationships.AddRangeAsync(newStateRelationships);
-    }
-
-    foreach(var type in typeCfg.BasicTypes)
-    {
-        var existingType = await appDbContext.TaskTypes.FirstOrDefaultAsync(r => r.Id == type.Value);
-        if (existingType is null)
-        {
-            await appDbContext.TaskTypes.AddAsync(new TaskType { Id = type.Value, Name = type.Key });
-        }
-        else if (!string.Equals(existingType.Name, type.Key))
-        {
-            existingType.Name = type.Key;
-            appDbContext.TaskTypes.Update(existingType);
-        }
-    }
-
-    await appDbContext.SaveChangesAsync();
-}

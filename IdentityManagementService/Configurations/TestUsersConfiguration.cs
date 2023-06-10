@@ -3,11 +3,12 @@
 public class TestUsersConfiguration
 {
     public static string ConfigurationName = "TestUsersConfiguration";
-    public List<TestUserDto> TestUsers = new List<TestUserDto>();
+    public List<TestUserDto> TestUsers { get; set; }
 }
 
 public class TestUserDto
 {
+    public Guid Id { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string MiddleName { get; set; }

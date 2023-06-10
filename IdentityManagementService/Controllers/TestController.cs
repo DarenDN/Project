@@ -1,30 +1,48 @@
-﻿namespace IdentityManagementService.Data;
+﻿namespace IdentityManagementService.Controllers;
 
-using Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
+using Data;
 using IdentityManagementService.Configurations;
 using IdentityManagementService.Handler.Hash;
+using IdentityManagementService.Models;
+using Microsoft.Extensions.Options;
 
-public class IdentityManagementDbContext : DbContext
+[Route("api/[controller]")]
+[ApiController]
+public class TestController : ControllerBase
 {
+	private readonly AppDbContext _context;
     private TestUsersConfiguration _testUsersConfiguration;
     private HashHandler _hashHandler;
 
-    public IdentityManagementDbContext(
-        DbContextOptions<IdentityManagementDbContext> appDbOptions,
-        IOptions<TestUsersConfiguration> options) : base(appDbOptions)
-    {
+    public TestController(
+        IOptions<TestUsersConfiguration> options,
+        AppDbContext identityManagementDbContext)
+	{
         _testUsersConfiguration = options.Value;
+		_context = identityManagementDbContext;
         _hashHandler = new HashHandler();
+
     }
 
-    public DbSet<Identity> Identities { get; set; }
-    public DbSet<UserInfo> UserInfos { get; set; }
-    public DbSet<RefreshToken> RefreshTokens { get; set; }
-
-    private void FillData(ModelBuilder modelBuilder)
+    [HttpPost]
+    [Route(nameof(FillTestDataAsync))]
+    public async Task<ActionResult> FillTestDataAsync()
     {
+		try
+		{
+			await TryFillTestDataAsync();
+			return Ok();
+
+        }
+		catch (Exception ex)
+		{
+			return StatusCode(500, ex.Message);
+        }
+    }
+
+    private async Task TryFillTestDataAsync()
+	{
         var identities = new List<Identity>();
         var userInfos = new List<UserInfo>();
 
@@ -41,6 +59,7 @@ public class IdentityManagementDbContext : DbContext
             var (hash, salt) = _hashHandler.CreateHashAndSaltAsync(testUser.Password).Result;
             var identity = new Identity
             {
+                Id = testUser.Id,
                 Login = testUser.Login,
                 PasswordHash = hash,
                 PasswordSalt = salt,
@@ -51,7 +70,8 @@ public class IdentityManagementDbContext : DbContext
             userInfos.Add(userInfo);
         }
 
-        modelBuilder.Entity<UserInfo>().HasData(userInfos);
-        modelBuilder.Entity<Identity>().HasData(identities);
+        await _context.UserInfos.AddRangeAsync(userInfos);
+        await _context.Identities.AddRangeAsync(identities);
+        await _context.SaveChangesAsync();
     }
 }

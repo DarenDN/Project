@@ -4,9 +4,9 @@ using Data;
 using Dtos.State;
 public class StateService : IStateService
 {
-    private readonly ApplicationDbContext _applicationDbContext;
+    private readonly Data.AppDbContext _applicationDbContext;
 
-    public StateService(ApplicationDbContext applicationDbContext)
+    public StateService(Data.AppDbContext applicationDbContext)
     {
         this._applicationDbContext = applicationDbContext;
     }

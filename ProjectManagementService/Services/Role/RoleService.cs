@@ -13,11 +13,11 @@ using ProjectManagementService.Configurations;
 public class RoleService : IRoleService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ApplicationDbContext _appDbContext;
+    private readonly Data.AppDbContext _appDbContext;
     private readonly RoleConfiguration _roleConfiguration;
 
 
-    public RoleService(IHttpContextAccessor httpContextAccessor, ApplicationDbContext appDbContext, IOptions<RoleConfiguration> options)
+    public RoleService(IHttpContextAccessor httpContextAccessor, Data.AppDbContext appDbContext, IOptions<RoleConfiguration> options)
     {
         _httpContextAccessor = httpContextAccessor;
         _appDbContext = appDbContext;

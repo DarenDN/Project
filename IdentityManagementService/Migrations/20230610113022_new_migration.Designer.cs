@@ -11,9 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace IdentityManagementService.Migrations
 {
-    [DbContext(typeof(IdentityManagementDbContext))]
-    [Migration("20230608195535_newMigration")]
-    partial class newMigration
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20230610113022_new_migration")]
+    partial class new_migration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

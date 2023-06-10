@@ -29,8 +29,6 @@ public sealed class Task : DbEntity
     public TimeSpan? EstimationInTime { get; set; } = null!;
     public int? EstimationInPoints { get; set; } = null!;
 
-    public UserStory? CorrespondingUserStory { get; set; } = null!;
-
     public Guid? SprintId { get; set; } = null!;
 
     [Required]
@@ -41,6 +39,4 @@ public sealed class Task : DbEntity
 
     [Required]
     public TaskState State { get; set; }
-
-    
 }

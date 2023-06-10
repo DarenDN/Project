@@ -14,11 +14,11 @@ public class AuthService : IAuthService
     private Handler.Token.TokenHandler TokenHandler { get; set; }
 
     private readonly SecurityConfiguration _securityCfg;
-    private readonly IdentityManagementDbContext _appDbContext;
+    private readonly AppDbContext _appDbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AuthService(
-        IdentityManagementDbContext appDbContext,
+        AppDbContext appDbContext,
         IOptions<SecurityConfiguration> options,
         IHttpContextAccessor httpContextAccessor)
     {

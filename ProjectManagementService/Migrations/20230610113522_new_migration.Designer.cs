@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjectManagementService.Data;
@@ -11,10 +12,11 @@ using ProjectManagementService.Data;
 
 namespace ProjectManagementService.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20230610113522_new_migration")]
+    partial class new_migration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,6 +125,9 @@ namespace ProjectManagementService.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<bool?>("Finished")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -151,15 +156,116 @@ namespace ProjectManagementService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("StateRelationships");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1222655c-a4fd-422b-8729-ef833f65083e"),
+                            StateCurrent = new Guid("aeb8aaf7-0c48-4806-9840-eb48cccbbdf8"),
+                            StateNext = new Guid("c9124443-fab8-4696-a837-ecf7b421f4be")
+                        },
+                        new
+                        {
+                            Id = new Guid("abc3f2e9-ea6d-4e3d-9655-a7a9b17cff91"),
+                            StateCurrent = new Guid("eadbc4f9-f1cf-426d-9ca1-06a69b09971c"),
+                            StateNext = new Guid("ba5ebabd-89c7-4a3f-b997-ecdb4009a604")
+                        },
+                        new
+                        {
+                            Id = new Guid("bcf0a183-4257-44ee-9ab9-699ac8b4bccf"),
+                            StateCurrent = new Guid("eadbc4f9-f1cf-426d-9ca1-06a69b09971c"),
+                            StateNext = new Guid("d2ab7572-2359-4698-ae87-14b5955101cf")
+                        },
+                        new
+                        {
+                            Id = new Guid("5461dc6b-dd8a-4841-afb6-96f1ee1f850a"),
+                            StateCurrent = new Guid("d2ab7572-2359-4698-ae87-14b5955101cf"),
+                            StateNext = new Guid("eadbc4f9-f1cf-426d-9ca1-06a69b09971c")
+                        },
+                        new
+                        {
+                            Id = new Guid("90047ab5-09d0-4830-84f3-55703d70cc31"),
+                            StateCurrent = new Guid("d2ab7572-2359-4698-ae87-14b5955101cf"),
+                            StateNext = new Guid("ba5ebabd-89c7-4a3f-b997-ecdb4009a604")
+                        },
+                        new
+                        {
+                            Id = new Guid("679bf0f5-ab5a-428a-ac9f-217a3f6c19f9"),
+                            StateCurrent = new Guid("d31de2b7-103b-45fd-9731-964e7bc0a1ff"),
+                            StateNext = new Guid("8981ee9e-e878-4b7a-b2d3-21e586eba814")
+                        },
+                        new
+                        {
+                            Id = new Guid("8627d14a-7e48-4c73-8ae9-ad858fdd260d"),
+                            StateCurrent = new Guid("d31de2b7-103b-45fd-9731-964e7bc0a1ff"),
+                            StateNext = new Guid("aeb8aaf7-0c48-4806-9840-eb48cccbbdf8")
+                        },
+                        new
+                        {
+                            Id = new Guid("6a6756b7-44a4-4753-bede-01a69e16c1d8"),
+                            StateCurrent = new Guid("d31de2b7-103b-45fd-9731-964e7bc0a1ff"),
+                            StateNext = new Guid("c9124443-fab8-4696-a837-ecf7b421f4be")
+                        },
+                        new
+                        {
+                            Id = new Guid("28589618-0897-42c5-ac54-fd1b0eaa7c4c"),
+                            StateCurrent = new Guid("ba5ebabd-89c7-4a3f-b997-ecdb4009a604"),
+                            StateNext = new Guid("e6bfb790-c086-41b9-aba9-6511fb8e2e17")
+                        },
+                        new
+                        {
+                            Id = new Guid("593abe35-120c-437b-a6af-72f5d7b7d847"),
+                            StateCurrent = new Guid("c9124443-fab8-4696-a837-ecf7b421f4be"),
+                            StateNext = new Guid("d31de2b7-103b-45fd-9731-964e7bc0a1ff")
+                        },
+                        new
+                        {
+                            Id = new Guid("6f740baa-8aae-4e11-9317-fbcb4bdbd3dc"),
+                            StateCurrent = new Guid("c9124443-fab8-4696-a837-ecf7b421f4be"),
+                            StateNext = new Guid("aeb8aaf7-0c48-4806-9840-eb48cccbbdf8")
+                        },
+                        new
+                        {
+                            Id = new Guid("a9008fbb-7653-46bb-a502-cb43902aaef2"),
+                            StateCurrent = new Guid("8981ee9e-e878-4b7a-b2d3-21e586eba814"),
+                            StateNext = new Guid("ba5ebabd-89c7-4a3f-b997-ecdb4009a604")
+                        },
+                        new
+                        {
+                            Id = new Guid("bb0cef36-747b-4fbb-baeb-80fb3f4f46a0"),
+                            StateCurrent = new Guid("8981ee9e-e878-4b7a-b2d3-21e586eba814"),
+                            StateNext = new Guid("aeb8aaf7-0c48-4806-9840-eb48cccbbdf8")
+                        },
+                        new
+                        {
+                            Id = new Guid("82d25b59-881d-47b0-b991-fdac4e4069fc"),
+                            StateCurrent = new Guid("8981ee9e-e878-4b7a-b2d3-21e586eba814"),
+                            StateNext = new Guid("d31de2b7-103b-45fd-9731-964e7bc0a1ff")
+                        },
+                        new
+                        {
+                            Id = new Guid("987a396c-ecc0-4d40-b1f9-5579f6645791"),
+                            StateCurrent = new Guid("e6bfb790-c086-41b9-aba9-6511fb8e2e17"),
+                            StateNext = new Guid("ba5ebabd-89c7-4a3f-b997-ecdb4009a604")
+                        },
+                        new
+                        {
+                            Id = new Guid("5931b098-9c18-4e30-9d72-d3420d04f6b8"),
+                            StateCurrent = new Guid("e6bfb790-c086-41b9-aba9-6511fb8e2e17"),
+                            StateNext = new Guid("d2ab7572-2359-4698-ae87-14b5955101cf")
+                        },
+                        new
+                        {
+                            Id = new Guid("15368c31-24e3-479f-ad63-3106b1e16c24"),
+                            StateCurrent = new Guid("e6bfb790-c086-41b9-aba9-6511fb8e2e17"),
+                            StateNext = new Guid("69a34855-ad70-4b86-b2b6-fe801faf0f9f")
+                        });
                 });
 
             modelBuilder.Entity("ProjectManagementService.Models.Task", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CorrespondingUserStoryId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreateTime")
@@ -203,8 +309,6 @@ namespace ProjectManagementService.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CorrespondingUserStoryId");
-
                     b.HasIndex("StateId");
 
                     b.HasIndex("TypeId");
@@ -226,6 +330,53 @@ namespace ProjectManagementService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TaskStates");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("aeb8aaf7-0c48-4806-9840-eb48cccbbdf8"),
+                            Name = "Анализ"
+                        },
+                        new
+                        {
+                            Id = new Guid("eadbc4f9-f1cf-426d-9ca1-06a69b09971c"),
+                            Name = "Доработка"
+                        },
+                        new
+                        {
+                            Id = new Guid("69a34855-ad70-4b86-b2b6-fe801faf0f9f"),
+                            Name = "Завершено"
+                        },
+                        new
+                        {
+                            Id = new Guid("d2ab7572-2359-4698-ae87-14b5955101cf"),
+                            Name = "К доработке"
+                        },
+                        new
+                        {
+                            Id = new Guid("d31de2b7-103b-45fd-9731-964e7bc0a1ff"),
+                            Name = "К работе"
+                        },
+                        new
+                        {
+                            Id = new Guid("ba5ebabd-89c7-4a3f-b997-ecdb4009a604"),
+                            Name = "К тестированию"
+                        },
+                        new
+                        {
+                            Id = new Guid("c9124443-fab8-4696-a837-ecf7b421f4be"),
+                            Name = "Оценка"
+                        },
+                        new
+                        {
+                            Id = new Guid("8981ee9e-e878-4b7a-b2d3-21e586eba814"),
+                            Name = "Работа"
+                        },
+                        new
+                        {
+                            Id = new Guid("e6bfb790-c086-41b9-aba9-6511fb8e2e17"),
+                            Name = "Тестирование"
+                        });
                 });
 
             modelBuilder.Entity("ProjectManagementService.Models.TaskType", b =>
@@ -242,6 +393,28 @@ namespace ProjectManagementService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TaskTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("dc9b0e23-5c4a-40fb-83ec-691bcd405a83"),
+                            Name = "Задача"
+                        },
+                        new
+                        {
+                            Id = new Guid("1738a748-d9f2-4a92-8010-d69b9fb7fd67"),
+                            Name = "Ошибка"
+                        },
+                        new
+                        {
+                            Id = new Guid("30755127-b34c-4b6f-9e44-57fbd8306bbc"),
+                            Name = "Пользовательская история"
+                        },
+                        new
+                        {
+                            Id = new Guid("460509ef-ce6d-4b4d-a3cf-1c2161fe4e5e"),
+                            Name = "Прочее"
+                        });
                 });
 
             modelBuilder.Entity("ProjectManagementService.Models.UserRole", b =>
@@ -258,6 +431,18 @@ namespace ProjectManagementService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("ef7d3fc3-611f-46b0-98fd-5bf8e1005dec"),
+                            Name = "Админ"
+                        },
+                        new
+                        {
+                            Id = new Guid("b68e2f0d-c7e8-4ba2-b5ff-093ac717cb9d"),
+                            Name = "Стандартный"
+                        });
                 });
 
             modelBuilder.Entity("ProjectManagementService.Models.UserStory", b =>
@@ -306,10 +491,6 @@ namespace ProjectManagementService.Migrations
 
             modelBuilder.Entity("ProjectManagementService.Models.Task", b =>
                 {
-                    b.HasOne("ProjectManagementService.Models.UserStory", "CorrespondingUserStory")
-                        .WithMany()
-                        .HasForeignKey("CorrespondingUserStoryId");
-
                     b.HasOne("ProjectManagementService.Models.TaskState", "State")
                         .WithMany()
                         .HasForeignKey("StateId")
@@ -321,8 +502,6 @@ namespace ProjectManagementService.Migrations
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("CorrespondingUserStory");
 
                     b.Navigation("State");
 

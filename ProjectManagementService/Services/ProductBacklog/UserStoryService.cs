@@ -9,10 +9,10 @@ using Task = System.Threading.Tasks.Task;
 
 public class UserStoryService : IUserStoryService
 {
-    private readonly ApplicationDbContext _appDbContext;
+    private readonly Data.AppDbContext _appDbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public UserStoryService(ApplicationDbContext appDbContext, IHttpContextAccessor httpContextAccessor)
+    public UserStoryService(Data.AppDbContext appDbContext, IHttpContextAccessor httpContextAccessor)
     {
         this._appDbContext = appDbContext;
         this._httpContextAccessor = httpContextAccessor;

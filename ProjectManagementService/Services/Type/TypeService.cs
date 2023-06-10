@@ -5,9 +5,9 @@ using ProjectManagementService.Data;
 
 public class TypeService : ITypeService
 {
-    private readonly ApplicationDbContext _applicationDbContext;
+    private readonly Data.AppDbContext _applicationDbContext;
 
-    public TypeService(ApplicationDbContext applicationDbContext)
+    public TypeService(Data.AppDbContext applicationDbContext)
     {
         this._applicationDbContext = applicationDbContext;
     }

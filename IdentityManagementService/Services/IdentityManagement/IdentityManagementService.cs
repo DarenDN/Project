@@ -1,27 +1,26 @@
 ﻿namespace IdentityManagementService.Services.IdentityManagement;
 
-using Data;
-using Dtos;
-using Models;
-using Handler.Token;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Configurations;
-using System.Security.Principal;
+using Data;
+using Dtos;
+using Models;
+using Handler.Token;
 
 public class IdentityManagementService : IIdentityManagementService
 {
     private TokenHandler TokenHandler { get; set; }
 
-    private readonly IdentityManagementDbContext _appDbContext;
+    private readonly AppDbContext _appDbContext;
     private IHttpContextAccessor _httpContextAccessor;
     private readonly SecurityConfiguration _securityCfg;
 
     public IdentityManagementService(
-        IdentityManagementDbContext appDbContext,
+        AppDbContext appDbContext,
         IHttpContextAccessor httpContextAccessor,
         IOptions<SecurityConfiguration> securityCfg)
     {

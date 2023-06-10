@@ -9,10 +9,10 @@ using System.Collections.Generic;
 
 public sealed class SprintService : ISprintService
 {
-    private readonly ApplicationDbContext _applicationDbContext;
+    private readonly Data.AppDbContext _applicationDbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public SprintService(ApplicationDbContext applicationDbContext, IHttpContextAccessor httpContextAccessor)
+    public SprintService(Data.AppDbContext applicationDbContext, IHttpContextAccessor httpContextAccessor)
     {
         this._applicationDbContext = applicationDbContext;
         this._httpContextAccessor = httpContextAccessor;
@@ -80,15 +80,9 @@ public sealed class SprintService : ISprintService
         return new SprintDto(sprint.Id, sprint.Name, sprint.DateStart, sprint.DateEnd, sprint.Description);
     }
 
-    public async Task<SprintDto?> GetCurrentSprintAsync()
+    public async Task<SprintDto?> GetCurrentSprintDtoAsync()
     {
-        var projectId = await GetRequestingUsersProjectIdAsync();
-        var currentDate = DateTime.Now;
-
-        var sprint = await _applicationDbContext.Sprints.FirstOrDefaultAsync(
-            s => s.ProjectId == projectId
-            && s.DateEnd >= currentDate
-            && s.DateStart <= currentDate);
+        var sprint = await GetCurrentSprintAsync();
 
         return sprint is not null
             ? new SprintDto(sprint.Id, sprint.Name, sprint.DateStart, sprint.DateEnd, sprint.Description)
@@ -103,6 +97,32 @@ public sealed class SprintService : ISprintService
             .Where(s => s.ProjectId == projectId)
             .Select(s => new SprintDto(s.Id, s.Name, s.DateStart, s.DateEnd, s.Description))
             .ToListAsync();
+    }
+
+    public async Task FinishSprintAsync()
+    {
+        var currentSprint = await GetCurrentSprintAsync();
+        if (currentSprint is null)
+        {
+            return;
+        }
+        currentSprint.Finished = true;
+        _applicationDbContext.Sprints.Update(currentSprint);
+        await TrySaveChangesAsync();
+    }
+
+    private async Task<Sprint?> GetCurrentSprintAsync()
+    {
+        var projectId = await GetRequestingUsersProjectIdAsync();
+        var currentDate = DateTime.Now;
+
+        var sprint = await _applicationDbContext.Sprints.FirstOrDefaultAsync(
+            s => s.ProjectId == projectId
+            && s.DateEnd >= currentDate
+            && s.DateStart <= currentDate
+            && s.Finished == false);
+
+        return sprint;
     }
 
     private async System.Threading.Tasks.Task TrySaveChangesAsync()
