@@ -6,6 +6,7 @@ using Services.Dashboard;
 using Dtos.Dashboard;
 
 [ApiController, Authorize]
+[EnableCors("CorsPolicy")]
 [Route("api/[controller]")]
 public sealed class DashboardController : ControllerBase
 {

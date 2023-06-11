@@ -6,6 +6,7 @@ using Dtos.Sprint;
 using Services.Sprint;
 
 [Route("api/[controller]"), Authorize]
+[EnableCors("CorsPolicy")]
 [ApiController]
 public sealed class SprintController : ControllerBase
 {

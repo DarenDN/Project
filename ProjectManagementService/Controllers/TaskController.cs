@@ -5,8 +5,10 @@ using Dtos.Task;
 using Services.Task;
 using Microsoft.AspNetCore.Authorization;
 using ProjectManagementService.Dtos.Estimation;
+using Microsoft.AspNetCore.Cors;
 
 [Route("api/[controller]"), Authorize]
+[EnableCors("CorsPolicy")]
 [ApiController]
 public sealed class TaskController : ControllerBase
 {

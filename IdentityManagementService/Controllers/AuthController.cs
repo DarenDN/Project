@@ -25,7 +25,8 @@ public class AuthController : ControllerBase
         try
         {
             var createdToken = await _authService.LoginAsync(userAuthDto);
-            return Ok(createdToken);
+
+            return new JsonResult(new { createdToken });
         }
         catch (ArgumentNullException argNullEx)
         {
@@ -33,7 +34,9 @@ public class AuthController : ControllerBase
         }
         catch (ArgumentException argEx)
         {
-            return Unauthorized(argEx.Message);
+            this.HttpContext.Response.StatusCode = 401;
+            return new JsonResult(new { argEx.Message });
+            //return Unauthorized(argEx.Message);
         }
         catch (Exception ex)
         {
@@ -64,7 +67,7 @@ public class AuthController : ControllerBase
         try
         {
             var newAccessToken = await _authService.RefreshTokensAsync();
-            return Ok(newAccessToken);
+            return new JsonResult(new { newAccessToken });
         }
         catch(SecurityTokenExpiredException)
         {
@@ -84,7 +87,7 @@ public class AuthController : ControllerBase
         try
         {
             var isAuthorized = await _authService.IsAuthorized();
-            return Ok(isAuthorized);
+            return new JsonResult(new { isAuthorized });
         }
         catch (Exception ex)
         {

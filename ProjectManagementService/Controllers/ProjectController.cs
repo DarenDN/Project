@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 // working with project could be easily drawn into one own microservice
 [ApiController, Authorize]
+[EnableCors("CorsPolicy")]
 [Route("api/[controller]")]
 public class ProjectController : ControllerBase
 {

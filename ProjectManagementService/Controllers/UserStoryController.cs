@@ -8,6 +8,7 @@ using Services.ProductBacklog;
 /// Responsible for dealing with UserStories
 /// </summary>
 [Route("api/[controller]"), Authorize]
+[EnableCors("CorsPolicy")]
 [ApiController]
 public sealed class UserStoryController : ControllerBase
 {

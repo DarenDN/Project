@@ -1,10 +1,12 @@
 ﻿namespace ProjectManagementService.Controllers;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Type;
 
 [ApiController, Authorize]
+[EnableCors("CorsPolicy")]
 [Route("api/[controller]")]
 public class TypeController : ControllerBase
 {

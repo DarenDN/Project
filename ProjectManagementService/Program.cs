@@ -27,7 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile(DefaultDataCfg);
 builder.Configuration.AddJsonFile(TestDataCfg);
-
+builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 builder.Services.Configure<RoleConfiguration>(builder.Configuration.GetSection(RoleConfiguration.ConfigurationName));
 builder.Services.Configure<StateConfiguration>(builder.Configuration.GetSection(StateConfiguration.ConfigurationName));
 builder.Services.Configure<TypeConfiguration>(builder.Configuration.GetSection(TypeConfiguration.ConfigurationName));
@@ -89,7 +89,7 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 var app = builder.Build();
-
+app.UseCors("CorsPolicy");
 //app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

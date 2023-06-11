@@ -14,7 +14,7 @@ const string RedisConnectionStringSection = "Redis";
 const string SignalRCfgRouteSection = "SignalRConfiguration:Route";
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters
     {
@@ -65,7 +65,7 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 var app = builder.Build();
-
+app.UseCors("CorsPolicy");
 app.MapControllers();
 
 //app.UseHttpsRedirection();

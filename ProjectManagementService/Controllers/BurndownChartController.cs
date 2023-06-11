@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using ProjectManagementService.Services.BurndownChart;
 
 [Route("api/[controller]"), Authorize]
+[EnableCors("CorsPolicy")]
 [ApiController]
 public sealed class BurndownChartController : ControllerBase
 {

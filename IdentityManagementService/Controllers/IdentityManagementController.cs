@@ -25,7 +25,7 @@ public sealed class IdentityManagementController : ControllerBase
         try
         {
             var accessToken = await _identityManagmentService.RegisterUserIdentityAsync(registerIdentityDto);
-            return Ok(accessToken);
+            return new JsonResult(new { accessToken });
         }
         catch (Exception ex)
         {

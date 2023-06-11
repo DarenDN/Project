@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagementService.Models;
 using ProjectManagementService.Data;
+using Microsoft.AspNetCore.Cors;
 
 [Route("api/[controller]")]
+[EnableCors("CorsPolicy")]
 [ApiController]
 public sealed class TestController : ControllerBase
 {
