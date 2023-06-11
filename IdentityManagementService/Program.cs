@@ -72,6 +72,7 @@ builder.Services.AddSwaggerGen(opt =>
 var app = builder.Build();
 
 //app.UseHttpsRedirection();
+app.UseCors("CorsPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
