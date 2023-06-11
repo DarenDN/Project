@@ -5,8 +5,10 @@ using Services.MeetingService;
 using Enums;
 using Dtos;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 
 [ApiController, Authorize]
+[EnableCors("CorsPolicy")]
 [Route("api/[controller]")]
 public sealed class MeetingController : ControllerBase
 {
@@ -28,8 +30,8 @@ public sealed class MeetingController : ControllerBase
     {
         try
         {
-            var meeting = await _meetingService.GetMeetingAsync(projectId);
-            return Ok(meeting);
+            var meetingCode = await _meetingService.GetMeetingAsync(projectId);
+            return new JsonResult(new { meetingCode });
         }
         catch (Exception ex)
         {
@@ -44,7 +46,7 @@ public sealed class MeetingController : ControllerBase
         try
         {
             var meetingState = await _meetingService.JoinMeetingAndNotifyAsync(meetingCode);
-            return Ok(meetingState);
+            return new JsonResult(meetingState);
         }
         catch (Exception ex)
         {
@@ -59,7 +61,7 @@ public sealed class MeetingController : ControllerBase
         try
         {
             var meetingState = await _meetingService.GetCurrentMeetingStateAsync(meetingCode);
-            return Ok(meetingState);
+            return new JsonResult(meetingState);
         }
         catch (Exception ex)
         {
@@ -89,7 +91,7 @@ public sealed class MeetingController : ControllerBase
         try
         {
             var meetingCode = await _meetingService.CreateMeetingAndJoinAsync(projectId, tasks);
-            return Ok(meetingCode);
+            return new JsonResult(new { meetingCode });
         }
         catch (Exception ex)
         {
@@ -104,7 +106,7 @@ public sealed class MeetingController : ControllerBase
         try
         {
             var currentTaskState = await _meetingService.ChangeActiveTaskAndNotifyAsync(meetingCode, taskId);
-            return Ok(currentTaskState);
+            return new JsonResult(currentTaskState);
         }
         catch (Exception ex)
         {
@@ -118,8 +120,8 @@ public sealed class MeetingController : ControllerBase
     {
         try
         {
-            var results = await _meetingService.GetFinalEvaluationsAsync(meetingCode);
-            return Ok(results);
+            var taskSprintEvaluationInfos = await _meetingService.GetFinalEvaluationsAsync(meetingCode);
+            return new JsonResult(new { taskSprintEvaluationInfos });
         }
         catch (Exception ex)
         {

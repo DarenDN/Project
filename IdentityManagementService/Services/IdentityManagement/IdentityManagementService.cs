@@ -88,7 +88,7 @@ public class IdentityManagementService : IIdentityManagementService
         await TrySaveChangesAsync();
     }
 
-    public async Task<IEnumerable<UserDto>> GetUsersAsync()
+    public async Task<IEnumerable<UserIdentityDto>> GetUsersAsync()
     {
         var projectId = await GetRequestingUsersProjectIdAsync();
         if(projectId is null)
@@ -99,7 +99,15 @@ public class IdentityManagementService : IIdentityManagementService
         var users = _appDbContext.Identities
                                     .Include(i => i.UserInfo)
                                     .Where(i => i.UserInfo.ProjectId == projectId)
-                                    .Select(i=> new UserDto(i.Id, i.UserInfo.RoleId, i.UserInfo.FirstName, i.UserInfo.LastName, i.UserInfo.MiddleName));
+                                    .Select(i=> new UserIdentityDto(
+                                        i.Id, 
+                                        i.UserInfo.RoleId,
+                                        i.Login,
+                                        i.UserInfo.FirstName, 
+                                        i.UserInfo.LastName, 
+                                        i.UserInfo.MiddleName,
+                                        i.UserInfo.Email,
+                                        i.UserInfo.RegisterTime));
 
         return users;
     }
@@ -120,23 +128,9 @@ public class IdentityManagementService : IIdentityManagementService
             userInfo.RegisterTime);
     }
 
-    public async Task<ShortUserInfoDto> GetUserAsync()
+
+    public async Task<ShortUserInfoDto> GetShortUserInfoAsync(Guid? identityId)
     {
-        var identityId = GetClaimedIdentityId();
-        if(identityId is null)
-        {
-            throw new ArgumentException(nameof(identityId));
-        }
-
-        var identity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i => i.Id == identityId.Value);
-        var userInfo = identity.UserInfo;
-
-        return new ShortUserInfoDto(userInfo.FirstName, userInfo.LastName, userInfo.MiddleName);
-    }
-
-    public async Task<ShortUserInfoDto> GetShortUserInfoAsync(Guid? identityId = null)
-    {
-        identityId ??= GetClaimedIdentityId();
         if(identityId is null)
         {
             throw new ArgumentException(nameof(identityId));
@@ -154,6 +148,38 @@ public class IdentityManagementService : IIdentityManagementService
         var shortUserInfoDtos = identities.Select(i => new ShortUserInfoDto(i.UserInfo.FirstName, i.UserInfo.LastName, i.UserInfo?.MiddleName));
 
         return shortUserInfoDtos;
+    }
+
+    public async Task<ShortUserInfoDto> GetCurrentShortUserInfoAsync()
+    {
+        var identityId = GetClaimedIdentityId();
+        return await GetShortUserInfoAsync(identityId);
+    }
+
+    public async Task<UserIdentityDto> GetCurrentFullUserInfoAsync()
+    {
+        var identityId = GetClaimedIdentityId();
+        return await GetUserAsync(identityId);
+    }
+
+    public async Task SetProjectIdToUserAsync(Guid projectId)
+    {
+        var identityId = GetClaimedIdentityId();
+        if (identityId is null)
+        {
+            throw new ArgumentException(nameof(identityId));
+        }
+
+        var idnetity = await _appDbContext.Identities.Include(i => i.UserInfo).FirstOrDefaultAsync(i => i.Id == identityId.Value);
+        var userInfo = idnetity.UserInfo;
+        userInfo.ProjectId = projectId;
+        _appDbContext.UserInfos.Update(userInfo);
+        await TrySaveChangesAsync();
+    }
+
+    public Task UpdateUserAsync()
+    {
+        throw new NotImplementedException();
     }
 
     private async Task<Identity> RegisterNewIdentityAsync(RegisterIdentityDto registerUserDto)
@@ -325,25 +351,5 @@ public class IdentityManagementService : IIdentityManagementService
         var projectId = identity?.UserInfo.ProjectId;
 
         return projectId;
-    }
-
-    public Task UpdateUserAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task SetProjectIdToUserAsync(Guid projectId)
-    {
-        var identityId = GetClaimedIdentityId();
-        if(identityId is null)
-        {
-            throw new ArgumentException(nameof(identityId));
-        }
-
-        var idnetity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i=>i.Id == identityId.Value);
-        var userInfo = idnetity.UserInfo;
-        userInfo.ProjectId = projectId;
-        _appDbContext.UserInfos.Update(userInfo);
-        await TrySaveChangesAsync();
     }
 }

@@ -23,7 +23,7 @@ public class TypeController : ControllerBase
         try
         {
             var types = await _typeService.GetTypesAsync();
-            return Ok(types);
+            return new JsonResult(new { types });
         }
         catch (Exception ex)
         {

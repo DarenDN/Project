@@ -24,7 +24,7 @@ public class StateController : ControllerBase
         try
         {
             var states = await _stateService.GetStatesAsync();
-            return Ok(states);
+            return new JsonResult(new { states });
         }
         catch (Exception ex)
         {
@@ -39,7 +39,7 @@ public class StateController : ControllerBase
         try
         {
             var states = await _stateService.GetNextStatesAsync(currentState);
-            return Ok(states);
+            return new JsonResult(new { states });
         }
         catch (Exception ex)
         {

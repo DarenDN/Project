@@ -86,7 +86,7 @@ public sealed class TaskController : ControllerBase
         try
         {
             var task = await _taskService.GetTaskAsync(taskId); 
-            return Ok(task);
+            return new JsonResult(task);
         }
         catch (Exception ex) 
         {
@@ -101,7 +101,7 @@ public sealed class TaskController : ControllerBase
         try
         {
             var tasksBacklog = await _taskService.GetTasksBacklogAsync();
-            return Ok(tasksBacklog);
+            return new JsonResult( new { tasksBacklog });
         }
         catch (Exception ex)
         {
@@ -116,7 +116,7 @@ public sealed class TaskController : ControllerBase
         try
         {
             var tasks = await _taskService.GetSprintTasksAsync();
-            return Ok(tasks);
+            return new JsonResult(new { tasks });
         }
         catch (Exception ex)
         {
@@ -131,7 +131,7 @@ public sealed class TaskController : ControllerBase
         try
         {
             var tasks = await _taskService.GetTasksWithStatesAsync(states);
-            return Ok(tasks);
+            return new JsonResult( new { tasks });
         }
         catch (Exception ex)
         {

@@ -42,7 +42,7 @@ public class RoleController : ControllerBase
         try
         {
             var roles = await _roleService.GetRolesAsync();
-            return Ok(roles);
+            return new JsonResult(new { roles });
         }
         catch (Exception ex)
         {
@@ -58,7 +58,7 @@ public class RoleController : ControllerBase
         try
         {
             var role = await _roleService.GetRoleAsync(roleId);
-            return Ok(role);
+            return new JsonResult(role);
         }
         catch (Exception ex)
         {
@@ -90,7 +90,7 @@ public class RoleController : ControllerBase
         try
         {
             var isAdmin = await _roleService.IsAdminAsync();
-            return Ok(isAdmin);
+            return new JsonResult(new { isAdmin });
         }
         catch (Exception ex)
         {

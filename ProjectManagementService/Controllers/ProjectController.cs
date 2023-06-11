@@ -56,7 +56,7 @@ public class ProjectController : ControllerBase
         try
         {
             var projectData = await _projectService.GetProjectAsync();
-            return Ok(projectData);
+            return new JsonResult( projectData );
         }
         catch (Exception ex)
         {
@@ -86,7 +86,7 @@ public class ProjectController : ControllerBase
         try
         {
             var createdProjectDto = await _projectService.CreateProjectAsync(projectDto);
-            return Ok(createdProjectDto);
+            return new JsonResult( createdProjectDto );
         }
         catch (Exception ex)
         {

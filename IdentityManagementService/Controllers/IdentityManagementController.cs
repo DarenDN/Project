@@ -87,8 +87,8 @@ public sealed class IdentityManagementController : ControllerBase
     {
         try
         {
-            var users = await _identityManagmentService.GetUsersAsync();
-            return new JsonResult(new { users });
+            var userIdentityDtos = await _identityManagmentService.GetUsersAsync();
+            return new JsonResult(new { userIdentityDtos });
         }
         catch (Exception ex)
         {
@@ -96,14 +96,14 @@ public sealed class IdentityManagementController : ControllerBase
         }
     }
 
-    [HttpGet, Authorize]
+    [HttpPut, Authorize]
     [Route(nameof(GetUserInfoAsync))]
     public async Task<ActionResult> GetUserInfoAsync(Guid? identityId)
     {
         try
         {
-            var user = await _identityManagmentService.GetUserAsync(identityId);
-            return new JsonResult(new { user });
+            var userIdentityDto = await _identityManagmentService.GetUserAsync(identityId);
+            return new JsonResult(userIdentityDto);
         }
         catch (Exception ex)
         {
@@ -111,14 +111,14 @@ public sealed class IdentityManagementController : ControllerBase
         }
     }
 
-    [HttpGet, Authorize]
+    [HttpPut, Authorize]
     [Route(nameof(GetShortUserInfoAsync))]
     public async Task<ActionResult> GetShortUserInfoAsync(Guid? identityId)
     {
         try
         {
-            var user = await _identityManagmentService.GetShortUserInfoAsync(identityId);
-            return new JsonResult(new { user });
+            var shortUserInfoDto = await _identityManagmentService.GetShortUserInfoAsync(identityId);
+            return new JsonResult(shortUserInfoDto);
         }
         catch (Exception ex)
         {
@@ -127,13 +127,43 @@ public sealed class IdentityManagementController : ControllerBase
     }
 
     [HttpGet, Authorize]
+    [Route(nameof(GetCurrentShortUserInfoAsync))]
+    public async Task<ActionResult> GetCurrentShortUserInfoAsync()
+    {
+        try
+        {
+            var shortUserInfoDto = await _identityManagmentService.GetCurrentShortUserInfoAsync();
+            return new JsonResult(shortUserInfoDto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet, Authorize]
+    [Route(nameof(GetCurrentFullUserInfoAsync))]
+    public async Task<ActionResult> GetCurrentFullUserInfoAsync()
+    {
+        try
+        {
+            var userIdentityDto = await _identityManagmentService.GetCurrentFullUserInfoAsync();
+            return new JsonResult(userIdentityDto);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut, Authorize]
     [Route(nameof(GetShortUserInfosAsync))]
     public async Task<ActionResult> GetShortUserInfosAsync(List<Guid?>? identityIds)
     {
         try
         {
-            var user = await _identityManagmentService.GetShortUserInfosAsync(identityIds);
-            return new JsonResult(new { user });
+            var shortUserInfoDto = await _identityManagmentService.GetShortUserInfosAsync(identityIds);
+            return new JsonResult(shortUserInfoDto);
         }
         catch (Exception ex)
         {

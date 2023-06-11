@@ -11,11 +11,12 @@ public interface IIdentityManagementService
 
     Task DeleteUserAsync(Guid? identityId);
 
-    Task<IEnumerable<UserDto>> GetUsersAsync();
+    Task<IEnumerable<UserIdentityDto>> GetUsersAsync();
 
     Task<UserIdentityDto> GetUserAsync(Guid? identityId);
 
-    Task<ShortUserInfoDto> GetUserAsync();
+    Task<ShortUserInfoDto> GetCurrentShortUserInfoAsync();
+    Task<UserIdentityDto> GetCurrentFullUserInfoAsync();
     Task<ShortUserInfoDto> GetShortUserInfoAsync(Guid? identityId = null);
     Task<IEnumerable<ShortUserInfoDto>> GetShortUserInfosAsync(IEnumerable<Guid?> identityIds);
 

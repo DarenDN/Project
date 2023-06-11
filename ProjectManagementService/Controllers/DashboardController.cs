@@ -70,7 +70,7 @@ public sealed class DashboardController : ControllerBase
         try
         {
             var dashboards = await _dashboardService.GetDashboardsAsync();
-            return Ok(dashboards);
+            return new JsonResult(new { dashboards });
         }
         catch (Exception ex)
         {
@@ -85,7 +85,7 @@ public sealed class DashboardController : ControllerBase
         try
         {
             var dashboard = await _dashboardService.GetDashboardAsync(dashboardId);
-            return Ok(dashboard);
+            return new JsonResult(dashboard);
         }
         catch (Exception ex)
         {

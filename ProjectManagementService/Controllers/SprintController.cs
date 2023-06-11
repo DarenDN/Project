@@ -40,7 +40,7 @@ public sealed class SprintController : ControllerBase
         try
         {
             var sprint = await _sprintService.GetCurrentSprintDtoAsync();
-            return Ok(sprint);
+            return new JsonResult(sprint);
         }
         catch (Exception ex)
         {
@@ -55,7 +55,7 @@ public sealed class SprintController : ControllerBase
         try
         {
             var sprint = await _sprintService.GetSprintAsync(sprintId);
-            return Ok(sprint);
+            return new JsonResult(sprint);
         }
         catch (Exception ex)
         {
