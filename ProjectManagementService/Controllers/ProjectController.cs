@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Dtos.Project;
 using Services.Project;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 
 // working with project could be easily drawn into one own microservice
 [ApiController, Authorize]

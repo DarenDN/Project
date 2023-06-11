@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Dtos.Sprint;
 using Services.Sprint;
+using Microsoft.AspNetCore.Cors;
 
 [Route("api/[controller]"), Authorize]
 [EnableCors("CorsPolicy")]

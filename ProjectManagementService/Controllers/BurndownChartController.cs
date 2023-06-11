@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ProjectManagementService.Services.BurndownChart;
+using Microsoft.AspNetCore.Cors;
 
 [Route("api/[controller]"), Authorize]
 [EnableCors("CorsPolicy")]
