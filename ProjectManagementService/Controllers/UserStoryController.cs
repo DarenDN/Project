@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Services.ProductBacklog;
+using Microsoft.AspNetCore.Cors;
 
 /// <summary>
 /// Responsible for dealing with UserStories

@@ -6,8 +6,10 @@ using IdentityManagementService.Configurations;
 using IdentityManagementService.Handler.Hash;
 using IdentityManagementService.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Cors;
 
 [Route("api/[controller]")]
+[EnableCors("CorsPolicy")]
 [ApiController]
 public class TestController : ControllerBase
 {

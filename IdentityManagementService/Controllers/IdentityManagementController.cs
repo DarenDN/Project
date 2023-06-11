@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Dtos;
 using Services.IdentityManagement;
 using Microsoft.AspNetCore.Cors;
+using IdentityManagementService.Models;
 
 [ApiController]
 [EnableCors("CorsPolicy")]
@@ -55,7 +56,7 @@ public sealed class IdentityManagementController : ControllerBase
         try
         {
             var identityId = await _identityManagmentService.CreateUserAsync(registerUserDto);
-            return Ok(identityId);
+            return new JsonResult(new { identityId });
         }
         catch (Exception ex)
         {
@@ -87,7 +88,7 @@ public sealed class IdentityManagementController : ControllerBase
         try
         {
             var users = await _identityManagmentService.GetUsersAsync();
-            return Ok(users);
+            return new JsonResult(new { users });
         }
         catch (Exception ex)
         {
@@ -102,7 +103,7 @@ public sealed class IdentityManagementController : ControllerBase
         try
         {
             var user = await _identityManagmentService.GetUserAsync(identityId);
-            return Ok(user);
+            return new JsonResult(new { user });
         }
         catch (Exception ex)
         {
@@ -117,7 +118,7 @@ public sealed class IdentityManagementController : ControllerBase
         try
         {
             var user = await _identityManagmentService.GetShortUserInfoAsync(identityId);
-            return Ok(user);
+            return new JsonResult(new { user });
         }
         catch (Exception ex)
         {
@@ -132,7 +133,7 @@ public sealed class IdentityManagementController : ControllerBase
         try
         {
             var user = await _identityManagmentService.GetShortUserInfosAsync(identityIds);
-            return Ok(user);
+            return new JsonResult(new { user });
         }
         catch (Exception ex)
         {

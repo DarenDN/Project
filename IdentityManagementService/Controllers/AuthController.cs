@@ -25,7 +25,6 @@ public class AuthController : ControllerBase
         try
         {
             var createdToken = await _authService.LoginAsync(userAuthDto);
-
             return new JsonResult(new { createdToken });
         }
         catch (ArgumentNullException argNullEx)
