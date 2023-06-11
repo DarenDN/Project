@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Dtos;
 using Services.IdentityManagement;
+using Microsoft.AspNetCore.Cors;
 
 [ApiController]
+[EnableCors("CorsPolicy")]
 [Route("api/[controller]")]
 public sealed class IdentityManagementController : ControllerBase
 {

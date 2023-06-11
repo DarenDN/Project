@@ -1,11 +1,13 @@
 ﻿namespace IdentityManagementService.Controllers;
 
 using IdentityManagementService.Dtos;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Services.Auth;
 
 [ApiController]
+[EnableCors("CorsPolicy")]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
