@@ -95,10 +95,12 @@ module.exports = configure(function (/* ctx */) {
     framework: {
       // Quasar plugins
       plugins: [
-        'Loading'
+        'Loading',
+        'Notify'
       ],
       config: {
-        loading: { /* look at QuasarConfOptions from the API card */ }
+        loading: { /* look at QuasarConfOptions from the API card */ },
+        notify: { /* look at QuasarConfOptions from the API card */ }
       }
 
       // iconSet: 'material-icons', // Quasar icon set

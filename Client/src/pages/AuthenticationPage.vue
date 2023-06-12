@@ -25,11 +25,7 @@
       />
 
       <div>
-        <q-btn
-          label="Submit"
-          type="submit"
-          color="primary"
-        />
+        <q-btn label="Submit" type="submit" color="primary" />
         <q-btn
           label="I dont't have an account"
           type="reset"
@@ -55,7 +51,13 @@
           title="Account information"
           icon="settings"
           :done="step > 1"
-          :error="checkNameOrLogin(registrationLogin) !== true || checkPassword(registrationPassword) !== true || checkPassword(registrationPasswordAgain) !== true || checkPasswords(registrationPassword, registrationPasswordAgain) !== true"
+          :error="
+            checkNameOrLogin(registrationLogin) !== true ||
+            checkPassword(registrationPassword) !== true ||
+            checkPassword(registrationPasswordAgain) !== true ||
+            checkPasswords(registrationPassword, registrationPasswordAgain) !==
+              true
+          "
         >
           <q-input
             filled
@@ -84,11 +86,7 @@
           />
 
           <q-stepper-navigation>
-            <q-btn
-              @click="step = 2"
-              color="primary"
-              label="Continue"
-            />
+            <q-btn @click="step = 2" color="primary" label="Continue" />
             <q-btn
               label="I have an account"
               type="reset"
@@ -129,11 +127,7 @@
           />
 
           <q-stepper-navigation>
-            <q-btn
-              @click="step = 4"
-              color="primary"
-              label="Continue"
-            />
+            <q-btn @click="step = 4" color="primary" label="Continue" />
             <q-btn
               flat
               @click="step = 1"
@@ -161,11 +155,7 @@
           />
 
           <q-stepper-navigation>
-            <q-btn
-              color="primary"
-              label="Finish"
-              type="submit"
-            />
+            <q-btn color="primary" label="Finish" type="submit" />
             <q-btn
               flat
               @click="step = 2"
@@ -185,10 +175,12 @@ import { useQuasar } from "quasar";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { store } from "stores/store";
+import { mask } from "src/utils/mask";
+import { httpClient } from "src/utils/httpClient";
 
 store.reset();
 
-const $q = useQuasar();
+const q = useQuasar();
 const router = useRouter();
 
 const authorizationLogin = ref(null);
@@ -208,9 +200,43 @@ const projectDescription = ref(null);
 const registration = ref(false);
 const step = ref(1);
 
+mask.init(q.loading);
+
 function onSubmit() {
+  mask.show("loading");
   store.newAccountHasBeenRegistered = registration.value;
-  router.push("/home");
+
+  if (!store.newAccountHasBeenRegistered) {
+    const authData = {
+      login: authorizationLogin.value,
+      password: authorizationPassword.value,
+    };
+
+    httpClient
+      .post(httpClient.IdentityManagementPath, "auth/loginasync", authData)
+      .then((response) => {
+        return response.json();
+      })
+      .then((result) => {
+
+        const token = result.createdToken;
+        if (!token) {
+          throw new Error(result.message)
+        }
+
+        mask.hide();
+        router.push("/home");
+        localStorage.setItem("authToken", result.createdToken);
+      })
+      .catch(result => {
+        console.log(result.message);
+        q.notify({
+          message: result.message,
+          color: 'primary'
+        })
+        mask.hide();
+      });
+  }
 }
 
 function onReset() {
@@ -218,28 +244,28 @@ function onReset() {
 }
 
 function checkPassword(password) {
-  if (!password || password.length < 6) {
-    return "Password must contain 6 characters";
+  if (!password || password.length < 4) {
+    return "Password must contain 4 characters";
   }
 
   return true;
 }
 
 function checkPasswords(firstPassword, secondPassword) {
-  var result1 = checkPassword(firstPassword)
-  var result2 = checkPassword(secondPassword)
+  var result1 = checkPassword(firstPassword);
+  var result2 = checkPassword(secondPassword);
 
-  if (result1 !== true) return result1
-  if (result2 !== true) return result2
+  if (result1 !== true) return result1;
+  if (result2 !== true) return result2;
 
-  if (firstPassword !== secondPassword) return "Passwords are not the same"
+  if (firstPassword !== secondPassword) return "Passwords are not the same";
 
   return true;
 }
 
 function checkNameOrLogin(nameOrLogin) {
-  if (!nameOrLogin || nameOrLogin.length < 6) {
-    return "Value must contain 6 characters";
+  if (!nameOrLogin || nameOrLogin.length < 4) {
+    return "Value must contain 4 characters";
   }
 
   if (/\d/.test(nameOrLogin)) {
