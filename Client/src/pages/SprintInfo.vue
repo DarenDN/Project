@@ -9,7 +9,7 @@
 
         <q-separator class="card-separator" inset />
 
-        <q-card-section class="q-pt-none">{{ dateCreated }}</q-card-section>
+        <q-card-section class="q-pt-none">{{ store?.sprint?.dateCreated }}</q-card-section>
       </q-card>
 
       <q-card class="card" bordered>
@@ -19,7 +19,9 @@
 
         <q-separator class="card-separator" inset />
 
-        <q-card-section class="q-pt-none"> {{ store?.sprint?.startDate }}</q-card-section>
+        <q-card-section class="q-pt-none">
+          {{ store?.sprint?.startDate }}</q-card-section
+        >
       </q-card>
 
       <q-card class="card" bordered>
@@ -29,7 +31,9 @@
 
         <q-separator class="card-separator" inset />
 
-        <q-card-section class="q-pt-none"> {{ store?.sprint?.endDate }}</q-card-section>
+        <q-card-section class="q-pt-none">
+          {{ store?.sprint?.endDate }}</q-card-section
+        >
       </q-card>
     </div>
 
@@ -56,6 +60,7 @@
       label="Edit sprint"
     />
     <q-fab-action
+      v-show="store?.user?.isAdmin"
       color="primary"
       @click="finishSprint()"
       icon="check_circle_outline"
@@ -69,22 +74,19 @@
 import { ref } from "vue";
 import { store } from "stores/store";
 import { useRouter } from "vue-router";
-import SprintCreationWindow from 'src/components/windows/SprintCreationWindow.vue'
+import SprintCreationWindow from "src/components/windows/SprintCreationWindow.vue";
 
 const router = useRouter();
+const createDialog = ref(false);
 
 if (!store.sprint) {
   router.push("/home/empty-sprint");
 }
 
-const dateCreated = ref(store?.sprint?.dateCreated);
-const createDialog = ref(false);
-
 function finishSprint() {
   store.sprint = null;
   router.push("/home/empty-sprint");
 }
-
 </script>
 <style scoped>
 .title {

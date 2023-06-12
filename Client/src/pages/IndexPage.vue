@@ -18,50 +18,111 @@
         style="position: absolute; top: 50%; left: 50%"
         v-morph:startpopup:boxes:600.tween="morphGroupModel"
       ></div>
-      <div
-        class="popup user-popup"
+      <q-card
+        class="popup user-popup bg-primary text-white"
         v-morph:userpopup:boxes:600.tween="morphGroupModel"
       >
-        <p><b>Hi, here you can edit your profile or switch it</b></p>
+        <q-card-section>
+          <div class="text-h6">Profile</div>
+          <div class="text-subtitle2">
+            Hi, here you can edit your profile or switch it
+          </div>
+        </q-card-section>
 
-        <div class="splitter"></div>
-        <div class="button-container">
-          <q-btn class="popup-button" color="blue" label="Next" @click="nextMorph" />
-          <q-btn class="popup-button" color="secondary" label="Skip" @click="finishPopup" />
-        </div>
-      </div>
+        <q-separator dark />
 
-      <div
-        class="popup sprint-popup"
+        <q-card-actions>
+          <q-btn
+            class="popup-button"
+            color="blue"
+            label="Next"
+            @click="nextMorph"
+          />
+          <q-btn
+            class="popup-button"
+            color="secondary"
+            label="Skip"
+            @click="finishPopup"
+          />
+        </q-card-actions>
+      </q-card>
+
+      <q-card
+        class="popup sprint-popup bg-primary text-white"
         v-morph:sprintpopup:boxes:600.tween="morphGroupModel"
       >
-        <p>
-          <b
-            >Here you can check the latest information about current spring or
-            see actual task on the board</b
-          >
-        </p>
+        <q-card-section>
+          <div class="text-h6">Sprint</div>
+          <div class="text-subtitle2">
+            Here you can check the latest information about current spring or
+            see actual task on the board
+          </div>
+        </q-card-section>
 
-        <div class="splitter"></div>
-        <div class="button-container">
-          <q-btn class="popup-button" color="blue" label="Next" @click="nextMorph" />
-          <q-btn class="popup-button" color="secondary" label="Skip" @click="finishPopup" />
-        </div>
-      </div>
+        <q-separator dark />
 
-      <div
-        class="popup administration-popup"
+        <q-card-actions>
+          <q-btn
+            class="popup-button"
+            color="blue"
+            label="Next"
+            @click="nextMorph"
+          />
+          <q-btn
+            class="popup-button"
+            color="secondary"
+            label="Skip"
+            @click="finishPopup"
+          />
+        </q-card-actions>
+      </q-card>
+
+      <q-card
+        class="popup project-popup bg-primary text-white"
+        v-morph:projectpopup:boxes:600.tween="morphGroupModel"
+      >
+        <q-card-section>
+          <div class="text-h6">Project</div>
+          <div class="text-subtitle2">
+            Here you can check the latest information about you project
+          </div>
+        </q-card-section>
+
+        <q-separator dark />
+
+        <q-card-actions>
+          <q-btn
+            class="popup-button"
+            color="blue"
+            label="Next"
+            @click="nextMorph"
+          />
+          <q-btn
+            class="popup-button"
+            color="secondary"
+            label="Skip"
+            @click="finishPopup"
+          />
+        </q-card-actions>
+      </q-card>
+
+      <q-card
+        class="popup administration-popup bg-primary text-white"
         v-morph:administrationpopup:boxes:600.tween="morphGroupModel"
       >
-        <p>
-          <b>Administration pannel, hey, that's a secret place</b>
-        </p>
+        <q-card-section>
+          <div class="text-h6">Administration</div>
+          <div class="text-subtitle2">
+            Hey, that's a secret place
+          </div>
+        </q-card-section>
 
-        <div class="splitter"></div>
-        <div>
+        <q-separator dark />
+
+        <q-card-actions>
           <q-btn color="blue" label="Got it" @click="finishPopup" />
-        </div>
-      </div>
+        </q-card-actions>
+      </q-card>
       <div
         style="position: absolute; top: 50%; left: 50%"
         v-morph:finishpopup:boxes:600.tween="morphGroupModel"
@@ -73,7 +134,6 @@
 <script setup>
 import { ref } from "vue";
 import { store } from "stores/store";
-import { mask } from "src/utils/mask";
 
 const morphGroupModel = ref("startpopup");
 function nextMorph() {
@@ -91,8 +151,17 @@ function nextMorph() {
       break;
     }
     case "sprintpopup": {
-      store.adminPanel.show();
-      morphGroupModel.value = "administrationpopup";
+      store.projectPanel.show();
+      morphGroupModel.value = "projectpopup";
+      break;
+    }
+    case "projectpopup": {
+      if (store.user.isAdmin) {
+        store.adminPanel.show();
+        morphGroupModel.value = "administrationpopup";
+      } else {
+        finishPopup();
+      }
       break;
     }
     case "administrationpopup": {
@@ -110,46 +179,20 @@ function finishPopup() {
   morphGroupModel.value = "finishpopup";
 }
 
-function loadedAnimation() {
-  mask.hide();
-}
-
-mask.show()
-
 setTimeout(() => {
-  loadedAnimation();
-
-
-  // TODO: test data
-
-  store.project = {};
-  store.project.projectName = "Test project"
-  store.project.dateCreated = "2020/12/12"
-  store.project.description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias mollitia harum quaerat necessitatibus porro, corporis est? Porro, nobis dolorum? Quas saepe aut eaque natus at eveniet voluptatum veritatis officiis tempora!"
-
   if (store.newAccountHasBeenRegistered) {
-    store.newAccountHasBeenRegistered = false // to make sure that user wont see it again after relogin
+    store.newAccountHasBeenRegistered = false; // to make sure that user wont see it again after relogin
     startPopup();
   }
-}, 2000);
+}, 500);
 </script>
 
 <style scoped>
 .popup {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   position: absolute;
-  width: 250px;
-  height: 150px;
-  border-radius: 25px;
-  font-size: 14px;
-  background-color: #1976d2;
-  color: white;
-  text-align: center;
 }
 .user-popup {
+  position: absolute;
   top: 10px;
   right: 30px;
 }
@@ -159,25 +202,18 @@ setTimeout(() => {
   width: 300px;
   height: 200px;
 }
-.administration-popup {
-  top: 250px;
+.project-popup {
+  top: 200px;
   left: 10px;
+  width: 300px;
+  height: 200px;
 }
-.splitter {
-  background-color: white;
-  width: 80%;
-  height: 1px;
-  margin: 5px 0;
-}
-.button-container {
-  display: flex;
-  justify-content: space-between;
+.administration-popup {
+  top: 350px;
+  left: 10px;
 }
 .popup-button {
   margin: 0px 10px;
-}
-b {
-  margin: 5px;
 }
 img {
   opacity: 0.5;

@@ -8,38 +8,54 @@ export const httpClient = {
       "Content-Type": "application/json",
     };
 
-    if (useToken) {
-      const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
 
-      if (token === null) {
-        //TODO: fix
-      }
-
-      headers["Authorization"] = `bearer ${token}`;
+    if (!token) {
+      //TODO: fix
     }
+
+    headers["Authorization"] = `bearer ${token}`;
     return fetch(`${root}/${endpoint}`, {
       method: "GET",
       headers,
     });
   },
 
-  post(root, endpoint, data, useToken = true) {
+  post(root, endpoint, data) {
     const headers = {
       "Content-Type": "application/json",
     };
 
-    if (useToken) {
-      const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
 
-      if (token === null) {
-        //TODO: fix
-      }
-
-      headers["Authorization"] = `bearer ${token}`;
+    if (!token) {
+      //TODO: fix
     }
+
+    headers["Authorization"] = `bearer ${token}`;
 
     return fetch(`${root}/${endpoint}`, {
       method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+  },
+
+  put(root, endpoint, data) {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      //TODO: fix
+    }
+
+    headers["Authorization"] = `bearer ${token}`;
+
+    return fetch(`${root}/${endpoint}`, {
+      method: "PUT",
       headers,
       body: JSON.stringify(data),
     });
