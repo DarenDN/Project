@@ -1,3 +1,3 @@
 ﻿namespace IdentityManagementService.Dtos;
 
-public record ShortUserInfoDto(string FirstName, string LastName, string? MiddleName);
+public record ShortUserInfoDto(Guid Id, string FirstName, string LastName, string? MiddleName);

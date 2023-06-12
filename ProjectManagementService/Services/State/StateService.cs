@@ -19,7 +19,7 @@ public class StateService : IStateService
                     sr => sr.StateNext,
                     s => s.Id,
                     (sr, s) => s)
-            .Select(s => new StateDto(s.Id, s.Name))
+            .Select(s => new StateDto(s.Id, s.Name, s.Order))
             .ToListAsync();
 
         return nextStates;
@@ -27,7 +27,8 @@ public class StateService : IStateService
 
     public async Task<IEnumerable<StateDto>> GetStatesAsync()
     {
-        var states = await _applicationDbContext.TaskStates.Select(s => new StateDto(s.Id, s.Name)).ToListAsync();
+        var states = await _applicationDbContext.TaskStates
+            .Select(s => new StateDto(s.Id, s.Name, s.Order)).ToListAsync();
         return states;
     }
 }

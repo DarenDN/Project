@@ -28,7 +28,7 @@ public sealed class ProjectService : IProjectService
         var projectId = await GetRequestingUsersProjectIdAsync();
         var project = await _appDbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
 
-        return new ProjectDto(projectId.Value, project.Title, project.Description);
+        return new ProjectDto(projectId.Value, project.Title, project.Description, project.Created);
     }
 
     public async Task UpdateProjectAsync(UpdateProjectDto projectDto)

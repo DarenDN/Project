@@ -28,6 +28,12 @@ public sealed class IdentityManagementController : ControllerBase
             var accessToken = await _identityManagmentService.RegisterUserIdentityAsync(registerIdentityDto);
             return new JsonResult(new { accessToken });
         }
+        catch(ArgumentException argEx)
+        {
+            this.HttpContext.Response.StatusCode = 400;
+            return new JsonResult(new { argEx.Message });
+            //return Unauthorized(argEx.Message);
+        }
         catch (Exception ex)
         {
             return StatusCode(500, ex.Message);

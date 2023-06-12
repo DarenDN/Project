@@ -160,6 +160,8 @@ public sealed class TaskService : ITaskService
             task.Description,
             task.State.Name,
             task.Type.Name,
+            task.EstimationInTime,
+            task.EstimationInPoints,
             task.PerformerId,
             task.CreatorId);
     }

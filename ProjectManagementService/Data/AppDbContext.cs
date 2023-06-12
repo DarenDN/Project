@@ -46,9 +46,12 @@ public sealed class AppDbContext : DbContext
         modelBuilder.Entity<UserRole>()
             .HasData(_roleConfiguration.BasicRoles
                         .Select(r => new UserRole { Id = r.Value, Name = r.Key }));
-
+        var stateOrder = _stateConfiguration.StatesOrder;
         var taskStates = _stateConfiguration.BasicStates
-                        .Select(s => new TaskState { Id = s.Value, Name = s.Key })
+                        .Select(s => new TaskState { 
+                            Id = s.Value, 
+                            Name = s.Key, 
+                            Order = stateOrder.GetValueOrDefault(s.Key)})
                         .ToDictionary(k => k.Name);
 
         modelBuilder.Entity<TaskState>()

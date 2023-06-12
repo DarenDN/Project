@@ -139,13 +139,13 @@ public class IdentityManagementService : IIdentityManagementService
         var identity = await _appDbContext.Identities.Include(i=>i.UserInfo).FirstOrDefaultAsync(i => i.Id == identityId.Value);
         var userInfo = identity.UserInfo;
 
-        return new ShortUserInfoDto(userInfo.FirstName, userInfo.LastName, userInfo.MiddleName);
+        return new ShortUserInfoDto(identityId.Value, userInfo.FirstName, userInfo.LastName, userInfo.MiddleName);
     }
 
     public async Task<IEnumerable<ShortUserInfoDto>> GetShortUserInfosAsync(IEnumerable<Guid?> identityIds)
     {
         var identities = await _appDbContext.Identities.Include(i=>i.UserInfo).Where(i => identityIds.Contains(i.Id)).ToListAsync();
-        var shortUserInfoDtos = identities.Select(i => new ShortUserInfoDto(i.UserInfo.FirstName, i.UserInfo.LastName, i.UserInfo?.MiddleName));
+        var shortUserInfoDtos = identities.Select(i => new ShortUserInfoDto(i.Id,i.UserInfo.FirstName, i.UserInfo.LastName, i.UserInfo?.MiddleName));
 
         return shortUserInfoDtos;
     }

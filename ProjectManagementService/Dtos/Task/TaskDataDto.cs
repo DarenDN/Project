@@ -5,6 +5,8 @@ public sealed record TaskDataDto(
     string Description,
     string Status, 
     string Type, 
+    TimeSpan? EstimationTime,
+    int? EstimationPoint,
     Guid? PerformerId, 
     Guid CreatorId);
 

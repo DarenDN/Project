@@ -11,4 +11,6 @@ public class StateConfiguration
     public Dictionary<string, Guid> BasicStates { get; set; }
 
     public Dictionary<string, List<string>> BasicRelationships { get; set; }
+
+    public Dictionary<string, int> StatesOrder { get; set; }
 }
