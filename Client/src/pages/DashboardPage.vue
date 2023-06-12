@@ -57,7 +57,6 @@ import TaskCreationWindow from "src/components/windows/TaskCreationWindow.vue";
 const router = useRouter();
 const usersMapping = ref(new Map());
 const createDialog = ref(false);
-mask.show();
 
 if (!store.sprint) {
   router.push("/home/empty-sprint");
@@ -65,6 +64,7 @@ if (!store.sprint) {
 
 onMounted(() => {
   if (store.sprint) {
+    mask.show();
     httpClient
       .get(httpClient.ProjectManagementServicePath, "State/GetStatesAsync")
       .then((resp) => resp.json())
@@ -82,13 +82,16 @@ onMounted(() => {
       .then((result) => {
         tasks.value = result.tasks;
       })
-      .then((result) =>
-        httpClient.put(
+      .then((result) => {
+        const users = tasks.value
+          .map((task) => [task.creator, task.actor])
+          .flat();
+        return httpClient.put(
           httpClient.IdentityManagementPath,
           "IdentityManagement/GetShortUserInfosAsync",
-          tasks.value.map((x) => x.creator)
-        )
-      )
+          users
+        );
+      })
       .then((resp) => resp.json())
       .then((result) => {
         if (result) {
@@ -107,12 +110,30 @@ const tasks = ref([]);
 
 function openTask(task) {
   store.currentTask = task;
+
+  mask.show();
+
+  httpClient
+    .post(
+      httpClient.ProjectManagementServicePath,
+      `Task/GetTaskAsync?taskId=${task.id}`,
+      {}
+    )
+    .then((response) => response.json())
+    .then((task) => {
+      store.currentTask = task;
+      store.currentTask.author = getUserNameById(task.creatorId);
+      store.currentTask.performer = getUserNameById(task.performerId);
+      mask.hide();
+    });
+
   router.push("/home/dashboard/task");
 }
 
 function getUserNameById(id) {
   const user = usersMapping.value.get(id);
-  return `${user?.firstName} ${user?.lastName}`;
+
+  return user ? `${user?.firstName} ${user?.lastName}` : "none";
 }
 </script>
 

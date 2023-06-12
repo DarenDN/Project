@@ -10,24 +10,7 @@
           aria-label="Menu"
           @click="toggleLeftDrawer"
         />
-
         <q-toolbar-title>ManageIt</q-toolbar-title>
-        <q-breadcrumbs class="text-white" active-color="white">
-          <template v-slot:separator>
-            <q-icon size="1.2em" name="arrow_forward" color="purple" />
-          </template>
-          <q-breadcrumbs-el label="Home" icon="home" to="/home" />
-          <q-breadcrumbs-el
-            label="Components"
-            icon="dashboard"
-            to="/components"
-          />
-          <q-breadcrumbs-el
-            label="Random task #3228"
-            icon="navigation"
-            to="/aTask"
-          />
-        </q-breadcrumbs>
         <q-space />
         <q-space />
         <q-space />
