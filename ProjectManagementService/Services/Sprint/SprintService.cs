@@ -77,7 +77,7 @@ public sealed class SprintService : ISprintService
             throw new ArgumentException(nameof(sprintId));
         }
 
-        return new SprintDto(sprint.Id, sprint.Name, sprint.DateStart, sprint.DateEnd, sprint.Description);
+        return new SprintDto(sprint.Id, sprint.Name, sprint.DateStart, sprint.DateEnd, sprint.Description, sprint.DateCreated);
     }
 
     public async Task<SprintDto?> GetCurrentSprintDtoAsync()
@@ -85,7 +85,7 @@ public sealed class SprintService : ISprintService
         var sprint = await GetCurrentSprintAsync();
 
         return sprint is not null
-            ? new SprintDto(sprint.Id, sprint.Name, sprint.DateStart, sprint.DateEnd, sprint.Description)
+            ? new SprintDto(sprint.Id, sprint.Name, sprint.DateStart, sprint.DateEnd, sprint.Description, sprint.DateCreated)
             : null;
     }
 
@@ -95,7 +95,7 @@ public sealed class SprintService : ISprintService
 
         return await _applicationDbContext.Sprints
             .Where(s => s.ProjectId == projectId)
-            .Select(s => new SprintDto(s.Id, s.Name, s.DateStart, s.DateEnd, s.Description))
+            .Select(s => new SprintDto(s.Id, s.Name, s.DateStart, s.DateEnd, s.Description, s.DateCreated))
             .ToListAsync();
     }
 

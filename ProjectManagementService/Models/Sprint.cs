@@ -24,5 +24,9 @@ public sealed class Sprint : DbEntity
     [Column(TypeName = "date")]
     public DateTime DateEnd { get; set;}
 
+    [Required]
+    [Column(TypeName = "date")]
+    public DateTime DateCreated { get; set; } = DateTime.Now;
+
     public bool? Finished { get; set; } = false;
 }
