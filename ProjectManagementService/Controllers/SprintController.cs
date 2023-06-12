@@ -48,6 +48,21 @@ public sealed class SprintController : ControllerBase
         }
     }
 
+    [HttpPut]
+    [Route(nameof(FinishSprintAsync))]
+    public async Task<ActionResult> FinishSprintAsync()
+    {
+        try
+        {
+            await _sprintService.FinishSprintAsync();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
     [HttpPost]
     [Route(nameof(GetSprintAsync))]
     public async Task<ActionResult> GetSprintAsync(Guid sprintId)
