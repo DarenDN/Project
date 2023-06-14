@@ -19,5 +19,7 @@ export const store = reactive({
     this.projectPanel = null;
     this.currentTask = null;
     this.user = null;
+
+    localStorage.setItem("authToken", '');
   }
 });

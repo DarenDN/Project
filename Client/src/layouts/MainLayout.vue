@@ -10,24 +10,7 @@
           aria-label="Menu"
           @click="toggleLeftDrawer"
         />
-
         <q-toolbar-title>ManageIt</q-toolbar-title>
-        <q-breadcrumbs class="text-white" active-color="white">
-          <template v-slot:separator>
-            <q-icon size="1.2em" name="arrow_forward" color="purple" />
-          </template>
-          <q-breadcrumbs-el label="Home" icon="home" to="/home" />
-          <q-breadcrumbs-el
-            label="Components"
-            icon="dashboard"
-            to="/components"
-          />
-          <q-breadcrumbs-el
-            label="Random task #3228"
-            icon="navigation"
-            to="/aTask"
-          />
-        </q-breadcrumbs>
         <q-space />
         <q-space />
         <q-space />
@@ -56,7 +39,7 @@
                   </q-avatar>
 
                   <div class="text-subtitle1 q-mt-md q-mb-xs">
-                    Billy Herrington
+                    {{ `${store.user.firstName} ${store.user.lastName}` }}
                   </div>
 
                   <q-btn
@@ -77,7 +60,7 @@
 
     <q-drawer ref="mainDrawer" v-model="leftDrawerOpen" bordered>
       <div class="q-pa-md" style="max-width: 350px">
-        <h6 class="project-name"> {{ store?.project?.projectName }}</h6>
+        <h6 class="project-name">{{ store?.project?.projectName }}</h6>
         <q-list bordered class="rounded-borders">
           <q-expansion-item
             switch-toggle-side
@@ -161,6 +144,7 @@
           </q-expansion-item>
 
           <q-expansion-item
+            v-show="store?.user?.isAdmin"
             switch-toggle-side
             expand-separator
             icon="manage_accounts"
@@ -199,6 +183,7 @@ import { useRouter } from "vue-router";
 import { store } from "stores/store";
 import { useQuasar } from "quasar";
 import { mask } from "src/utils/mask";
+import { httpClient } from "src/utils/httpClient";
 
 const mainDrawer = ref(null);
 const adminPanel = ref(null);
@@ -213,11 +198,78 @@ const q = useQuasar();
 
 mask.init(q.loading);
 
+const token = localStorage.getItem("authToken");
+
+if (!token) {
+  router.push("/login");
+}
+
 onMounted(() => {
-  store.drawer = mainDrawer.value;
-  store.adminPanel = adminPanel.value;
-  store.sprintPanel = sprintPanel.value;
-  store.projectPanel = projectPanel.value;
+  if (token) {
+    store.drawer = mainDrawer.value;
+    store.adminPanel = adminPanel.value;
+    store.sprintPanel = sprintPanel.value;
+    store.projectPanel = projectPanel.value;
+
+    mask.show("loading");
+
+    store.user = {};
+
+    const userInfo = httpClient
+      .get(
+        httpClient.IdentityManagementPath,
+        "IdentityManagement/GetCurrentShortUserInfoAsync"
+      )
+      .then((response) => response.json())
+      .then((response) => {
+        store.user.firstName = response.firstName;
+        store.user.lastName = response.lastName;
+      });
+
+    const projectInfo = httpClient
+      .get(
+        httpClient.ProjectManagementServicePath,
+        "Project/GetProjectDataAsync"
+      )
+      .then((response) => response.json())
+      .then((response) => {
+        store.project = {};
+        store.project.projectName = response.title;
+        store.project.dateCreated = response.dateCreated;
+        store.project.description = response.description;
+      });
+
+    const adminInfo = httpClient
+      .get(httpClient.ProjectManagementServicePath, "Role/IsAdminAsync")
+      .then((response) => response.json())
+      .then((response) => {
+        store.user.isAdmin = response.isAdmin;
+      });
+
+    const sprintInfo = httpClient
+      .get(
+        httpClient.ProjectManagementServicePath,
+        "Sprint/GetCurrentSprintAsync"
+      )
+      .then((response) => response.json())
+      .then((result) => {
+        if (result) {
+          store.sprint = {
+            sprintName: result.name,
+            startDate: result.dateStart,
+            endDate: result.dateEnd,
+            dateCreated: result.dateCreated,
+            description: result.description,
+          };
+        }
+      });
+
+    Promise.all([userInfo, projectInfo, adminInfo, sprintInfo]).then(
+      (values) => {
+        mask.hide();
+      }
+    );
+  }
 });
 
 function toggleLeftDrawer() {

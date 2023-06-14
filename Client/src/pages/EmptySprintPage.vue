@@ -22,7 +22,7 @@
 
 <script setup>
 import { ref } from "vue";
-import SprintCreationWindow from 'src/components/windows/SprintCreationWindow.vue'
+import SprintCreationWindow from "src/components/windows/SprintCreationWindow.vue";
 
 const createDialog = ref(false);
 </script>

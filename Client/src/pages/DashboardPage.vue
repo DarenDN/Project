@@ -6,7 +6,7 @@
         <div
           class="card-wrapper"
           v-for="task in tasks.filter((x) => x.status === taskStatus)"
-          :key="task.taskName"
+          :key="task.title"
           @click="openTask(task)"
         >
           <q-card
@@ -14,15 +14,15 @@
             style="background-color: #1976d2"
           >
             <q-card-section>
-              <div class="text-h6">
-                {{ task.taskName }}
-                <q-badge transparent align="middle" color="orange">
-                  {{ 'task' + tasks.indexOf(task.taskName) }}
-                </q-badge>
+              <div>
+                {{ task.title }}
               </div>
+              <q-badge transparent align="middle" color="orange">
+                {{ getUserNameById(task.creator) }}
+              </q-badge>
             </q-card-section>
+
             <q-separator class="card-separator" inset />
-            <q-card-section class="q-pt-none">{{ task.description }}</q-card-section>
           </q-card>
         </div>
       </div>
@@ -47,162 +47,93 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { store } from "stores/store";
+import { httpClient } from "src/utils/httpClient";
+import { mask } from "src/utils/mask";
 import { useRouter } from "vue-router";
 import TaskCreationWindow from "src/components/windows/TaskCreationWindow.vue";
 
 const router = useRouter();
-
+const usersMapping = ref(new Map());
 const createDialog = ref(false);
 
 if (!store.sprint) {
   router.push("/home/empty-sprint");
 }
 
-const taskStatuses = store?.sprint?.taskStatuses || ["new", "done"];
+onMounted(() => {
+  if (store.sprint) {
+    mask.show();
+    httpClient
+      .get(httpClient.ProjectManagementServicePath, "State/GetStatesAsync")
+      .then((resp) => resp.json())
+      .then((result) => {
+        result.states.sort((a, b) => a.order - b.order);
+        taskStatuses.value = result.states.map((x) => x.name);
+      })
+      .then((result) =>
+        httpClient.get(
+          httpClient.ProjectManagementServicePath,
+          "Task/GetSprintTasksAsync"
+        )
+      )
+      .then((resp) => resp.json())
+      .then((result) => {
+        tasks.value = result.tasks;
+      })
+      .then((result) => {
+        const users = tasks.value
+          .map((task) => [task.creator, task.actor])
+          .flat();
+        return httpClient.put(
+          httpClient.IdentityManagementPath,
+          "IdentityManagement/GetShortUserInfosAsync",
+          users
+        );
+      })
+      .then((resp) => resp.json())
+      .then((result) => {
+        if (result) {
+          result.forEach((user) => {
+            usersMapping.value.set(user.id, user);
+          });
+        }
+        mask.hide();
+      });
+  }
+});
 
-const tasks = [
-  {
-    timeEstimate: "1 hour",
-    author: "Alex.J.J",
-    status: "done",
-    type: "feature",
-    performer: "Charlie.L.W",
-    taskName: "Update user profile page",
-    description: "Add fields for phone number and address",
-  },
-  {
-    timeEstimate: "20 hours",
-    author: "Dave.A.L",
-    status: "new",
-    type: "bug",
-    performer: "Alice.B.J",
-    taskName: "Fix login error message",
-    description: "Change message to be more descriptive",
-  },
-  {
-    timeEstimate: "2 hours",
-    author: "Eve.N.S",
-    status: "review",
-    type: "feature",
-    performer: "Bob.R.T",
-    taskName: "Implement payment gateway",
-    description: "Enable users to purchase premium features",
-  },
-  {
-    timeEstimate: "30 minutes",
-    author: "Charlie.K.G",
-    status: "in progress",
-    type: "bug",
-    performer: "Dave.A.L",
-    taskName: "Fix broken link on homepage",
-    description: "Link to about page goes to 404",
-  },
-  {
-    timeEstimate: "5 hours",
-    author: "Bob.R.T",
-    status: "in progress",
-    type: "feature",
-    performer: "Eve.N.S",
-    taskName: "Create admin dashboard",
-    description: "Allow admins to manage users and content",
-  },
-  {
-    timeEstimate: "1 hour",
-    author: "Alice.B.J",
-    status: "new",
-    type: "bug",
-    performer: "Charlie.K.G",
-    taskName: "Fix broken image on product page",
-    description: "Image resolution is too low",
-  },
-  {
-    timeEstimate: "2 hours",
-    author: "Charlie.L.W",
-    status: "done",
-    type: "bug",
-    performer: "Bob.R.T",
-    taskName: "Fix broken link on about page",
-    description: "Link to careers page goes to 404",
-  },
-  {
-    timeEstimate: "10 minutes",
-    author: "Dave.A.L",
-    status: "done",
-    type: "feature",
-    performer: "Eve.N.S",
-    taskName: "Add social media links to footer",
-    description: "Include links to Facebook, Twitter, and Instagram",
-  },
-  {
-    timeEstimate: "20 hours",
-    author: "Bob.R.T",
-    status: "review",
-    type: "bug",
-    performer: "Alice.B.J",
-    taskName: "Fix checkout process",
-    description: "Payments fail at step 3",
-  },
-  {
-    timeEstimate: "5 hours",
-    author: "Eve.N.S",
-    status: "new",
-    type: "feature",
-    performer: "Charlie.L.W",
-    taskName: "Implement chat functionality",
-    description: "Allow users to send messages to each other",
-  },
-  {
-    timeEstimate: "2 hours",
-    author: "Alex.J.J",
-    status: "done",
-    type: "bug",
-    performer: "Charlie.L.W",
-    taskName: "Fix broken search functionality",
-    description: "Search results are not displaying correctly",
-  },
-  {
-    timeEstimate: "10 minutes",
-    author: "Dave.A.L",
-    status: "new",
-    type: "feature",
-    performer: "Alice.B.J",
-    taskName: "Add email sign-up form",
-    description: "Allow users to subscribe to newsletter",
-  },
-  {
-    timeEstimate: "1 hour",
-    author: "Eve.N.S",
-    status: "review",
-    type: "bug",
-    performer: "Bob.R.T",
-    taskName: "Fix broken pagination on blog",
-    description: "Page numbers are not displaying correctly",
-  },
-  {
-    timeEstimate: "5 hours",
-    author: "Charlie.K.G",
-    status: "in progress",
-    type: "feature",
-    performer: "Dave.A.L",
-    taskName: "Implement user rating system",
-    description: "Allow users to rate content and leave comments",
-  },
-  {
-    timeEstimate: "20 hours",
-    author: "Bob.R.T",
-    status: "done",
-    type: "bug",
-    performer: "Eve.N.S",
-    taskName: "Fix broken checkout process",
-    description: "Payments fail at step 2",
-  },
-];
+const taskStatuses = ref([]);
+
+const tasks = ref([]);
 
 function openTask(task) {
   store.currentTask = task;
+
+  mask.show();
+
+  httpClient
+    .post(
+      httpClient.ProjectManagementServicePath,
+      `Task/GetTaskAsync?taskId=${task.id}`,
+      {}
+    )
+    .then((response) => response.json())
+    .then((task) => {
+      store.currentTask = task;
+      store.currentTask.author = getUserNameById(task.creatorId);
+      store.currentTask.performer = getUserNameById(task.performerId);
+      mask.hide();
+    });
+
   router.push("/home/dashboard/task");
+}
+
+function getUserNameById(id) {
+  const user = usersMapping.value.get(id);
+
+  return user ? `${user?.firstName} ${user?.lastName}` : "none";
 }
 </script>
 
@@ -212,13 +143,14 @@ function openTask(task) {
   flex-direction: row;
   justify-content: space-between;
   padding: 20px;
+  max-width: 120px;
 }
 .content {
   background-color: aliceblue;
   border-radius: 5px;
 }
 .column {
-  flex-grow: 1;
+  flex-grow: 0.2;
   margin: 10px;
 }
 .column-header {

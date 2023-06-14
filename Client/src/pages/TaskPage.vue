@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h5 class="title">{{ store?.currentTask?.taskName }}</h5>
+    <h5 class="title">{{ store?.currentTask?.title }}</h5>
     <div style="display: flex">
       <q-avatar
         :size="xs"
@@ -38,13 +38,25 @@
 
       <q-card class="card" bordered>
         <q-card-section>
-          <div class="text-h6">Estimate</div>
+          <div class="text-h6">Estimate time</div>
         </q-card-section>
 
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store?.currentTask?.timeEstimate
+          store?.currentTask?.estimationTime || 'none'
+        }}</q-card-section>
+      </q-card>
+
+      <q-card class="card" bordered>
+        <q-card-section>
+          <div class="text-h6">Estimate point</div>
+        </q-card-section>
+
+        <q-separator class="card-separator" inset />
+
+        <q-card-section class="q-pt-none">{{
+          store?.currentTask?.estimationPoint || 'none'
         }}</q-card-section>
       </q-card>
 

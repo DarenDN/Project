@@ -207,36 +207,96 @@ function onSubmit() {
   store.newAccountHasBeenRegistered = registration.value;
 
   if (!store.newAccountHasBeenRegistered) {
-    const authData = {
-      login: authorizationLogin.value,
-      password: authorizationPassword.value,
-    };
-
-    httpClient
-      .post(httpClient.IdentityManagementPath, "auth/loginasync", authData)
-      .then((response) => {
-        return response.json();
-      })
+    login(authorizationLogin.value, authorizationPassword.value)
       .then((result) => {
-
-        const token = result.createdToken;
-        if (!token) {
-          throw new Error(result.message)
-        }
-
         mask.hide();
         router.push("/home");
-        localStorage.setItem("authToken", result.createdToken);
       })
-      .catch(result => {
-        console.log(result.message);
+      .catch((result) => {
         q.notify({
           message: result.message,
-          color: 'primary'
-        })
+          color: "primary",
+        });
+        mask.hide();
+      });
+  } else {
+    register()
+      .then((result) => {
+        mask.hide();
+        router.push("/home");
+      })
+      .catch((result) => {
+        q.notify({
+          message: result.message,
+          color: "primary",
+        });
         mask.hide();
       });
   }
+}
+
+function register() {
+  const registrationData = {
+    login: registrationLogin.value,
+    password: registrationPassword.value,
+  };
+  return httpClient
+    .post(
+      httpClient.IdentityManagementPath,
+      "IdentityManagement/RegisterIdentityAsync",
+      registrationData
+    )
+    .then((response) => response.json())
+    .then((result) => {
+      if (!result.accessToken) {
+        throw new Error(result.message);
+      }
+
+      localStorage.setItem("authToken", result.accessToken);
+
+      const projectData = {
+        title: projectName.value,
+        description: projectDescription.value,
+      };
+      return httpClient.post(
+        httpClient.ProjectManagementServicePath,
+        "Project/CreateProjectAsync",
+        projectData
+      );
+    })
+    .then((response) => response.json())
+    .then((result) => {
+      const userData = {
+        projectId: result.projectId,
+        roleId: result.adminRoleId,
+        firstName: firstName.value,
+        lastName: secondName.value,
+        middleName: patronymic.value,
+      };
+      return httpClient.post(
+        httpClient.IdentityManagementPath,
+        "IdentityManagement/RegisterDataAsync",
+        userData
+      );
+    })
+    .then((result) => login(registrationData.login, registrationData.password));
+}
+
+function login(login, password) {
+  return httpClient
+    .post(httpClient.IdentityManagementPath, "auth/loginasync", {
+      login,
+      password,
+    })
+    .then((response) => response.json())
+    .then((result) => {
+      const token = result.createdToken;
+      if (!token) {
+        throw new Error(result.message);
+      }
+
+      localStorage.setItem("authToken", result.createdToken);
+    });
 }
 
 function onReset() {
