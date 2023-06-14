@@ -10,6 +10,7 @@ using Configurations;
 using Models;
 using ProjectManagementService.Dtos.Estimation;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using ProjectManagementService.Dtos.Backlog;
 
 public sealed class TaskService : ITaskService
 {
@@ -49,20 +50,22 @@ public sealed class TaskService : ITaskService
         await TrySaveChangesAsync();
     }
 
-    public async Task<Dictionary<Guid, int>> GetTasksBacklogAsync()
+    public async Task<IEnumerable<BacklogTaskDto>> GetTasksBacklogAsync()
     {
         var projectId = await GetRequestingUsersProjectIdAsync();
         var tasks = await _appDbContext.Tasks.Where(t=>t.ProjectId == projectId.Value).ToListAsync();
         var currentSprintId = await GetCurrentSprintIdAsync();
-        var taskByBacklogs = tasks.ToDictionary(
-                key => key.Id, 
-                value => value.SprintId.HasValue && currentSprintId.HasValue && value.SprintId == currentSprintId 
-                    ? 1 
-                    :0);
-        return taskByBacklogs;
+        var backlogTasks = tasks.Select(t=>new BacklogTaskDto(
+            t.Id,
+            t.EstimationInTime, 
+            t.EstimationInPoints,
+            t.SprintId.HasValue && currentSprintId.HasValue && t.SprintId == currentSprintId
+                    ? 1
+                    : 0));
+        return backlogTasks;
     }
 
-    public async Task UpdateTasksAsync(IEnumerable<TaskSprintEvaluationInfo> taskSprintInfos)
+    public async Task UpdateTasksAsync(IEnumerable<BacklogTaskDto> taskSprintInfos)
     {
         var currentSprintId = await GetCurrentSprintIdAsync();
         var updatedTasks = new List<Models.Task>();
@@ -74,22 +77,25 @@ public sealed class TaskService : ITaskService
                 continue;
             }
 
-            if(taskSprintInfo.InSprint)
+            if(taskSprintInfo.BacklogType == 1)
             {
                 task.SprintId = currentSprintId;
-                task.EstimationInPoints = taskSprintInfo.EvaluationPoints;
-                task.EstimationInTime = taskSprintInfo.EvaluationTime;
+                task.EstimationInPoints = taskSprintInfo.EstimationPoint;
+                task.EstimationInTime = taskSprintInfo.EstimationTime;
             }
             else
             {
                 task.SprintId = null;
-                task.EstimationInPoints = null;
-                task.EstimationInTime = null;
+                task.EstimationInPoints = taskSprintInfo.EstimationPoint;
+                task.EstimationInTime = taskSprintInfo.EstimationTime;
             }
-
-            task.State = taskSprintInfo.EvaluationPoints != null || taskSprintInfo.EvaluationTime != null
-                ? await GetToWorkStateAsync()
-                : await GetDefaultTaskStateAsync();
+            var toWorkState = await GetToWorkStateAsync();
+            if (task.State.Order <= toWorkState.Order)
+            {
+                task.State = taskSprintInfo.EstimationPoint != null || taskSprintInfo.EstimationTime != null
+                    ? await GetToWorkStateAsync()
+                    : await GetDefaultTaskStateAsync();
+            }
 
             updatedTasks.Add(task);
         }

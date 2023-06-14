@@ -1,5 +1,6 @@
 ﻿namespace ProjectManagementService.Services.Task;
 using Dtos.Task;
+using ProjectManagementService.Dtos.Backlog;
 using ProjectManagementService.Dtos.Estimation;
 using Task = System.Threading.Tasks.Task;
 
@@ -8,8 +9,8 @@ public interface ITaskService
     Task CreateTaskAsync(CreateTaskDto newTaskDto);
     Task UpdateTaskAsync(TaskUpdateDto taskDto);
     Task DeleteTaskAsync(Guid taskId);
-    Task<Dictionary<Guid, int>> GetTasksBacklogAsync();
-    Task UpdateTasksAsync(IEnumerable<TaskSprintEvaluationInfo> taskSprintInfos);
+    Task<IEnumerable<BacklogTaskDto>> GetTasksBacklogAsync();
+    Task UpdateTasksAsync(IEnumerable<BacklogTaskDto> taskSprintInfos);
     Task<TaskDataDto> GetTaskAsync(Guid taskId);
     Task<IEnumerable<TaskShortInfoDto>> GetTasksAsync();
     Task<IEnumerable<TaskShortInfoDto>> GetSprintTasksAsync();

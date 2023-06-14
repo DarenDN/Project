@@ -417,28 +417,63 @@ public class RedisCacheService : ICacheService
         await _distributedCache.SetStringAsync(cacheCode, JsonSerializer.Serialize<T>(cache), _distributedCacheEntryOptions);
     }
 
-    public async Task<IEnumerable<TaskSprintEvaluationInfo>> GetFinalEvaluationsAsync(string meetingCode)
+    public async Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync(string meetingCode)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var selections = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
-        var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
-        var taskSprintEvaluationInfos = new List<TaskSprintEvaluationInfo>();
-        foreach (var selection in selections.Backlog)
-        {
-            if(selection.Value == BacklogType.Project)
-            {
-                taskSprintEvaluationInfos.Add(new TaskSprintEvaluationInfo(selection.Key, false, null, null));
-                continue;
-            }
-            
-            if(evaluations.TaskFinalEvaluations.TryGetValue(selection.Key, out var finalEvaluation) && finalEvaluation is not null)
-            {
-                taskSprintEvaluationInfos.Add(new TaskSprintEvaluationInfo(selection.Key, true, finalEvaluation.EvaluationPoints, finalEvaluation.EvaluationTime));
-                continue;
-            }
+        var evaluations = (await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode)).TaskFinalEvaluations;
+        var taskSprintEvaluationInfos = selections.Backlog.Select(bl=> 
+                new BacklogTaskDto(
+                    bl.Key, 
+                    evaluations.GetValueOrDefault(bl.Key)?.EvaluationTime, 
+                    evaluations.GetValueOrDefault(bl.Key)?.EvaluationPoints, 
+                    bl.Value));
 
-            taskSprintEvaluationInfos.Add(new TaskSprintEvaluationInfo(selection.Key, true, null, null));
-        }
         return taskSprintEvaluationInfos;
+    }
+
+    public async Task<string> CreateCacheMeetingAsync(Guid projectId, IEnumerable<BacklogTaskDto> tasks)
+    {
+        if (!string.IsNullOrWhiteSpace(await GetMeetingCodeOrNullAsync(projectId)))
+        {
+            throw new ArgumentException($"Key {nameof(projectId)} already exists");
+        }
+
+        var taskSelection = new TasksSelection
+        {
+            Code = Guid.NewGuid().ToString(),
+            Backlog = tasks.Select(t=>new { t.TaskId, t.BacklogType }).ToDictionary(k => k.TaskId, v=>v.BacklogType)
+        };
+
+        var evaluation = new Evaluations
+        {
+            Code = Guid.NewGuid().ToString(),
+            TaskFinalEvaluations = tasks
+                .Where(t=>t.EstimationTime.HasValue || t.EstimationPoint.HasValue)
+                .Select(t=>new {t.TaskId, t.EstimationPoint, t.EstimationTime})
+                .ToDictionary(k=>k.TaskId, v=> new TaskEvaluation 
+                    { 
+                        Id = v.TaskId, 
+                        EvaluationPoints = v.EstimationPoint, 
+                        EvaluationTime = v.EstimationTime
+                    })
+        };
+
+        var meeting = new Meeting
+        {
+            MeetingCode = projectId.ToString(),
+            TaskSelectionCode = taskSelection.Code,
+            EvaluationsCode = evaluation.Code
+        };
+
+        var tasksSave = new Task[]
+        {
+            SaveMeetingChangesAsync(meeting.MeetingCode, meeting),
+            SaveEvaluationsChangesAsync(evaluation.Code, evaluation),
+            SaveTaskSelectionChangesAsync(taskSelection.Code, taskSelection)
+        };
+        var awaiter = Task.WhenAll(tasksSave);
+        await awaiter;
+        return meeting.MeetingCode;
     }
 }

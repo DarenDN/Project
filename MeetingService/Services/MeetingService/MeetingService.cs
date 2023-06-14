@@ -81,9 +81,14 @@ public sealed class MeetingService : IMeetingService
         return meetingCode;
     }
 
-    public async Task<string> CreateMeetingAndJoinAsync(Guid projectId, Dictionary<Guid, int> tasks)
+    public async Task<MeetingStateDto> CreateMeetingAndJoinAsync(Guid projectId, IEnumerable<BacklogTaskDto> tasks)
     {
-        return await CreateMeetingAndJoinAsync(projectId, ParseBacklogType(tasks));
+        var userId = GetRequestingUserId();
+        var connectionId = GetRequestingConnectionId();
+        var code = await _cacheService.CreateCacheMeetingAsync(projectId, tasks);
+        await _cacheService.AddCasheUserConnectionAsync(code, connectionId, userId.Value);
+        var meetingState = await _cacheService.GetCacheMeetingStateAsync(code);
+        return meetingState;
     }
 
     public async Task<string> CreateMeetingAndJoinAsync(Guid projectId, Dictionary<Guid, BacklogType> tasks)
@@ -148,7 +153,7 @@ public sealed class MeetingService : IMeetingService
 
     }
 
-    public async Task<IEnumerable<TaskSprintEvaluationInfo>> GetFinalEvaluationsAsync(string meetingCode)
+    public async Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync(string meetingCode)
     {
         var finalTaskStatesAsync = await _cacheService.GetFinalEvaluationsAsync(meetingCode);
         return finalTaskStatesAsync;

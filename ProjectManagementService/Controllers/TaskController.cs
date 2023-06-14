@@ -6,6 +6,7 @@ using Services.Task;
 using Microsoft.AspNetCore.Authorization;
 using ProjectManagementService.Dtos.Estimation;
 using Microsoft.AspNetCore.Cors;
+using ProjectManagementService.Dtos.Backlog;
 
 [Route("api/[controller]"), Authorize]
 [EnableCors("CorsPolicy")]
@@ -36,7 +37,7 @@ public sealed class TaskController : ControllerBase
 
     [HttpPut]
     [Route(nameof(UpdateTasksAsync))]
-    public async Task<ActionResult> UpdateTasksAsync(List<TaskSprintEvaluationInfo> taskInfo)
+    public async Task<ActionResult> UpdateTasksAsync(IEnumerable<BacklogTaskDto> taskInfo)
     {
         try
         {
