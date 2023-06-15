@@ -25,11 +25,11 @@ public sealed class MeetingService : IMeetingService
         _httpContextAccesor = httpContextAccesor;
     }
 
-    public async Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string meetingCode)
+    public async Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string meetingCode, string userName)
     {
         var userId = GetRequestingUserId();
         var connectionId = GetRequestingConnectionId();
-        await _cacheService.AddCasheUserConnectionAsync(meetingCode, connectionId, userId.Value);
+        await _cacheService.AddCasheUserConnectionAsync(meetingCode, connectionId, userId.Value, userName);
         var userCachedEvaluations = await _cacheService.GetUserCachedEvaluationsAsync(meetingCode, userId.Value);
         await _meetingHubContext.Clients
             .GroupExcept(
@@ -51,7 +51,7 @@ public sealed class MeetingService : IMeetingService
         var userId = GetRequestingUserId();
         var connectionId = GetRequestingConnectionId();
         await _cacheService.SetEvaluationAsync(meetingCode, userId.Value, evaluationDto);
-        var participantEvaluationDto = new ParticipantEvaluationDto(userId.Value, new EvaluationDto(evaluationDto.EvaluationPoints, evaluationDto.EvaluationTime));
+        var participantEvaluationDto = await _cacheService.GetUserCachedEvaluationsAsync (meetingCode, userId.Value);
         await _meetingHubContext.Clients
             .GroupExcept(
                 meetingCode,
@@ -81,23 +81,14 @@ public sealed class MeetingService : IMeetingService
         return meetingCode;
     }
 
-    public async Task<MeetingStateDto> CreateMeetingAndJoinAsync(Guid projectId, IEnumerable<BacklogTaskDto> tasks)
+    public async Task<MeetingStateDto> CreateMeetingAndJoinAsync(string userName, Guid projectId, IEnumerable<BacklogTaskDto> tasks)
     {
         var userId = GetRequestingUserId();
         var connectionId = GetRequestingConnectionId();
-        var code = await _cacheService.CreateCacheMeetingAsync(projectId, tasks);
-        await _cacheService.AddCasheUserConnectionAsync(code, connectionId, userId.Value);
-        var meetingState = await _cacheService.GetCacheMeetingStateAsync(code);
+        var meetingCode = await _cacheService.CreateCacheMeetingAsync( projectId, tasks);
+        await _cacheService.AddCasheUserConnectionAsync(meetingCode, connectionId, userId.Value, userName);
+        var meetingState = await _cacheService.GetCacheMeetingStateAsync(meetingCode);
         return meetingState;
-    }
-
-    public async Task<string> CreateMeetingAndJoinAsync(Guid projectId, Dictionary<Guid, BacklogType> tasks)
-    {
-        var userId = GetRequestingUserId();
-        var connectionId = GetRequestingConnectionId();
-        var code = await _cacheService.CreateCacheMeetingAsync(projectId, tasks);
-        await _cacheService.AddCasheUserConnectionAsync(code, connectionId, userId.Value);
-        return code;
     }
 
     public async Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId)
@@ -123,13 +114,13 @@ public sealed class MeetingService : IMeetingService
 
     public async Task ReevaluateAsync(string meetingCode, Guid taskId)
     {
-        await _cacheService.DeleteTaskEvaluationsAsync(meetingCode, taskId);
+        var currentTaskState = await _cacheService.DeleteTaskEvaluationsAsync(meetingCode, taskId);
 
         await _meetingHubContext.Clients
             .GroupExcept(
                 meetingCode,
                 GetRequestingConnectionId())
-            .ReevaluateAsync(taskId);
+            .ReevaluateAsync(currentTaskState);
     }
 
     public async Task EvaluateTaskFinalAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto)
@@ -157,17 +148,6 @@ public sealed class MeetingService : IMeetingService
     {
         var finalTaskStatesAsync = await _cacheService.GetFinalEvaluationsAsync(meetingCode);
         return finalTaskStatesAsync;
-    }
-
-    private Dictionary<Guid, BacklogType> ParseBacklogType(Dictionary<Guid, string> taskBacklogDictionary)
-    {
-        return taskBacklogDictionary
-            .Select(t => new { Key = t.Key, Value = Enum.Parse<BacklogType>(t.Value) })
-            .ToDictionary(key => key.Key, value => value.Value);
-    }
-    private Dictionary<Guid, BacklogType> ParseBacklogType(Dictionary<Guid, int> taskBacklogDictionary)
-    {
-        return taskBacklogDictionary.ToDictionary(k=>k.Key, v=> (BacklogType)v.Value);
     }
 
     private string GetRequestingConnectionId()

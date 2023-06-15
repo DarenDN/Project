@@ -7,6 +7,6 @@ public record MeetingStateDto(
     Guid? ActiveTask,
     TaskEvaluation? TaskFinalEvaluations,
     Dictionary<Guid, BacklogType> Backlog,
-    IEnumerable<Guid> Participants,
+    IEnumerable<ParticipantDto> Participants,
     Dictionary<Guid, TaskEvaluation> EvaluationsByParticipant
     );

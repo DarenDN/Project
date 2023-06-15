@@ -1,3 +1,3 @@
 ﻿namespace MeetingService.Dtos;
 
-public record ParticipantEvaluationDto(Guid ParticipantId, EvaluationDto EvaluationDto);
+public record ParticipantEvaluationDto(ParticipantDto ParticipantDto, EvaluationDto EvaluationDto);

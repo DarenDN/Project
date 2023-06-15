@@ -91,20 +91,21 @@ public class RedisCacheService : ICacheService
         await SaveTaskSelectionChangesAsync(taskSelectionCode, taskSelection);
     }
 
-    public async Task AddCasheUserConnectionAsync(string meetingCode, string connectionId, Guid userId)
+    public async Task AddCasheUserConnectionAsync(string meetingCode, string connectionId, Guid userId, string userName)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
-        if(meeting.Participants.TryGetValue(userId, out var connectionIdExisted) )
+        var participant = meeting.Participants.FirstOrDefault(p => p.Id == userId);
+        if (participant is not null)
         {
-            if( string.Equals(connectionId, connectionIdExisted))
+            if( string.Equals(connectionId, participant.ConnectionId))
             {
                 return;
             }
-            meeting.Participants[userId] = connectionId;
+            participant.ConnectionId = connectionId;
         }
         else
         {
-            meeting.Participants.Add(userId, connectionId);
+            meeting.Participants.Add(new Participant { Id = userId, Name = userName, ConnectionId = connectionId });
         }
 
         await SaveMeetingChangesAsync(meeting.MeetingCode, meeting);
@@ -113,7 +114,12 @@ public class RedisCacheService : ICacheService
     public async Task RemoveCasheUserConnectionAsync(string meetingCode, Guid userId)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
-        meeting.Participants.Remove(userId);
+        var participant = meeting.Participants.FirstOrDefault(p => p.Id == userId);
+        if(participant is null)
+        {
+            return;
+        }
+        meeting.Participants.Remove(participant);
         await SaveMeetingChangesAsync(meeting.MeetingCode, meeting);
     }
 
@@ -122,7 +128,7 @@ public class RedisCacheService : ICacheService
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         return meeting == null
             ? Enumerable.Empty<string>()
-            : meeting.Participants.Values;
+            : meeting.Participants.Select(p => p.ConnectionId);
     }
 
     /// <summary>
@@ -247,7 +253,7 @@ public class RedisCacheService : ICacheService
             taskSelection.ActiveTask,
             finalEvaluation,
             taskSelection.Backlog,
-            meeting.Participants.Keys,
+            meeting.Participants.Select(p => new ParticipantDto(p.Id, p.Name)),
             evaluations.EvaluationsByParticipant?.ToDictionary(key => key.Key, value => value.Value?.FirstOrDefault(e=>e.Id == activeTaskId))
             );
 
@@ -255,21 +261,23 @@ public class RedisCacheService : ICacheService
         return meetingStateDto;
     }
 
-    public async Task DeleteTaskEvaluationsAsync(string meetingCode, Guid taskId)
+    public async Task<CurrentTaskStateDto> DeleteTaskEvaluationsAsync(string meetingCode, Guid taskId)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
-        var evaluation = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
-        var selection = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
-        evaluation.TaskFinalEvaluations.Remove(taskId);
-        evaluation.EvaluationsByParticipant.Clear();
-        selection.TasksEvaluationsOpen.Remove(taskId);
+        var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
+        var selections = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
+        evaluations.TaskFinalEvaluations.Remove(taskId);
+        evaluations.EvaluationsByParticipant.Clear();
+        selections.TasksEvaluationsOpen.Remove(taskId);
         var tasks = new Task[]
         {
-            SaveEvaluationsChangesAsync(meeting.EvaluationsCode, evaluation),
-            SaveTaskSelectionChangesAsync(meeting.TaskSelectionCode, selection)
+            SaveEvaluationsChangesAsync(meeting.EvaluationsCode, evaluations),
+            SaveTaskSelectionChangesAsync(meeting.TaskSelectionCode, selections)
         };
         var awaiter = Task.WhenAll(tasks);
         await awaiter;
+
+        return await GetCurrentTaskStateDtoAsync(taskId, meeting.MeetingCode, selections, evaluations);
     }
 
     public async Task<ParticipantEvaluationDto> GetUserCachedEvaluationsAsync(string meetingCode, Guid userId)
@@ -277,11 +285,12 @@ public class RedisCacheService : ICacheService
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var selection = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
         var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
-        if(evaluations.EvaluationsByParticipant?.TryGetValue(userId, out var evaluationsByUser) ?? false)
+        var participant = meeting.Participants.FirstOrDefault(p => p.Id == userId);
+        if (evaluations.EvaluationsByParticipant?.TryGetValue(userId, out var evaluationsByUser) ?? false)
         {
             var currentTaskEvaluation = evaluationsByUser.FirstOrDefault(e=>e.Id == selection.ActiveTask);
             var participantEvaluation = new ParticipantEvaluationDto(
-                userId,
+                new ParticipantDto(participant.Id, participant.Name),
                 currentTaskEvaluation == null 
                                     ? null
                                     : new EvaluationDto(currentTaskEvaluation.EvaluationPoints, currentTaskEvaluation.EvaluationTime));
@@ -305,7 +314,7 @@ public class RedisCacheService : ICacheService
         }
         
         return new ParticipantEvaluationDto(
-            userId, 
+            new ParticipantDto(participant.Id, participant.Name), 
             null);
     }
 

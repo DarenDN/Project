@@ -41,11 +41,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(JoinMeetingAsync))]
-    public async Task<ActionResult> JoinMeetingAsync(string meetingCode)
+    public async Task<ActionResult> JoinMeetingAsync(string meetingCode, string userName)
     {
         try
         {
-            var meetingState = await _meetingService.JoinMeetingAndNotifyAsync(meetingCode);
+            var meetingState = await _meetingService.JoinMeetingAndNotifyAsync(userName, meetingCode);
             return new JsonResult(meetingState);
         }
         catch (Exception ex)
@@ -86,11 +86,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(CreateMeetingAndJoinAsync))]
-    public async Task<ActionResult> CreateMeetingAndJoinAsync(Guid projectId, IEnumerable<BacklogTaskDto> tasks)
+    public async Task<ActionResult> CreateMeetingAndJoinAsync(string userName, Guid projectId, IEnumerable<BacklogTaskDto> tasks)
     {
         try
         {
-            var meetingCode = await _meetingService.CreateMeetingAndJoinAsync(projectId, tasks);
+            var meetingCode = await _meetingService.CreateMeetingAndJoinAsync(userName, projectId, tasks);
             return new JsonResult(meetingCode);
         }
         catch (Exception ex)

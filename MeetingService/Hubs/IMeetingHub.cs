@@ -11,7 +11,7 @@ public interface IMeetingHub
 
     // TODO Task TaskStateChangedAsync(CurrentTaskStateDto currentTaskDto)
     Task ChangeActiveTaskAsync(CurrentTaskStateDto currentTaskDto);
-    Task ReevaluateAsync(Guid taskId);
+    Task ReevaluateAsync(CurrentTaskStateDto currentTaskDto);
     //
     Task UpdateUserEvaluationAsync(ParticipantEvaluationDto participantEvaluationDto);
     Task EvaluateTaskFinalAsync(TaskEvaluationDto evaluationDto);

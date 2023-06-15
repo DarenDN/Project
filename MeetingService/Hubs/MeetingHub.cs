@@ -17,9 +17,9 @@ public class MeetingHub : Hub<IMeetingHub>
         await Clients.OthersInGroup(meetingCode).ShowEvaluationsAsync(taskId);
     }
 
-    public async Task ReevaluateAsync(string meetingCode, Guid taskId)
+    public async Task ReevaluateAsync(string meetingCode, CurrentTaskStateDto currentTaskDto)
     {
-        await Clients.OthersInGroup(meetingCode).ReevaluateAsync(taskId);
+        await Clients.OthersInGroup(meetingCode).ReevaluateAsync(currentTaskDto);
     }
 
     public async Task UpdateUserEvaluationAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)

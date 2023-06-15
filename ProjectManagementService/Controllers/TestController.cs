@@ -86,10 +86,13 @@ public sealed class TestController : ControllerBase
         var taskStates = await _applicationDbContext.TaskStates.ToDictionaryAsync(k => k.Name);
         var taskTypes = await _applicationDbContext.TaskTypes.ToDictionaryAsync(k => k.Name);
 
+
+
         var testTasks = new List<Models.Task>
             {
                 new Models.Task
                 {
+                    Id = Guid.Parse("c42a3d23-5c85-4e2b-9589-b90f54c0e7a6"),
                     Title = "Двухфакторная аутентификация",
                     Description = "Создание механизма проверки логина и пароля пользователя в сочетании с кодом, отправляемым по СМС или генерируемым специальным приложением на устройстве",
                     State = taskStates.GetValueOrDefault("Оценка"),
@@ -100,6 +103,7 @@ public sealed class TestController : ControllerBase
                 },
                 new Models.Task
                 {
+                    Id = Guid.Parse("9bcf27ed-aad5-48ee-89fe-18f3d232ca49"),
                     Title = "Автоматическое создание уникальных паролей",
                     Description = "Разработка механизма автоматической генерации и отправки уникальных паролей пользователям по электронной почте или СМС-сообщениям для повышения безопасности.",
                     State = taskStates.GetValueOrDefault("Оценка"),
@@ -110,6 +114,7 @@ public sealed class TestController : ControllerBase
                 },
                 new Models.Task
                 {
+                    Id = Guid.Parse("b874cfbf-e47b-466b-af11-83430c27ca18"),
                     Title = "Вход через социальные сети",
                     Description = "Реализация возможности авторизации пользователей через профили социальных сетей (например, Facebook, Twitter, LinkedIn) для упрощения процесса входа и повышения удобства использования сайта.",
                     State = taskStates.GetValueOrDefault("Анализ"),
@@ -120,6 +125,7 @@ public sealed class TestController : ControllerBase
                 },
                 new Models.Task
                 {
+                    Id = Guid.Parse("9d076924-5349-4e07-844f-4c29fea8b106"),
                     Title = "Контроль доступа в зависимости от роли пользователя",
                     Description = "Организация системы контроля доступа к ресурсам сайта на основе ролей пользователей (например, администратор, модератор, пользователь) для обеспечения безопасности и управления правами доступа.",
                     State = taskStates.GetValueOrDefault("К работе"),
@@ -131,6 +137,7 @@ public sealed class TestController : ControllerBase
                 },
                 new Models.Task
                 {
+                    Id = Guid.Parse("a9947dd4-5ebf-437c-9a44-8bebb4b32477"),
                     Title = "Подтверждение email адреса",
                     Description = "Создание механизма подтверждения email адреса при регистрации новых пользователей для повышения безопасности и предотвращения создания фиктивных аккаунтов.",
                     State = taskStates.GetValueOrDefault("К работе"),
@@ -141,6 +148,7 @@ public sealed class TestController : ControllerBase
                 },
                 new Models.Task
                 {
+                    Id = Guid.Parse("5852bda3-b389-4e53-861a-e15d6d27482a"),
                     Title = "Автоматический выход из системы",
                     Description = "Реализация механизма автоматического выхода пользователя из системы при закрытии браузера или завершении работы на устройстве для обеспечения безопасности и предотвращения несанкционированного доступа.",
                     State = taskStates.GetValueOrDefault("Работа"),
@@ -154,6 +162,7 @@ public sealed class TestController : ControllerBase
                 },
                 new Models.Task
                 {
+                    Id = Guid.Parse("d5a03cd8-cdb4-4c27-99f3-79e8c03602fd"),
                     Title = "Блокировка аккаунта",
                     Description = "Организация системы блокировки аккаунта пользователя при попытке входа с неверными учетными данными или при обнаружении подозрительной активности в аккаунте для защиты данных пользователя.",
                     State = taskStates.GetValueOrDefault("К тестированию"),
