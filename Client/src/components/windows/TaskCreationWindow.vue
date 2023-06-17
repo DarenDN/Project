@@ -63,6 +63,7 @@
 <script setup>
 import { ref } from "vue";
 import { store } from "stores/store";
+import { mask } from "src/utils/mask";
 
 const taskTypes = ["bug", "feature"];
 const currentTaskType = ref(taskTypes[0]);

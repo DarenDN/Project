@@ -143,25 +143,28 @@ function getUserNameById(id) {
   flex-direction: row;
   justify-content: space-between;
   padding: 20px;
-  max-width: 120px;
 }
 .content {
   background-color: aliceblue;
   border-radius: 5px;
 }
 .column {
-  flex-grow: 0.2;
   margin: 10px;
+  flex-basis: 0;
+  flex-grow: 1;
 }
 .column-header {
   margin: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .card-wrapper {
   width: 100%;
   padding: 20px;
 }
 .fab {
-  position: absolute;
+  position: fixed;
   bottom: 50px;
   right: 50px;
 }

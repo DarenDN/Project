@@ -47,6 +47,7 @@
   </div>
 
   <q-fab
+    v-show="store?.user?.isAdmin"
     class="fab"
     vertical-actions-align="center"
     color="primary"
