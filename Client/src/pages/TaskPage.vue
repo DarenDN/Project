@@ -44,7 +44,7 @@
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store?.currentTask?.estimationTime || 'none'
+          store?.currentTask?.estimationTime || "none"
         }}</q-card-section>
       </q-card>
 
@@ -56,7 +56,7 @@
         <q-separator class="card-separator" inset />
 
         <q-card-section class="q-pt-none">{{
-          store?.currentTask?.estimationPoint || 'none'
+          store?.currentTask?.estimationPoint || "none"
         }}</q-card-section>
       </q-card>
 
@@ -90,10 +90,16 @@
     direction="up"
   >
     <q-fab-action
+      color="primary"
+      @click="createDialog = true"
+      icon="edit"
+      label="Push forward"
+    />
+    <q-fab-action
       color="secondary"
       @click="createDialog = true"
       icon="edit"
-      label="Edit sprint"
+      label="Edit task"
     />
     <q-fab-action
       color="secondary"

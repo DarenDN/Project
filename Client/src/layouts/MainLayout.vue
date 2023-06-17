@@ -16,7 +16,7 @@
         <q-space />
         <q-space />
         <q-space />
-        <q-btn color="blue" label="New meeting"> </q-btn>
+        <q-btn color="blue" label="New meeting" to="/home/meeting"> </q-btn>
         <div class="q-pa-md">
           <q-btn color="secondary" label="Account Settings">
             <q-menu>

@@ -3,7 +3,7 @@
     <q-table
       flat
       bordered
-      title="Sprints"
+      title="Tasks"
       :rows="records"
       :columns="columns"
       row-key="name"
