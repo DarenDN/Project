@@ -11,17 +11,24 @@ using Models;
 using ProjectManagementService.Dtos.Estimation;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using ProjectManagementService.Dtos.Backlog;
+using ProjectManagementService.Services.State;
 
 public sealed class TaskService : ITaskService
 {
     private readonly Data.AppDbContext _appDbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IStateService _stateService;
     private readonly StateConfiguration _stateCfg;
 
-    public TaskService(Data.AppDbContext appDbContext, IHttpContextAccessor httpContextAccessor, IOptions<StateConfiguration> options)
+    public TaskService(
+        Data.AppDbContext appDbContext, 
+        IHttpContextAccessor httpContextAccessor, 
+        IStateService stateService,
+        IOptions<StateConfiguration> options)
     {
         _appDbContext = appDbContext;
         this._httpContextAccessor = httpContextAccessor;
+        this._stateService = stateService;
         _stateCfg = options.Value;
     }
 
@@ -159,7 +166,7 @@ public sealed class TaskService : ITaskService
             // TODO exception
             throw new Exception();
         }
-
+        var nextStates = await _stateService.GetNextStatesAsync(task.State.Id);
         return new TaskDataDto(
             task.Id, 
             task.Title, 
@@ -168,6 +175,7 @@ public sealed class TaskService : ITaskService
             task.Type.Name,
             task.EstimationInTime,
             task.EstimationInPoints,
+            nextStates,
             task.PerformerId,
             task.CreatorId);
     }

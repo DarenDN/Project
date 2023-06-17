@@ -1,4 +1,7 @@
-﻿namespace ProjectManagementService.Dtos.Task;
+﻿
+namespace ProjectManagementService.Dtos.Task;
+using State;
+
 public sealed record TaskDataDto(
     Guid Id, 
     string Title, 
@@ -7,6 +10,7 @@ public sealed record TaskDataDto(
     string Type, 
     TimeSpan? EstimationTime,
     int? EstimationPoint,
+    IEnumerable<StateDto> NextStates,
     Guid? PerformerId, 
     Guid CreatorId);
 
