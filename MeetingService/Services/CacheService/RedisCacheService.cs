@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Models;
 using Dtos;
 using Enums;
+using System.Linq;
 
 public class RedisCacheService : ICacheService
 {
@@ -243,6 +244,7 @@ public class RedisCacheService : ICacheService
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var taskSelection = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
         var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
+        var finalEvaluations = evaluations.TaskFinalEvaluations;
         var activeTaskId = taskSelection.ActiveTask;
         var finalEvaluation = activeTaskId.HasValue
                 && (evaluations.TaskFinalEvaluations?.ContainsKey(activeTaskId.Value) ?? false)
@@ -252,7 +254,9 @@ public class RedisCacheService : ICacheService
         var meetingStateDto = new MeetingStateDto(
             taskSelection.ActiveTask,
             finalEvaluation,
-            taskSelection.Backlog,
+            taskSelection.Backlog.ToDictionary(
+                    k=>k.Key, 
+                    v=>new BacklogDto(v.Value, finalEvaluations.TryGetValue(v.Key, out var evaluation) && evaluation != null)),
             meeting.Participants.Select(p => new ParticipantDto(p.Id, p.Name)),
             evaluations.EvaluationsByParticipant?.ToDictionary(key => key.Key, value => value.Value?.FirstOrDefault(e=>e.Id == activeTaskId))
             );

@@ -1,3 +1,5 @@
 ﻿namespace MeetingService.Dtos;
 
-public record BacklogDto();
+using MeetingService.Enums;
+
+public record BacklogDto(BacklogType BacklogType, bool Voted);
