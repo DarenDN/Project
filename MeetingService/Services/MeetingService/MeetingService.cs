@@ -25,8 +25,9 @@ public sealed class MeetingService : IMeetingService
         _httpContextAccesor = httpContextAccesor;
     }
 
-    public async Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string meetingCode, string userName)
+    public async Task<MeetingStateDto> JoinMeetingAndNotifyAsync( string userName)
     {
+        var meetingCode = GetReauestingMeetingCode();
         var userId = GetRequestingUserId();
         var connectionId = GetRequestingConnectionId();
         await _cacheService.AddCasheUserConnectionAsync(meetingCode, connectionId, userId.Value, userName);
@@ -40,14 +41,15 @@ public sealed class MeetingService : IMeetingService
         return meetingState;
     }
 
-    public async Task<MeetingStateDto> GetCurrentMeetingStateAsync(string meetingCode)
+    public async Task<MeetingStateDto> GetCurrentMeetingStateAsync()
     {
-        var meetingState = await _cacheService.GetCacheMeetingStateAsync(meetingCode);
+        var meetingState = await _cacheService.GetCacheMeetingStateAsync(GetReauestingMeetingCode());
         return meetingState;
     }
 
-    public async Task UpdateUserEvaluationAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto)
+    public async Task UpdateUserEvaluationAndNotifyAsync( TaskEvaluationDto evaluationDto)
     {
+        var meetingCode = GetReauestingMeetingCode();
         var userId = GetRequestingUserId();
         var connectionId = GetRequestingConnectionId();
         await _cacheService.SetEvaluationAsync(meetingCode, userId.Value, evaluationDto);
@@ -59,8 +61,9 @@ public sealed class MeetingService : IMeetingService
             .UpdateUserEvaluationAsync(participantEvaluationDto);
     }
 
-    public async Task LeaveMeetingAndNotifyAsync(string meetingCode)
+    public async Task LeaveMeetingAndNotifyAsync()
     {
+        var meetingCode = GetReauestingMeetingCode();
         var userId = GetRequestingUserId();
         await _cacheService.RemoveCasheUserConnectionAsync(meetingCode, userId.Value);
         await _meetingHubContext.Clients
@@ -70,7 +73,7 @@ public sealed class MeetingService : IMeetingService
             .UserLeavedMeetingAsync(userId.Value);
     }
 
-    public async Task DeleteMeetingAsync(string meetingCode, Guid projectId)
+    public async Task DeleteMeetingAsync(Guid projectId)
     {
         throw new NotImplementedException();
     }
@@ -91,8 +94,9 @@ public sealed class MeetingService : IMeetingService
         return meetingState;
     }
 
-    public async Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId)
+    public async Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync( Guid taskId)
     {
+        var meetingCode = GetReauestingMeetingCode();
         var currentTaskDto = await _cacheService.SetActiveTaskAsync(meetingCode, taskId);
         await _meetingHubContext.Clients
             .GroupExcept(
@@ -102,8 +106,9 @@ public sealed class MeetingService : IMeetingService
         return currentTaskDto;
     }
 
-    public async Task ShowEvaluationsAsync(string meetingCode, Guid taskId)
+    public async Task ShowEvaluationsAsync( Guid taskId)
     {
+        var meetingCode = GetReauestingMeetingCode();
         await _cacheService.SetEvaluationsOpenAsync(meetingCode, taskId);
         await _meetingHubContext.Clients
             .GroupExcept(
@@ -112,8 +117,9 @@ public sealed class MeetingService : IMeetingService
             .ShowEvaluationsAsync(taskId);
     }
 
-    public async Task ReevaluateAsync(string meetingCode, Guid taskId)
+    public async Task ReevaluateAsync( Guid taskId)
     {
+        var meetingCode = GetReauestingMeetingCode();
         var currentTaskState = await _cacheService.DeleteTaskEvaluationsAsync(meetingCode, taskId);
 
         await _meetingHubContext.Clients
@@ -123,8 +129,9 @@ public sealed class MeetingService : IMeetingService
             .ReevaluateAsync(currentTaskState);
     }
 
-    public async Task EvaluateTaskFinalAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto)
+    public async Task EvaluateTaskFinalAndNotifyAsync( TaskEvaluationDto evaluationDto)
     {
+        var meetingCode = GetReauestingMeetingCode();
         await _cacheService.SetEvaluationFinalAsync(meetingCode, evaluationDto);
         await _meetingHubContext.Clients
             .GroupExcept(
@@ -133,8 +140,9 @@ public sealed class MeetingService : IMeetingService
             .EvaluateTaskFinalAsync(evaluationDto);
     }
 
-    public async Task ChangeTaskBacklogTypeAndNotifyAsync(string meetingCode, Guid taskId, BacklogType backlogType)
+    public async Task ChangeTaskBacklogTypeAndNotifyAsync( Guid taskId, BacklogType backlogType)
     {
+        var meetingCode = GetReauestingMeetingCode();
         await _cacheService.ChangeTaskBacklogTypeAsync(meetingCode, taskId, backlogType);
         await _meetingHubContext.Clients
             .GroupExcept(
@@ -144,8 +152,9 @@ public sealed class MeetingService : IMeetingService
 
     }
 
-    public async Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync(string meetingCode)
+    public async Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync()
     {
+        var meetingCode = GetReauestingMeetingCode();
         var finalTaskStatesAsync = await _cacheService.GetFinalEvaluationsAsync(meetingCode);
         return finalTaskStatesAsync;
     }
@@ -159,5 +168,12 @@ public sealed class MeetingService : IMeetingService
     {
         var userIdString = _httpContextAccesor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
         return Guid.TryParse(userIdString, out var userId) ?userId:null;
+    }
+
+    private string GetReauestingMeetingCode()
+    {
+        const string MeetingCodeHeaderKey = "MeetingCode";
+        _httpContextAccesor.HttpContext.Request.Headers.TryGetValue(MeetingCodeHeaderKey, out var meetingCode);
+        return meetingCode;
     }
 }

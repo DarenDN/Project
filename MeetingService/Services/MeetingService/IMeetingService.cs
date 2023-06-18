@@ -5,17 +5,17 @@ using Enums;
 
 public interface IMeetingService
 {
-    Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync(string meetingCode);
-    Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync(string meetingCode, Guid taskId);
-    Task ShowEvaluationsAsync(string meetingCode, Guid taskId);
-    Task ReevaluateAsync(string meetingCode, Guid taskId);
+    Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync();
+    Task<CurrentTaskStateDto> ChangeActiveTaskAndNotifyAsync( Guid taskId);
+    Task ShowEvaluationsAsync( Guid taskId);
+    Task ReevaluateAsync(Guid taskId);
     Task<string> GetMeetingAsync(Guid projectId);
     Task<MeetingStateDto> CreateMeetingAndJoinAsync(string userName, Guid projectId, IEnumerable<BacklogTaskDto> tasks);
-    Task UpdateUserEvaluationAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto);
-    Task EvaluateTaskFinalAndNotifyAsync(string meetingCode, TaskEvaluationDto evaluationDto);
-    Task ChangeTaskBacklogTypeAndNotifyAsync(string meetingCode, Guid taskId, BacklogType backlogType);
+    Task UpdateUserEvaluationAndNotifyAsync(TaskEvaluationDto evaluationDto);
+    Task EvaluateTaskFinalAndNotifyAsync(TaskEvaluationDto evaluationDto);
+    Task ChangeTaskBacklogTypeAndNotifyAsync(Guid taskId, BacklogType backlogType);
 
-    Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string userName, string meetingCode);
-    Task<MeetingStateDto> GetCurrentMeetingStateAsync(string meetingCode);
-    Task LeaveMeetingAndNotifyAsync(string meetingCode);
+    Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string userName);
+    Task<MeetingStateDto> GetCurrentMeetingStateAsync();
+    Task LeaveMeetingAndNotifyAsync();
 }

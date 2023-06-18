@@ -27,6 +27,11 @@ public sealed class SprintController : ControllerBase
             await _sprintService.CreateSprintAsync(createSprintDto);
             return Ok();
         }
+        catch (ArgumentException argEx)
+        {
+            this.HttpContext.Response.StatusCode = 400;
+            return new JsonResult(new { message = argEx.Message });
+        }
         catch (Exception ex)
         {
             return StatusCode(500, ex.Message);

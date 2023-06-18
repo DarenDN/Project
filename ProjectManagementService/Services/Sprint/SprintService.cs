@@ -27,10 +27,9 @@ public sealed class SprintService : ISprintService
         var dateStart = createSprintDto.DateStart.Date;
         var dateEnd = createSprintDto.DateEnd.Date;
         var projectId = await GetRequestingUsersProjectIdAsync();
-        if(await _applicationDbContext.Sprints.AnyAsync(s=>s.ProjectId == projectId 
-                                                    && ((s.DateStart == dateStart
-                                                    && s.DateEnd == dateEnd)
-                                                    || dateStart <= s.DateEnd)))
+        if (await _applicationDbContext.Sprints
+            .Where(s => s.ProjectId == projectId && !s.Finished.Value)
+            .AnyAsync(s => (s.DateStart == dateStart && s.DateEnd == dateEnd) || dateStart <= s.DateEnd))
         {
             throw new ArgumentException($"Sprint with selected dates already exists");
         }
