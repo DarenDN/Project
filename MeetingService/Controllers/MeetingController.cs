@@ -41,11 +41,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(JoinMeetingAsync))]
-    public async Task<ActionResult> JoinMeetingAsync(string meetingCode, string userName)
+    public async Task<ActionResult> JoinMeetingAsync( string userName)
     {
         try
         {
-            var meetingState = await _meetingService.JoinMeetingAndNotifyAsync(userName, meetingCode);
+            var meetingState = await _meetingService.JoinMeetingAndNotifyAsync(userName);
             return new JsonResult(meetingState);
         }
         catch (Exception ex)
@@ -56,11 +56,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPut]
     [Route(nameof(GetCurrentMeetingStateAsync))]
-    public async Task<ActionResult> GetCurrentMeetingStateAsync(string meetingCode)
+    public async Task<ActionResult> GetCurrentMeetingStateAsync()
     {
         try
         {
-            var meetingState = await _meetingService.GetCurrentMeetingStateAsync(meetingCode);
+            var meetingState = await _meetingService.GetCurrentMeetingStateAsync();
             return new JsonResult(meetingState);
         }
         catch (Exception ex)
@@ -71,11 +71,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(LeaveMeetingAsync))]
-    public async Task<ActionResult> LeaveMeetingAsync(string meetingCode)
+    public async Task<ActionResult> LeaveMeetingAsync()
     {
         try
         {
-            await _meetingService.LeaveMeetingAndNotifyAsync(meetingCode);
+            await _meetingService.LeaveMeetingAndNotifyAsync();
             return Ok();
         }
         catch (Exception ex)
@@ -101,11 +101,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPut]
     [Route(nameof(ChangeActiveTaskAsync))]
-    public async Task<ActionResult> ChangeActiveTaskAsync(string meetingCode, Guid taskId)
+    public async Task<ActionResult> ChangeActiveTaskAsync( Guid taskId)
     {
         try
         {
-            var currentTaskState = await _meetingService.ChangeActiveTaskAndNotifyAsync(meetingCode, taskId);
+            var currentTaskState = await _meetingService.ChangeActiveTaskAndNotifyAsync( taskId);
             return new JsonResult(currentTaskState);
         }
         catch (Exception ex)
@@ -116,11 +116,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPut]
     [Route(nameof(GetFinalEvaluationsAsync))]
-    public async Task<ActionResult> GetFinalEvaluationsAsync(string meetingCode)
+    public async Task<ActionResult> GetFinalEvaluationsAsync()
     {
         try
         {
-            var backlogTasksDto = await _meetingService.GetFinalEvaluationsAsync(meetingCode);
+            var backlogTasksDto = await _meetingService.GetFinalEvaluationsAsync();
             return new JsonResult(new { backlogTasksDto });
         }
         catch (Exception ex)
@@ -131,11 +131,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPut]
     [Route(nameof(ShowEvaluationsAsync))]
-    public async Task<ActionResult> ShowEvaluationsAsync(string meetingCode, Guid taskId)
+    public async Task<ActionResult> ShowEvaluationsAsync(Guid taskId)
     {
         try
         {
-            await _meetingService.ShowEvaluationsAsync(meetingCode, taskId);
+            await _meetingService.ShowEvaluationsAsync(taskId);
             return Ok();
         }
         catch (Exception ex)
@@ -146,11 +146,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(UpdateUserEvaluationAsync))]
-    public async Task<ActionResult> UpdateUserEvaluationAsync(string meetingCode,TaskEvaluationDto evaluationDto)
+    public async Task<ActionResult> UpdateUserEvaluationAsync(TaskEvaluationDto evaluationDto)
     {
         try
         {
-            await _meetingService.UpdateUserEvaluationAndNotifyAsync(meetingCode, evaluationDto);
+            await _meetingService.UpdateUserEvaluationAndNotifyAsync(evaluationDto);
             return Ok();
         }
         catch (Exception ex)
@@ -161,11 +161,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(EvaluateTaskFinalAsync))]
-    public async Task<ActionResult> EvaluateTaskFinalAsync(string meetingCode,TaskEvaluationDto evaluationDto)
+    public async Task<ActionResult> EvaluateTaskFinalAsync(TaskEvaluationDto evaluationDto)
     {
         try
         {
-            await _meetingService.EvaluateTaskFinalAndNotifyAsync(meetingCode, evaluationDto);
+            await _meetingService.EvaluateTaskFinalAndNotifyAsync(evaluationDto);
             return Ok();
         }
         catch (Exception ex)
@@ -176,11 +176,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(ReevaluateAsync))]
-    public async Task<ActionResult> ReevaluateAsync(string meetingCode, Guid taskId)
+    public async Task<ActionResult> ReevaluateAsync(Guid taskId)
     {
         try
         {
-            await _meetingService.ReevaluateAsync(meetingCode,taskId);
+            await _meetingService.ReevaluateAsync(taskId);
             return Ok();
         }
         catch (Exception ex)
@@ -191,11 +191,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(ChangeTaskBacklogTypeAsync))]
-    public async Task<ActionResult> ChangeTaskBacklogTypeAsync(string meetingCode, Guid taskId, BacklogType backlogType)
+    public async Task<ActionResult> ChangeTaskBacklogTypeAsync(Guid taskId, BacklogType backlogType)
     {
         try
         {
-            await _meetingService.ChangeTaskBacklogTypeAndNotifyAsync(meetingCode,taskId, backlogType);
+            await _meetingService.ChangeTaskBacklogTypeAndNotifyAsync(taskId, backlogType);
             return Ok();
         }
         catch (Exception ex)
