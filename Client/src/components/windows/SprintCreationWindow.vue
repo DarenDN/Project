@@ -129,14 +129,19 @@ import { ref } from "vue";
 import { store } from "stores/store";
 import { mask } from "src/utils/mask";
 import { useRouter } from "vue-router";
+import { useQuasar } from "quasar";
+import { httpClient } from "src/utils/httpClient";
 
 const router = useRouter();
+const q = useQuasar();
 
 const taskStatuses = ref(["new", "done"]);
 const sprintName = ref(store?.sprint?.sprintName);
 const startDate = ref(store?.sprint?.startDate);
 const endDate = ref(store?.sprint?.endDate);
-const description = ref(store?.sprint?.description || "Type sprint description here");
+const description = ref(
+  store?.sprint?.description || "Type sprint description here"
+);
 const currentTaskStatus = ref(null);
 
 function addTaskStatus() {
@@ -151,18 +156,39 @@ function onSubmit() {
   // TODO: update the store
   mask.show("Loading");
 
-  setTimeout(() => {
-    store.sprint = {
-      sprintName: sprintName.value,
-      startDate: startDate.value,
-      endDate: endDate.value,
-      dateCreated: "2000/01/01",
-      description,
-      taskStatuses: taskStatuses.value
-    };
-    router.push("/home/sprint-info");
-    mask.hide();
-  }, 1000);
+  const sprintData = {
+    name: sprintName.value,
+    description: description.value,
+    dateStart: new Date(startDate.value),
+    dateEnd: new Date(endDate.value),
+  };
+
+  httpClient
+    .post(
+      httpClient.ProjectManagementServicePath,
+      "Sprint/CreateSprintAsync",
+      sprintData
+    )
+    .then((response) => {
+      if (response.ok) {
+        router.push("/home/sprint-info");
+        mask.hide();
+        store.sprint = {
+          sprintName: sprintName.value,
+          startDate: startDate.value,
+          endDate: endDate.value,
+          dateCreated: "2000/01/01",
+          description,
+          taskStatuses: taskStatuses.value,
+        };
+      } else {
+        q.notify({
+          message: 'Something went wrong',
+          color: "primary",
+        });
+        mask.hide();
+      }
+    });
 }
 </script>
 

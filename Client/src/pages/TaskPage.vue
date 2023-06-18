@@ -96,6 +96,7 @@
       label="Push forward"
     />
     <q-fab-action
+      v-show="store?.currentTask?.creatorId == store.user.id"
       color="secondary"
       @click="createDialog = true"
       icon="edit"

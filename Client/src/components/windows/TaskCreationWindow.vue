@@ -26,7 +26,7 @@
             <q-select
               filled
               v-model="currentTaskType"
-              :options="taskTypes"
+              :options="taskTypesToDispay"
               label="Task type"
             />
           </div>
@@ -61,19 +61,58 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, defineProps } from "vue";
 import { store } from "stores/store";
 import { mask } from "src/utils/mask";
+import { httpClient } from "src/utils/httpClient";
+import { useQuasar } from "quasar";
 
-const taskTypes = ["bug", "feature"];
-const currentTaskType = ref(taskTypes[0]);
+const q = useQuasar();
+
+const taskTypes = ref([]);
+const taskTypesToDispay = ref([]);
+const currentTaskType = ref(null);
 const addToCurrentSprint = ref(false);
 const taskName = ref(null);
 const description = ref(null);
 
+onMounted(function () {
+  httpClient
+    .get(httpClient.ProjectManagementServicePath, "Type/GetTypesAsync")
+    .then((response) => response.json())
+    .then((result) => {
+      taskTypes.value = result.types;
+      taskTypesToDispay.value = result.types.map((x) => x.name);
+    });
+});
+
 function onSubmit() {
   // TODO: update the store
   mask.show("Loading");
+  const createTaskDto = {
+    title: taskName.value,
+    description: description.value,
+    typeId: taskTypes.value.filter((x) => x.name === currentTaskType.value)[0]
+      .id,
+    sprintId: addToCurrentSprint.value ? store.sprint.id : null,
+  };
+
+  httpClient
+    .post(
+      httpClient.ProjectManagementServicePath,
+      "Task/CreateTaskAsync",
+      createTaskDto
+    )
+    .then((response) => {
+      if (!response.ok) {
+        q.notify({
+          message: "Something went wrong",
+          color: "primary",
+        });
+      }
+      
+      mask.hide();
+    });
 
   setTimeout(() => {
     mask.hide();

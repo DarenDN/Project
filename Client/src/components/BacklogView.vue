@@ -40,30 +40,65 @@
 
 <script setup>
 import { defineProps } from "vue";
-import { store } from "stores/store";
+import { ref, onMounted } from "vue";
+import { httpClient } from "src/utils/httpClient";
+import { mask } from "src/utils/mask";
 
+const usersMapping = ref(new Map());
+
+mask.show();
 const props = defineProps({
-  records: {
-    type: Array,
-    default: () => [],
+  source: {
+    type: String
   },
 });
+
+onMounted(function () {
+  httpClient
+    .get(httpClient.ProjectManagementServicePath, props.source)
+    .then((response) => response.json())
+
+    .then((response) => {
+      records.value = response.tasks;
+
+      const users = records.value.map((task) => task.creator).flat();
+      return httpClient.put(
+        httpClient.IdentityManagementPath,
+        "IdentityManagement/GetShortUserInfosAsync",
+        users
+      );
+    })
+    .then((resp) => resp.json())
+    .then((result) => {
+      if (result) {
+        result.forEach((user) => {
+          usersMapping.value.set(user.id, `${user.firstName} ${user.lastName}`);
+        });
+      }
+
+      records.value.forEach((x) => {
+        x.creatorName = usersMapping.value.get(x.creator);
+      });
+      mask.hide();
+    });
+});
+
+const records = ref([]);
+
 const columns = [
   {
-    name: "name",
+    name: "title",
     required: true,
     label: "Name",
     align: "left",
-    field: (row) => row.name,
+    field: "title",
     format: (val) => `${val}`,
     sortable: true,
   },
   { name: "type", label: "Type", field: "type", sortable: true },
   { name: "status", label: "Status", field: "status", sortable: true },
-  { name: "author", label: "Author", field: "author", sortable: true },
+  { name: "creator", label: "Creator", field: "creatorName", sortable: true },
 ];
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

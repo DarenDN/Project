@@ -222,8 +222,7 @@ onMounted(() => {
       )
       .then((response) => response.json())
       .then((response) => {
-        store.user.firstName = response.firstName;
-        store.user.lastName = response.lastName;
+        Object.assign(store.user, response)
       });
 
     const projectInfo = httpClient
@@ -255,6 +254,7 @@ onMounted(() => {
       .then((result) => {
         if (result) {
           store.sprint = {
+            id: result.id,
             sprintName: result.name,
             startDate: result.dateStart,
             endDate: result.dateEnd,
