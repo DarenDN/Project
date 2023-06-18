@@ -126,6 +126,21 @@ public sealed class TaskController : ControllerBase
     }
 
     [HttpGet]
+    [Route(nameof(GetTasksAsync))]
+    public async Task<ActionResult> GetTasksAsync()
+    {
+        try
+        {
+            var tasks = await _taskService.GetTasksAsync();
+            return new JsonResult(new { tasks });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet]
     [Route(nameof(GetTasksWithStatesAsync))]
     public async Task<ActionResult> GetTasksWithStatesAsync(List<Guid>? states)
     {
