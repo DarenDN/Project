@@ -201,6 +201,21 @@ public sealed class TaskController : ControllerBase
     }
 
     [HttpPut]
+    [Route(nameof(SetCurrentUserAsPerformerAsync))]
+    public async Task<ActionResult> SetCurrentUserAsPerformerAsync(Guid taskId)
+    {
+        try
+        {
+            await _taskService.SetCurrentUserAsPerformerAsync(taskId);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPut]
     [Route(nameof(SetEstimationManyAsync))]
     public async Task<ActionResult> SetEstimationManyAsync(List<EstimationDto> estimationDtos)
     {

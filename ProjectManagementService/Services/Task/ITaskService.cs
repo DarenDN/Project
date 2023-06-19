@@ -21,6 +21,7 @@ public interface ITaskService
     Task ChangeTypeAsync(Guid taskId, Guid typeId);
 
     Task ChangePerformerAsync(Guid taskId, Guid? performerId);
+    Task SetCurrentUserAsPerformerAsync(Guid taskId);
 
     Task SetEstimationManyAsync(List<EstimationDto> estimationDtos);
 

@@ -357,4 +357,10 @@ public sealed class TaskService : ITaskService
         _stateCfg.BasicStates.TryGetValue(_stateCfg.EvaluationState, out var evaluationState);
         return await _appDbContext.TaskStates.FirstOrDefaultAsync(t => t.Id == evaluationState);
     }
+
+    public async Task SetCurrentUserAsPerformerAsync(Guid taskId)
+    {
+        var currentUserId = GetRequestingIdentityId();
+        await ChangePerformerAsync(taskId, currentUserId);
+    }
 }
