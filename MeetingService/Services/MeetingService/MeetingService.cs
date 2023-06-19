@@ -176,4 +176,9 @@ public sealed class MeetingService : IMeetingService
         _httpContextAccesor.HttpContext.Request.Headers.TryGetValue(MeetingCodeHeaderKey, out var meetingCode);
         return meetingCode;
     }
+
+    public async Task TestSignalR()
+    {
+        await _meetingHubContext.Clients.Client(GetRequestingConnectionId()).TestHub("Test string");
+    }
 }

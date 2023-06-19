@@ -18,4 +18,6 @@ public interface IMeetingService
     Task<MeetingStateDto> JoinMeetingAndNotifyAsync(string userName);
     Task<MeetingStateDto> GetCurrentMeetingStateAsync();
     Task LeaveMeetingAndNotifyAsync();
+
+    Task TestSignalR();
 }

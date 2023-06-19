@@ -58,4 +58,9 @@ public class MeetingHub : Hub<IMeetingHub>
     {
         await Clients.OthersInGroup(meetingCode).DeleteMeetingAsync();
     }
+
+    public async Task TestHub(string testString)
+    {
+        await Clients.Caller.TestHub(testString);
+    }
 }

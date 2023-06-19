@@ -18,4 +18,6 @@ public interface IMeetingHub
     Task ShowEvaluationsAsync(Guid taskId);
 
     Task ChangeTaskBacklogTypeAsync(Guid taskId, BacklogType backlogType);
+
+    Task TestHub(string testString);
 }

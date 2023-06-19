@@ -223,4 +223,12 @@ public sealed class MeetingController : ControllerBase
     {
         return Ok();
     }
+
+    [HttpPut, AllowAnonymous]
+    [Route("testSignalR")]
+    public async Task<ActionResult> SignalR()
+    {
+        await _meetingService.TestSignalR();
+        return Ok();
+    }
 }
