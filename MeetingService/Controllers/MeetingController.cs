@@ -86,11 +86,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(CreateMeetingAndJoinAsync))]
-    public async Task<ActionResult> CreateMeetingAndJoinAsync(string userName, Guid projectId, IEnumerable<BacklogTaskDto> tasks)
+    public async Task<ActionResult> CreateMeetingAndJoinAsync(CreateMeetingDto createMeetingDto)
     {
         try
         {
-            var meetingCode = await _meetingService.CreateMeetingAndJoinAsync(userName, projectId, tasks);
+            var meetingCode = await _meetingService.CreateMeetingAndJoinAsync(createMeetingDto.userName, createMeetingDto.projectId, createMeetingDto.tasks);
             return new JsonResult(meetingCode);
         }
         catch (Exception ex)
