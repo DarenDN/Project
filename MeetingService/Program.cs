@@ -28,7 +28,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
+#if DEBUG
     options.Configuration = builder.Configuration.GetConnectionString(RedisConnectionStringSection);
+#else
+    options.Configuration = builder.Configuration.GetConnectionString("RedisDocker");
+#endif
     options.InstanceName = builder.Configuration.GetValue<string>(RedisCfgInstanceNameSection);
 });
 

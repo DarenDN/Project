@@ -8,9 +8,9 @@ public enum BacklogType
     Sprint
 }
 
-public class BacklogTypeConverter : Newtonsoft.Json.JsonConverter<BacklogType>
+public class BacklogTypeConverter : JsonConverter<BacklogType>
 {
-    public override BacklogType ReadJson(JsonReader reader, Type objectType, BacklogType existingValue, bool hasExistingValue, Newtonsoft.Json.JsonSerializer serializer)
+    public override BacklogType ReadJson(JsonReader reader, Type objectType, BacklogType existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         if (reader.TokenType == JsonToken.Null)
         {
@@ -26,7 +26,7 @@ public class BacklogTypeConverter : Newtonsoft.Json.JsonConverter<BacklogType>
         throw new JsonSerializationException($"Unexpected token type '{reader.TokenType}' for enum '{objectType.Name}'.");
     }
 
-    public override void WriteJson(JsonWriter writer, BacklogType value, Newtonsoft.Json.JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, BacklogType value, JsonSerializer serializer)
     {
         writer.WriteValue((int)value);
     }

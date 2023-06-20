@@ -1,5 +1,10 @@
 ﻿namespace MeetingService.Dtos;
 
 using MeetingService.Enums;
-
-public record BacklogTaskDto(Guid TaskId, TimeSpan? EstimationTime, int? EstimationPoint, BacklogType BacklogType);
+using System.ComponentModel;
+using Newtonsoft.Json;
+public record BacklogTaskDto(
+    Guid TaskId, 
+    TimeSpan? EstimationTime, 
+    int? EstimationPoint, 
+    [JsonConverter(typeof(BacklogTypeConverter))] BacklogType BacklogType);
