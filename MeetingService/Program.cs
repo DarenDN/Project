@@ -65,12 +65,11 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 var app = builder.Build();
-app.UseCors("CorsPolicy");
 app.MapControllers();
 
 //app.UseHttpsRedirection();
 app.UseRouting();
-
+app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints(e =>
