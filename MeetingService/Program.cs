@@ -15,7 +15,8 @@ const string SignalRCfgRouteSection = "SignalRConfiguration:Route";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder
-.AllowAnyOrigin()
+//.AllowAnyOrigin()
+.WithOrigins(@"http://localhost:9000")
 .AllowAnyHeader()
 .AllowAnyMethod()
 .AllowCredentials()));
