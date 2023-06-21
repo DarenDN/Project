@@ -14,7 +14,11 @@ const string RedisConnectionStringSection = "Redis";
 const string SignalRCfgRouteSection = "SignalRConfiguration:Route";
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddCors(options => options.AddPolicy("CorsPolicy", builder => builder
+.AllowAnyOrigin()
+.AllowAnyHeader()
+.AllowAnyMethod()
+.AllowCredentials()));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     opt => opt.TokenValidationParameters = new TokenValidationParameters
     {
@@ -79,6 +83,7 @@ app.UseAuthorization();
 app.UseEndpoints(e =>
 {
     e.MapHub<MeetingHub>(app.Configuration.GetValue<string>(SignalRCfgRouteSection));
+    
 });
 
 if (app.Environment.IsDevelopment())
