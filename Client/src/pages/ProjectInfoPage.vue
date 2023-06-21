@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-      <h5 class="title">{{ store?.project?.projectName }}</h5>
+      <h5 class="title">{{ store?.project?.title }}</h5>
       <div class="q-pa-md row items-start q-gutter-md">
         <q-card class="card" bordered>
           <q-card-section>
