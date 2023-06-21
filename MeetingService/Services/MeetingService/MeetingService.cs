@@ -73,9 +73,10 @@ public sealed class MeetingService : IMeetingService
             .UserLeavedMeetingAsync(userId.Value);
     }
 
-    public async Task DeleteMeetingAsync(Guid projectId)
+    public async Task DeleteMeetingAsync()
     {
-        throw new NotImplementedException();
+        var meetingCode = GetReauestingMeetingCode();
+        await _cacheService.DeleteCasheMeetingAsync(meetingCode);
     }
 
     public async Task<string> GetMeetingAsync(Guid projectId)
@@ -179,6 +180,6 @@ public sealed class MeetingService : IMeetingService
 
     public async Task TestSignalR()
     {
-        await _meetingHubContext.Clients.Client(GetRequestingConnectionId()).TestHub("Test string");
+        await _meetingHubContext.Clients.All.TestHub("Test string");
     }
 }

@@ -85,6 +85,21 @@ public sealed class MeetingController : ControllerBase
     }
 
     [HttpPost]
+    [Route(nameof(DeleteMeetingAsync))]
+    public async Task<ActionResult> DeleteMeetingAsync()
+    {
+        try
+        {
+            await _meetingService.DeleteMeetingAsync();
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost]
     [Route(nameof(CreateMeetingAndJoinAsync))]
     public async Task<ActionResult> CreateMeetingAndJoinAsync(CreateMeetingDto createMeetingDto)
     {
