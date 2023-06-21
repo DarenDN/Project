@@ -4,7 +4,9 @@ using Dtos;
 using Models;
 using Microsoft.AspNetCore.SignalR;
 using MeetingService.Enums;
+using Microsoft.AspNetCore.Cors;
 
+[EnableCors("CorsPolicy")]
 public class MeetingHub : Hub<IMeetingHub>
 {
     public async Task ChangeActiveTaskAsync(string meetingCode, CurrentTaskStateDto currentTaskDto)
