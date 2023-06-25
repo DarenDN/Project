@@ -38,15 +38,15 @@ public class AuthService : IAuthService
     /// <exception cref="ArgumentException"></exception>
     public async Task<string> LoginAsync(UserAuthDto userAuthDto)
     {
-        var userLogin = userAuthDto.Login;
-        var userPass = userAuthDto.Password;
+        var userLogin = userAuthDto.Login.Trim();
+        var userPass = userAuthDto.Password.Trim();
         if (string.IsNullOrWhiteSpace(userLogin))
         {
-            throw new ArgumentNullException($"Empty argument value: {nameof(userAuthDto.Login)}");
+            throw new ArgumentNullException($"Empty argument value: {nameof(userLogin)}");
         }
         if (string.IsNullOrWhiteSpace(userPass))
         {
-            throw new ArgumentNullException($"Empty argument value: {nameof(userAuthDto.Password)}");
+            throw new ArgumentNullException($"Empty argument value: {nameof(userPass)}");
         }
 
         var identity = await _appDbContext.Identities

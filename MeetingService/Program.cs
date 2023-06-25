@@ -47,6 +47,8 @@ builder.Services.AddScoped(typeof(IMeetingService),typeof(MeetingService.Service
 
 builder.Services.AddSignalR(cfg =>
 {
+    cfg.ClientTimeoutInterval = TimeSpan.FromMinutes(30);
+    cfg.KeepAliveInterval = TimeSpan.FromMinutes(30);
     cfg.EnableDetailedErrors = true;
 });
 
