@@ -2,4 +2,4 @@
 
 using MeetingService.Enums;
 
-public record BacklogDto(BacklogType BacklogType, bool Voted);
+public record BacklogDto(Guid Id, string Name, BacklogType BacklogType, bool Voted);

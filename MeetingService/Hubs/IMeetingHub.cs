@@ -6,7 +6,7 @@ using MeetingService.Enums;
 public interface IMeetingHub
 {
     Task UserJoinedMeetingAsync(ParticipantEvaluationDto participantEvaluationDto);
-    Task UserLeavedMeetingAsync(Guid participantId);
+    Task UserLeavedMeetingAsync(ParticipantIdDto participantDto);
     Task DeleteMeetingAsync();
 
     // TODO Task TaskStateChangedAsync(CurrentTaskStateDto currentTaskDto)
@@ -15,9 +15,9 @@ public interface IMeetingHub
     //
     Task UpdateUserEvaluationAsync(ParticipantEvaluationDto participantEvaluationDto);
     Task EvaluateTaskFinalAsync(TaskEvaluationDto evaluationDto);
-    Task ShowEvaluationsAsync(Guid taskId);
+    Task ShowEvaluationsAsync(TaskDto taskDto);
 
-    Task ChangeTaskBacklogTypeAsync(Guid taskId, BacklogType backlogType);
+    Task ChangeTaskBacklogTypeAsync(TaskBacklogChangedDto taskBacklogChangedDto);
 
     Task TestHub(string testString);
 }

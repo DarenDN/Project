@@ -27,42 +27,6 @@ public class RedisCacheService : ICacheService
         return meeting?.MeetingCode;
     }
 
-    public async Task<string> CreateCacheMeetingAsync(Guid projectId, Dictionary<Guid, BacklogType> tasks)
-    {// TODO check if one already exists
-        if(!string.IsNullOrWhiteSpace(await GetMeetingCodeOrNullAsync(projectId)))
-        {
-            throw new ArgumentException($"Key {nameof(projectId)} already exists");
-        }
-
-        var taskSelection = new TasksSelection
-        {
-            Code = Guid.NewGuid().ToString(),
-            Backlog = tasks
-        };
-
-        var evaluation = new Evaluations
-        {
-            Code = Guid.NewGuid().ToString()
-        };
-
-        var meeting = new Meeting
-        {
-            MeetingCode = projectId.ToString(),
-            TaskSelectionCode = taskSelection.Code,
-            EvaluationsCode = evaluation.Code
-        };
-
-        var tasksSave = new Task[]
-        {
-            SaveMeetingChangesAsync(meeting.MeetingCode, meeting),
-            SaveEvaluationsChangesAsync(evaluation.Code, evaluation),
-            SaveTaskSelectionChangesAsync(taskSelection.Code, taskSelection)
-        };
-        var awaiter = Task.WhenAll(tasksSave);
-        await awaiter;
-        return meeting.MeetingCode;
-    }
-
     public async Task DeleteCasheMeetingAsync(string meetingCode)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
@@ -77,16 +41,16 @@ public class RedisCacheService : ICacheService
         await awaiter;
     }
 
-    public async Task UpdateMeetingBacklogAsync(string meetingCode, Dictionary<Guid, BacklogType> tasks)
+    public async Task UpdateMeetingBacklogAsync(string meetingCode, IEnumerable<BacklogTaskDto> tasks)
     {
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var taskSelectionCode = meeting.TaskSelectionCode;
         var taskSelection = await GetTaskSelectionFromCacheAsync(taskSelectionCode);
-        var backlog = taskSelection.Backlog.Keys;
-        var addToBacklog = tasks.Where(t => !backlog.Contains(t.Key));
+        var backlog = taskSelection.Backlog.Select(bl=>bl.Id);
+        var addToBacklog = tasks.Where(t => !backlog.Contains(t.TaskId));
         foreach(var task in addToBacklog)
         {
-            taskSelection.Backlog.Add(task.Key, task.Value);
+            taskSelection.Backlog.Add(new Backlog { Id = task.TaskId, Name = task.Name, BacklogType = task.BacklogType });
         }
 
         await SaveTaskSelectionChangesAsync(taskSelectionCode, taskSelection);
@@ -171,7 +135,7 @@ public class RedisCacheService : ICacheService
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var evaluations = await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
         var selections = await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
-        if(!selections.Backlog.ContainsKey(evaluationDto.TaskId))
+        if(!selections.Backlog.Any(bl=>bl.Id == evaluationDto.TaskId))
         {
             throw new ArgumentException($"Key {nameof(evaluationDto.TaskId)} does not exist in {nameof(selections.Backlog)}");
         }
@@ -254,9 +218,8 @@ public class RedisCacheService : ICacheService
         var meetingStateDto = new MeetingStateDto(
             taskSelection.ActiveTask,
             finalEvaluation,
-            taskSelection.Backlog.ToDictionary(
-                    k=>k.Key, 
-                    v=>new BacklogDto(v.Value, finalEvaluations.TryGetValue(v.Key, out var evaluation) && evaluation != null)),
+            taskSelection.Backlog.Select(
+                    t=>new BacklogDto(t.Id, t.Name, t.BacklogType, finalEvaluations.TryGetValue(t.Id, out var evaluation) && evaluation != null)),
             meeting.Participants.Select(p => new ParticipantDto(p.Id, p.Name)),
             evaluations.EvaluationsByParticipant?.ToDictionary(key => key.Key, value => value.Value?.FirstOrDefault(e=>e.Id == activeTaskId))
             );
@@ -327,13 +290,14 @@ public class RedisCacheService : ICacheService
         var meeting = await GetMeetingFromCacheAsync(meetingCode);
         var taskSelectionsCode = meeting.TaskSelectionCode;
         var selections = await GetTaskSelectionFromCacheAsync(taskSelectionsCode);
-        if(selections.Backlog.ContainsKey(taskId))
+        if(selections.Backlog.Any(bl=>bl.Id == taskId))
         {
-            selections.Backlog[taskId] = backlogType;
+            var blog = selections.Backlog.FirstOrDefault(bl=>bl.Id == taskId);
+            blog.BacklogType = backlogType;
         }
         else
         {
-            selections.Backlog.Add(taskId, backlogType);
+            selections.Backlog.Add(new Backlog { BacklogType = backlogType, Id = taskId});
         }
         await SaveTaskSelectionChangesAsync(taskSelectionsCode, selections);
     }
@@ -437,10 +401,11 @@ public class RedisCacheService : ICacheService
         var evaluations = (await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode)).TaskFinalEvaluations;
         var taskSprintEvaluationInfos = selections.Backlog.Select(bl=> 
                 new BacklogTaskDto(
-                    bl.Key, 
-                    evaluations.GetValueOrDefault(bl.Key)?.EvaluationTime, 
-                    evaluations.GetValueOrDefault(bl.Key)?.EvaluationPoints, 
-                    bl.Value));
+                    bl.Id, 
+                    bl.Name,
+                    evaluations.GetValueOrDefault(bl.Id)?.EvaluationTime, 
+                    evaluations.GetValueOrDefault(bl.Id)?.EvaluationPoints, 
+                    bl.BacklogType));
 
         return taskSprintEvaluationInfos;
     }
@@ -455,7 +420,7 @@ public class RedisCacheService : ICacheService
         var taskSelection = new TasksSelection
         {
             Code = Guid.NewGuid().ToString(),
-            Backlog = tasks.Select(t=>new { t.TaskId, t.BacklogType }).ToDictionary(k => k.TaskId, v=>v.BacklogType)
+            Backlog = tasks.Select(t=>new Backlog{ Id = t.TaskId, Name = t.Name, BacklogType = t.BacklogType }).ToList()
         };
 
         var evaluation = new Evaluations

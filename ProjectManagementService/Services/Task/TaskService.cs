@@ -64,6 +64,7 @@ public sealed class TaskService : ITaskService
         var currentSprintId = await GetCurrentSprintIdAsync();
         var backlogTasks = tasks.Select(t=>new BacklogTaskDto(
             t.Id,
+            t.Title,
             t.EstimationInTime, 
             t.EstimationInPoints,
             t.SprintId.HasValue && currentSprintId.HasValue && t.SprintId == currentSprintId

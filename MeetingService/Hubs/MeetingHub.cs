@@ -16,7 +16,7 @@ public class MeetingHub : Hub<IMeetingHub>
 
     public async Task ShowEvaluationsAsync(string meetingCode, Guid taskId)
     {
-        await Clients.OthersInGroup(meetingCode).ShowEvaluationsAsync(taskId);
+        await Clients.OthersInGroup(meetingCode).ShowEvaluationsAsync(new TaskDto(taskId));
     }
 
     public async Task ReevaluateAsync(string meetingCode, CurrentTaskStateDto currentTaskDto)
@@ -36,7 +36,7 @@ public class MeetingHub : Hub<IMeetingHub>
 
     public async Task ChangeTaskBacklogTypeAsync(string meetingCode, Guid taskId , BacklogType backlogType)
     {
-        await Clients.OthersInGroup(meetingCode).ChangeTaskBacklogTypeAsync(taskId, backlogType);
+        await Clients.OthersInGroup(meetingCode).ChangeTaskBacklogTypeAsync(new TaskBacklogChangedDto(taskId, backlogType));
     }
 
     public async Task JoinMeetingAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)
@@ -47,7 +47,7 @@ public class MeetingHub : Hub<IMeetingHub>
 
     public async Task LeaveMeetingAsync(string meetingCode, Guid participantId)
     {
-        await Clients.OthersInGroup(meetingCode).UserLeavedMeetingAsync(participantId);
+        await Clients.OthersInGroup(meetingCode).UserLeavedMeetingAsync(new ParticipantIdDto(participantId));
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, meetingCode);
     }
 
