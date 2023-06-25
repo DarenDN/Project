@@ -129,7 +129,7 @@ public sealed class MeetingController : ControllerBase
         }
     }
 
-    [HttpPut]
+    [HttpGet]
     [Route(nameof(GetFinalEvaluationsAsync))]
     public async Task<ActionResult> GetFinalEvaluationsAsync()
     {

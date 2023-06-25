@@ -37,11 +37,11 @@ public sealed class TaskController : ControllerBase
 
     [HttpPut]
     [Route(nameof(UpdateTasksAsync))]
-    public async Task<ActionResult> UpdateTasksAsync(IEnumerable<BacklogTaskDto> taskInfo)
+    public async Task<ActionResult> UpdateTasksAsync(MeetingResultDto meetingResultDto)
     {
         try
         {
-            await _taskService.UpdateTasksAsync(taskInfo);
+            await _taskService.UpdateTasksAsync(meetingResultDto.BacklogTaskDtos);
             return Ok();
         }
         catch (Exception ex)
