@@ -34,10 +34,7 @@ public sealed class MeetingService : IMeetingService
         await _cacheService.AddCasheUserConnectionAsync(meetingCode, connectionId, userId.Value, userName);
         var userCachedEvaluations = await _cacheService.GetUserCachedEvaluationsAsync(meetingCode, userId.Value);
         await _meetingHubContext.Groups.AddToGroupAsync(connectionId, meetingCode);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                connectionId)
+        await _meetingHubContext.Clients.All
             .UserJoinedMeetingAsync(userCachedEvaluations);
         var meetingState = await _cacheService.GetCacheMeetingStateAsync(meetingCode);
         return meetingState;
@@ -56,11 +53,7 @@ public sealed class MeetingService : IMeetingService
         var connectionId = GetRequestingConnectionId();
         await _cacheService.SetEvaluationAsync(meetingCode, userId.Value, evaluationDto);
         var participantEvaluationDto = await _cacheService.GetUserCachedEvaluationsAsync (meetingCode, userId.Value);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                connectionId)
-            .UpdateUserEvaluationAsync(participantEvaluationDto);
+        await _meetingHubContext.Clients.All.UpdateUserEvaluationAsync(participantEvaluationDto);
     }
 
     public async Task LeaveMeetingAndNotifyAsync()
@@ -70,10 +63,7 @@ public sealed class MeetingService : IMeetingService
         var connectionId = GetRequestingConnectionId();
         await _cacheService.RemoveCasheUserConnectionAsync(meetingCode, userId.Value);
         await _meetingHubContext.Groups.RemoveFromGroupAsync(connectionId, meetingCode);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId())
+        await _meetingHubContext.Clients.All
             .UserLeavedMeetingAsync(new ParticipantIdDto(userId.Value));
     }
 
@@ -82,9 +72,7 @@ public sealed class MeetingService : IMeetingService
         var meetingCode = GetRequestingMeetingCode();
         var connections = await _cacheService.GetCasheUserConnectionAsync (meetingCode);
         await _cacheService.DeleteCasheMeetingAsync(meetingCode);
-        await _meetingHubContext.Clients.GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId()).DeleteMeetingAsync();
+        await _meetingHubContext.Clients.All.DeleteMeetingAsync();
         foreach (var connection in connections)
         {
             await _meetingHubContext.Groups.RemoveFromGroupAsync(connection, meetingCode);
@@ -112,10 +100,7 @@ public sealed class MeetingService : IMeetingService
     {
         var meetingCode = GetRequestingMeetingCode();
         var currentTaskDto = await _cacheService.SetActiveTaskAsync(meetingCode, taskId);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId())
+        await _meetingHubContext.Clients.All
             .ChangeActiveTaskAsync(currentTaskDto);
         return currentTaskDto;
     }
@@ -124,10 +109,7 @@ public sealed class MeetingService : IMeetingService
     {
         var meetingCode = GetRequestingMeetingCode();
         await _cacheService.SetEvaluationsOpenAsync(meetingCode, taskId);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId())
+        await _meetingHubContext.Clients.All
             .ShowEvaluationsAsync(new TaskDto(taskId));
     }
 
@@ -136,10 +118,7 @@ public sealed class MeetingService : IMeetingService
         var meetingCode = GetRequestingMeetingCode();
         var currentTaskState = await _cacheService.DeleteTaskEvaluationsAsync(meetingCode, taskId);
 
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId())
+        await _meetingHubContext.Clients.All
             .ReevaluateAsync(currentTaskState);
     }
 
@@ -147,21 +126,14 @@ public sealed class MeetingService : IMeetingService
     {
         var meetingCode = GetRequestingMeetingCode();
         await _cacheService.SetEvaluationFinalAsync(meetingCode, evaluationDto);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId())
-            .EvaluateTaskFinalAsync(evaluationDto);
+        await _meetingHubContext.Clients.All.EvaluateTaskFinalAsync(evaluationDto);
     }
 
     public async Task ChangeTaskBacklogTypeAndNotifyAsync( Guid taskId, BacklogType backlogType)
     {
         var meetingCode = GetRequestingMeetingCode();
         await _cacheService.ChangeTaskBacklogTypeAsync(meetingCode, taskId, backlogType);
-        await _meetingHubContext.Clients
-            .GroupExcept(
-                meetingCode,
-                GetRequestingConnectionId())
+        await _meetingHubContext.Clients.All
             .ChangeTaskBacklogTypeAsync(new TaskBacklogChangedDto(taskId, backlogType));
 
     }
