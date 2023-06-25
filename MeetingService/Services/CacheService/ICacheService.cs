@@ -16,7 +16,7 @@ public interface ICacheService
     Task<CurrentTaskStateDto> DeleteTaskEvaluationsAsync(string meetingCode, Guid taskId);
     Task<MeetingStateDto> GetCacheMeetingStateAsync(string meetingCode);
     Task<IEnumerable<string>> GetCasheUserConnectionAsync(string meetingCode);
-    Task<string?> GetMeetingCodeOrNullAsync(Guid projectId);
+    Task<bool> IsMeetingExistAsync(string projectId);
     Task RemoveCasheUserConnectionAsync(string meetingCode, Guid userId);
     Task<CurrentTaskStateDto> SetActiveTaskAsync(string meetingCode, Guid taskId);
     Task SetEvaluationAsync(string meetingCode, Guid userId, TaskEvaluationDto evaluationDto);

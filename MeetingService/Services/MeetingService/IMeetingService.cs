@@ -10,7 +10,7 @@ public interface IMeetingService
     Task ShowEvaluationsAsync( Guid taskId);
     Task ReevaluateAsync(Guid taskId);
     Task DeleteMeetingAsync();
-    Task<string> GetMeetingAsync(Guid projectId);
+    Task<bool> IsMeetingExistAsync();
     Task<MeetingStateDto> CreateMeetingAndJoinAsync(string userName, Guid projectId, IEnumerable<BacklogTaskDto> tasks);
     Task UpdateUserEvaluationAndNotifyAsync(TaskEvaluationDto evaluationDto);
     Task EvaluateTaskFinalAndNotifyAsync(TaskEvaluationDto evaluationDto);

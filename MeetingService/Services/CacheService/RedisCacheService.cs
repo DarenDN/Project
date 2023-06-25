@@ -21,10 +21,10 @@ public class RedisCacheService : ICacheService
         _distributedCache = distributedCache;
     }
 
-    public async Task<string?> GetMeetingCodeOrNullAsync(Guid projectId)
+    public async Task<bool> IsMeetingExistAsync(string projectId)
     {
         var meeting = await GetMeetingFromCacheAsync(projectId);
-        return meeting?.MeetingCode;
+        return meeting == null;
     }
 
     public async Task DeleteCasheMeetingAsync(string meetingCode)
@@ -331,8 +331,10 @@ public class RedisCacheService : ICacheService
                                          : new EvaluationDto(
                                              value.Evaluation.EvaluationPoints,
                                              value.Evaluation.EvaluationTime));
+        var taskName = tasksSelection.Backlog.FirstOrDefault(e => e.Id == taskId).Name;
         var taskDto = new CurrentTaskStateDto(
             taskId,
+            taskName,
             taskOpened,
             evaluationDto,
             evaluationByUsers);
@@ -412,7 +414,7 @@ public class RedisCacheService : ICacheService
 
     public async Task<string> CreateCacheMeetingAsync(Guid projectId, IEnumerable<BacklogTaskDto> tasks)
     {
-        if (!string.IsNullOrWhiteSpace(await GetMeetingCodeOrNullAsync(projectId)))
+        if (await IsMeetingExistAsync(projectId.ToString()))
         {
             throw new ArgumentException($"Key {nameof(projectId)} already exists");
         }

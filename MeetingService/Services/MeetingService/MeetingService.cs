@@ -79,10 +79,11 @@ public sealed class MeetingService : IMeetingService
         }
     }
 
-    public async Task<string> GetMeetingAsync(Guid projectId)
+    public async Task<bool> IsMeetingExistAsync()
     {
-        var meetingCode = await _cacheService.GetMeetingCodeOrNullAsync(projectId);
-        return meetingCode;
+        var meetingCode = GetRequestingMeetingCode();
+        var meetingExists = await _cacheService.IsMeetingExistAsync(meetingCode);
+        return meetingExists;
     }
 
     public async Task<MeetingStateDto> CreateMeetingAndJoinAsync(string userName, Guid projectId, IEnumerable<BacklogTaskDto> tasks)

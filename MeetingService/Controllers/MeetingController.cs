@@ -25,13 +25,13 @@ public sealed class MeetingController : ControllerBase
     /// <param name="projectId"></param>
     /// <returns></returns>
     [HttpGet]
-    [Route(nameof(GetMeetingAsync))]
-    public async Task<ActionResult> GetMeetingAsync(Guid projectId)
+    [Route(nameof(IsMeetingExistAsync))]
+    public async Task<ActionResult> IsMeetingExistAsync()
     {
         try
         {
-            var meetingCode = await _meetingService.GetMeetingAsync(projectId);
-            return new JsonResult(new { meetingCode });
+            var exists = await _meetingService.IsMeetingExistAsync();
+            return new JsonResult(new { Exists = exists });
         }
         catch (Exception ex)
         {
@@ -206,11 +206,11 @@ public sealed class MeetingController : ControllerBase
 
     [HttpPost]
     [Route(nameof(ChangeTaskBacklogTypeAsync))]
-    public async Task<ActionResult> ChangeTaskBacklogTypeAsync(Guid taskId, BacklogType backlogType)
+    public async Task<ActionResult> ChangeTaskBacklogTypeAsync(TaskBacklogChangedDto taskBacklogChangedDto)
     {
         try
         {
-            await _meetingService.ChangeTaskBacklogTypeAndNotifyAsync(taskId, backlogType);
+            await _meetingService.ChangeTaskBacklogTypeAndNotifyAsync(taskBacklogChangedDto.TaskId, taskBacklogChangedDto.BacklogType);
             return Ok();
         }
         catch (Exception ex)
