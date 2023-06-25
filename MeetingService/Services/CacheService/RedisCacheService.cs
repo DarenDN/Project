@@ -24,7 +24,7 @@ public class RedisCacheService : ICacheService
     public async Task<bool> IsMeetingExistAsync(string projectId)
     {
         var meeting = await GetMeetingFromCacheAsync(projectId);
-        return meeting == null;
+        return meeting != null;
     }
 
     public async Task DeleteCasheMeetingAsync(string meetingCode)
