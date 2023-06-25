@@ -169,6 +169,8 @@ import { useQuasar } from "quasar";
 import { ref, onMounted } from "vue";
 import { store } from "stores/store";
 import { useRouter } from "vue-router";
+import { httpClient } from "src/utils/httpClient";
+import { hub } from "src/utils/hub";
 import MeetingTaskWindow from "src/components/windows/MeetingTaskWindow.vue";
 
 const CHOOSE_STATUS = "CHOOSE_STATUS";
@@ -182,6 +184,46 @@ const isAdmin = store.user.isAdmin;
 const windowTitle = ref("Set task estimate");
 const currentStatus = ref(CHOOSE_STATUS);
 const createDialog = ref(false);
+
+hub.start();
+
+hub.on("TestHub", (data) => {
+  console.log(data);
+});
+
+onMounted(function () {
+  if (store.user.isAdmin) {
+    createMeeting();
+  } else {
+    joinMeeting();
+  }
+});
+
+function createMeeting() {
+  httpClient
+    .get(httpClient.ProjectManagementServicePath, "Task/GetTasksBacklogAsync")
+    .then((response) => response.json())
+    .then((result) => {
+      console.log(result);
+      return result.tasksBacklog;
+    })
+    .then((tasks) => {
+      const data = {
+        userName: store.user.firstName,
+        projectId: store.project.id,
+        tasks,
+      };
+      return httpClient.post(
+        httpClient.MeetingServicePath,
+        "Meeting/CreateMeetingAndJoinAsync",
+        data
+      );
+    })
+    .then((response) => response.json())
+    .then((result) => console.log(result));
+}
+
+function joinMeeting() {}
 
 const users = ref([
   { id: 1, name: "John", value: 5 },
@@ -274,6 +316,7 @@ function revote() {
 
 function leave() {
   if (isAdmin) {
+    httpClient.post(httpClient.MeetingServicePath, 'Meeting/DeleteMeetingAsync')
   }
 
   router.push("/home");

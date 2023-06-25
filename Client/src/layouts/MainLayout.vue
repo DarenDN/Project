@@ -214,6 +214,7 @@ onMounted(() => {
     mask.show("loading");
 
     store.user = {};
+    store.project = {};
 
     const userInfo = httpClient
       .get(
@@ -222,7 +223,7 @@ onMounted(() => {
       )
       .then((response) => response.json())
       .then((response) => {
-        Object.assign(store.user, response)
+        Object.assign(store.user, response);
       });
 
     const projectInfo = httpClient
@@ -232,10 +233,7 @@ onMounted(() => {
       )
       .then((response) => response.json())
       .then((response) => {
-        store.project = {};
-        store.project.projectName = response.title;
-        store.project.dateCreated = response.dateCreated;
-        store.project.description = response.description;
+        Object.assign(store.project, response);
       });
 
     const adminInfo = httpClient
