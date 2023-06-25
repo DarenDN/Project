@@ -234,6 +234,7 @@ onMounted(() => {
       .then((response) => response.json())
       .then((response) => {
         Object.assign(store.project, response);
+        localStorage.setItem("meetingCode", store.project.id);
       });
 
     const adminInfo = httpClient

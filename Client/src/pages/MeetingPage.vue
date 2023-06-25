@@ -5,13 +5,11 @@
       <q-separator spaced />
       <q-chip color="primary" text-color="white" icon="schedule">
         Estimate:
-        {{
-          (selectedTask?.status == "voted" && selectedTask?.estimate) || "None"
-        }}
+        {{ selectedTask?.finalEvaluation?.evaluationTime || "None" }}
       </q-chip>
       <q-chip color="primary" text-color="white" icon="stacked_bar_chart">
         Point:
-        {{ (selectedTask?.status == "voted" && selectedTask?.point) || "None" }}
+        {{ selectedTask?.finalEvaluation?.evaluationPoints || "None" }}
       </q-chip>
     </div>
     <div class="main-content">
@@ -23,7 +21,7 @@
             card: true,
             'card-closen-not-voted': currentStatus === CHOOSE_STATUS,
             'card-closen-voted':
-              currentStatus === CHOOSE_STATUS && user.value !== '?',
+              currentStatus === CHOOSE_STATUS && getUserEvaluation(user),
           }"
           bordered
         >
@@ -44,8 +42,10 @@
               <q-card-section>
                 <div class="text-h6">
                   <div v-show="user.value !== '?'">
-                    <q-icon name="schedule" />: {{ user.value }} 
-                    <q-icon name="stacked_bar_chart" />: {{ user.value }}
+                    <q-icon name="schedule" />:
+                    {{ getUserEvaluation(user)?.evaluationPoints }} 
+                    <q-icon name="stacked_bar_chart" />:
+                    {{ getUserEvaluation(user)?.evaluationTime }}
                   </div>
                   <div v-show="user.value === '?'">-</div>
                 </div>
@@ -64,11 +64,11 @@
           <q-item-label header>Sprint backlog</q-item-label>
 
           <q-item
-            v-for="task in sprintBacklog"
+            v-for="task in tasks.sprintBacklog"
             v-bind:key="task.name"
             clickable
             v-ripple
-            :active="selectedTask?.name === task.name"
+            :active="isAdmin && selectedTask?.id === task.id"
             @click="selectTask(task)"
             active-class="selected-task"
           >
@@ -82,10 +82,16 @@
 
             <q-item-section>
               <q-item-label lines="1">{{ task.name }}</q-item-label>
-              <q-item-label caption>{{ task.status }}</q-item-label>
+              <q-item-label caption>{{
+                task.voted ? "Voted" : "Not voted"
+              }}</q-item-label>
             </q-item-section>
 
-            <q-item-section v-show="isAdmin" side @click="toProduct(task)">
+            <q-item-section
+              v-show="isAdmin"
+              side
+              @click="changeTaskType(task, 0)"
+            >
               <q-icon name="remove_circle_outline" />
             </q-item-section>
           </q-item>
@@ -94,8 +100,8 @@
           <q-item-label header>Product backlog</q-item-label>
 
           <q-item
-            v-for="task in productTasks"
-            v-bind:key="task.name"
+            v-for="task in tasks.productTasks"
+            v-bind:key="task.id"
             active-class="selected-task"
           >
             <q-item-section avatar top>
@@ -106,7 +112,11 @@
               <q-item-label lines="1">{{ task.name }}</q-item-label>
             </q-item-section>
 
-            <q-item-section v-show="isAdmin" side @click="toSprint(task)">
+            <q-item-section
+              v-show="isAdmin"
+              side
+              @click="changeTaskType(task, 1)"
+            >
               <q-icon name="add_circle_outline" />
             </q-item-section>
           </q-item>
@@ -160,18 +170,22 @@
 
   <MeetingTaskWindow
     :title="windowTitle"
+    :current-task="selectedTask"
+    :endpont="endpont"
+    :callback="callback"
     v-model="createDialog"
   ></MeetingTaskWindow>
 </template>
 
 <script setup>
 import { useQuasar } from "quasar";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive, toRefs } from "vue";
 import { store } from "stores/store";
 import { useRouter } from "vue-router";
 import { httpClient } from "src/utils/httpClient";
 import { hub } from "src/utils/hub";
 import MeetingTaskWindow from "src/components/windows/MeetingTaskWindow.vue";
+import { mask } from "src/utils/mask";
 
 const CHOOSE_STATUS = "CHOOSE_STATUS";
 const OPENED_STATUS = "OPENED_STATUS";
@@ -184,27 +198,47 @@ const isAdmin = store.user.isAdmin;
 const windowTitle = ref("Set task estimate");
 const currentStatus = ref(CHOOSE_STATUS);
 const createDialog = ref(false);
-
-hub.start();
-
-hub.on("TestHub", (data) => {
-  console.log(data);
-});
+const users = ref([]);
+const selectedTask = ref(null);
+const tasks = reactive({ productTasks: [], sprintBacklog: [] });
+const callback = ref(null);
+const endpont = ref(null);
+const refTasks = toRefs(tasks);
 
 onMounted(function () {
-  if (store.user.isAdmin) {
-    createMeeting();
-  } else {
-    joinMeeting();
-  }
+  mask.show("loading");
+  httpClient
+    .get(httpClient.MeetingServicePath, "Meeting/IsMeetingExistAsync")
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.exists) {
+        q.notify({
+          message: "Joining meeting",
+          color: "primary",
+        });
+        return joinMeeting();
+      } else if (store.user.isAdmin) {
+        q.notify({
+          message: "Creating meeting",
+          color: "primary",
+        });
+        return createMeeting();
+      } else {
+        router.push("/home");
+        q.notify({
+          message: "Meeting doesn't exist",
+          color: "primary",
+        });
+      }
+    })
+    .then((response) => mask.hide());
 });
 
 function createMeeting() {
-  httpClient
+  return httpClient
     .get(httpClient.ProjectManagementServicePath, "Task/GetTasksBacklogAsync")
     .then((response) => response.json())
     .then((result) => {
-      console.log(result);
       return result.tasksBacklog;
     })
     .then((tasks) => {
@@ -220,136 +254,212 @@ function createMeeting() {
       );
     })
     .then((response) => response.json())
-    .then((result) => console.log(result));
+    .then((result) => {
+      initData(result);
+    });
 }
 
-function joinMeeting() {}
+function joinMeeting() {
+  return httpClient
+    .post(
+      httpClient.MeetingServicePath,
+      `Meeting/JoinMeetingAsync?userName=${store.user.firstName}`
+    )
+    .then((response) => response.json())
+    .then((result) => {
+      initData(result);
+    });
+}
 
-const users = ref([
-  { id: 1, name: "John", value: 5 },
-  { id: 2, name: "Sarah", value: 12 },
-  { id: 3, name: "David", value: "?" },
-  { id: 4, name: "Emily", value: 8 },
-  { id: 5, name: "Michael", value: 1 },
-  { id: 6, name: "Emma", value: 15 },
-  { id: 7, name: "Jacob", value: "?" },
-  { id: 8, name: "Olivia", value: 3 },
-  { id: 9, name: "Ethan", value: 11 },
-  { id: 10, name: "Ava", value: "?" },
-]);
+function initData(data) {
+  hub.start();
+  users.value = data.participants;
+  data.backlog.forEach((element) => {
+    if (element.backlogType == 1) {
+      refTasks.sprintBacklog.value.push(element);
+    } else {
+      refTasks.productTasks.value.push(element);
+    }
+  });
 
-const productTasks = ref([
-  {
-    name: "Implement new login page",
-    status: "not voted",
-    point: 3,
-    estimate: "5h",
-  },
-  {
-    name: "Fix broken search functionality",
-    status: "voted",
-    point: 2,
-    estimate: "3h",
-  },
-  {
-    name: "Improve site performance",
-    status: "not voted",
-    point: 4,
-    estimate: "8h",
-  },
-  {
-    name: "Add product recommendations to homepage",
-    status: "not voted",
-    point: 2,
-    estimate: "2h",
-  },
-  {
-    name: "Create user onboarding flow",
-    status: "voted",
-    point: 5,
-    estimate: "10h",
-  },
-  {
-    name: "Redesign checkout process",
-    status: "not voted",
-    point: 6,
-    estimate: "12h",
-  },
-  {
-    name: "Update pricing display logic",
-    status: "voted",
-    point: 1,
-    estimate: "1h",
-  },
-  {
-    name: "Integrate with third-party API",
-    status: "not voted",
-    point: 5,
-    estimate: "7h",
-  },
-  {
-    name: "Implement internationalization support",
-    status: "not voted",
-    point: 3,
-    estimate: "6h",
-  },
-  {
-    name: "Create mobile app version",
-    status: "not voted",
-    point: 7,
-    estimate: "15h",
-  },
-]);
-const sprintBacklog = ref([]);
-const selectedTask = ref(null);
+  hub.on("UserJoinedMeetingAsync", (data) => {
+    users.value = [...users.value, { ...data.participantDto, voted: false }];
+  });
+  hub.on("UserLeavedMeetingAsync", (data) => {
+    users.value = users.value.filter(function (x) {
+      return x.id !== data.participantId;
+    });
+  });
+  hub.on("ChangeActiveTaskAsync", (data) => {
+    if (selectedTask.value?.id === data.id) return;
+
+    selectedTask.value = data;
+
+    if (data.finalEvaluation) {
+      currentStatus.value = FINAL_STATUS;
+      const show =
+        selectedTask.value && isAdmin && currentStatus.value === FINAL_STATUS;
+    } else if (data.opened) {
+      setOpenedCards();
+    } else {
+      currentStatus.value = CHOOSE_STATUS;
+      windowTitle.value = "Set task estimate";
+      endpont.value = "Meeting/UpdateUserEvaluationAsync";
+      callback.value = () => {
+        mask.hide();
+      };
+    }
+  });
+  hub.on("ChangeTaskBacklogTypeAsync", (data) => {
+    if (data.backlogType === 1) {
+      const deletingTask = refTasks.productTasks.value.filter(
+        (x) => x.id === data.taskId
+      )[0];
+      refTasks.productTasks.value = refTasks.productTasks.value.filter(
+        (x) => x.id !== data.taskId
+      );
+      refTasks.sprintBacklog.value.push(deletingTask);
+    } else {
+      const deletingTask = refTasks.sprintBacklog.value.filter(
+        (x) => x.id === data.taskId
+      )[0];
+      refTasks.sprintBacklog.value = refTasks.sprintBacklog.value.filter(
+        (x) => x.id !== data.taskId
+      );
+      refTasks.productTasks.value.push(deletingTask);
+    }
+  });
+  hub.on("UpdateUserEvaluationAsync", (data) => {
+    console.log(data);
+    selectedTask.value.evaluationByUsers = data.evaluationByUsers;
+
+    const user = users.value.filter((x) => x.id === data.participantDto.id)[0];
+
+    user["evaluationDto"] = data.evaluationDto;
+  });
+  hub.on("DeleteMeetingAsync", (data) => {
+    hub.stop();
+    router.push("/home");
+    q.notify({
+      message: "Meeting has been ended",
+      color: "primary",
+    });
+  });
+  hub.on("ShowEvaluationsAsync", (data) => {
+    setOpenedCards();
+  });
+  hub.on("EvaluateTaskFinalAsync", (data) => {
+    currentStatus.value = FINAL_STATUS;
+    windowTitle.value = "Set task estimate";
+    selectedTask.value.finalEvaluation = {};
+    selectedTask.value.finalEvaluation.evaluationPoints = data.evaluationPoints;
+    selectedTask.value.finalEvaluation.evaluationTime = data.evaluationTime;
+  });
+  hub.on("ReevaluateAsync", (data) => {
+    selectedTask.value = data;
+
+    if (data.finalEvaluation) {
+      currentStatus.value = FINAL_STATUS;
+    } else if (data.opened) {
+      setOpenedCards();
+    } else {
+      currentStatus.value = CHOOSE_STATUS;
+      windowTitle.value = "Set task estimate";
+      endpont.value = "Meeting/UpdateUserEvaluationAsync";
+      callback.value = () => {
+        mask.hide();
+      };
+    }
+  });
+}
 
 function openCards() {
+  httpClient.put(
+    httpClient.MeetingServicePath,
+    "Meeting/ShowEvaluationsAsync",
+    { taskId: selectedTask.value.id }
+  );
+}
+
+function setOpenedCards() {
   currentStatus.value = OPENED_STATUS;
   windowTitle.value = "Set final task estimate";
 }
 
 function revote() {
-  currentStatus.value = CHOOSE_STATUS;
-  windowTitle.value = "Set task estimate";
-  selectedTask.value.status = "not voted";
+  httpClient.post(httpClient.MeetingServicePath, "Meeting/ReevaluateAsync", {
+    taskId: selectedTask.value.id,
+  });
 }
 
 function leave() {
   if (isAdmin) {
-    httpClient.post(httpClient.MeetingServicePath, 'Meeting/DeleteMeetingAsync')
+    httpClient
+      .get(httpClient.MeetingServicePath, "Meeting/GetFinalEvaluationsAsync")
+      .then((response) => response.json())
+      .then((result) => {
+        return httpClient.put(
+          httpClient.ProjectManagementServicePath,
+          "Task/UpdateTasksAsync",
+          {
+            backlogTaskDtos: result.backlogTasksDto,
+          }
+        );
+      })
+      .then((result) => {
+        return httpClient.post(
+          httpClient.MeetingServicePath,
+          "Meeting/DeleteMeetingAsync"
+        );
+      });
+  } else {
+    httpClient.post(httpClient.MeetingServicePath, "Meeting/LeaveMeetingAsync");
   }
-
+  hub.stop();
   router.push("/home");
 }
 
-function toSprint(element) {
-  productTasks.value = productTasks.value.filter(
-    (x) => x.name !== element.name
-  );
-  sprintBacklog.value.push(element);
+function getUserEvaluation(user) {
+  if (selectedTask?.value?.evaluationByUsers) {
+    return selectedTask.value.evaluationByUsers[user.id];
+  }
 }
 
-function toProduct(element) {
-  sprintBacklog.value = sprintBacklog.value.filter(
-    (x) => x.name !== element.name
-  );
-  productTasks.value.push(element);
+function changeTaskType(element, backlogType) {
+  const taskData = {
+    taskId: element.id,
+    backlogType,
+  };
+  httpClient
+    .post(
+      httpClient.MeetingServicePath,
+      "Meeting/ChangeTaskBacklogTypeAsync",
+      taskData
+    )
+    .then((response) => /* Mask TODO */ {});
 }
 
 function submitVotes() {
   createDialog.value = true;
-  currentStatus.value = FINAL_STATUS;
-  selectedTask.value.status = "voted";
+
+  endpont.value = "Meeting/EvaluateTaskFinalAsync";
+  callback.value = () => {
+    mask.hide();
+  };
 }
 
 function selectTask(task) {
   if (!isAdmin) return;
 
-  if (selectedTask.value?.name !== task.name) {
-    currentStatus.value = CHOOSE_STATUS;
-  }
-  selectedTask.value = task;
-  windowTitle.value = "Set task estimate";
+  const taskData = {
+    taskId: task.id,
+  };
+
+  httpClient.put(
+    httpClient.MeetingServicePath,
+    "Meeting/ChangeActiveTaskAsync",
+    taskData
+  );
 }
 </script>
 
@@ -382,6 +492,7 @@ function selectTask(task) {
   text-align: center;
   width: calc(33.33% - 10px);
   margin-bottom: 10px;
+  max-height: 150px;
 }
 .card-closen-not-voted {
   background-color: #c2c2c2;

@@ -9,12 +9,11 @@ export const httpClient = {
     };
 
     const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      //TODO: fix
-    }
+    const mCode = localStorage.getItem("meetingCode");
 
     headers["Authorization"] = `bearer ${token}`;
+    headers["meetingCode"] = mCode;
+
     return fetch(`${root}/${endpoint}`, {
       method: "GET",
       headers,
@@ -45,12 +44,10 @@ export const httpClient = {
     };
 
     const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      //TODO: fix
-    }
+    const mCode = localStorage.getItem("meetingCode");
 
     headers["Authorization"] = `bearer ${token}`;
+    headers["meetingCode"] = mCode;
 
     return fetch(`${root}/${endpoint}`, {
       method: "PUT",

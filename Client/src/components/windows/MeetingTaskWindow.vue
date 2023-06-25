@@ -75,18 +75,43 @@
 import { ref, defineProps } from "vue";
 import { store } from "stores/store";
 import { mask } from "src/utils/mask";
+import { httpClient } from "src/utils/httpClient";
 
-defineProps({
-    title: {
-        type: String
-    }
-})
+const props = defineProps({
+  title: {
+    type: String,
+  },
+  currentTask: {
+    type: Object,
+  },
+  endpont: {
+    type: String
+  },
+  callback: {
+    type: Function
+  }
+});
 
 const points = [1, 2, 3, 5, 8, 13, 21];
 const votedPointValue = ref(points[0]);
 const votedEstimateValue = ref(0);
 
 function onSubmit() {
+  mask.show();
+  const data = {
+    taskId: props.currentTask.id,
+    evaluationPoints: votedPointValue.value,
+    evaluationTime: votedEstimateValue.value,
+  };
+  httpClient
+    .post(
+      httpClient.MeetingServicePath,
+      props.endpont,
+      data
+    )
+    .then((response) => {
+      mask.hide();
+    });
 }
 </script>
 
