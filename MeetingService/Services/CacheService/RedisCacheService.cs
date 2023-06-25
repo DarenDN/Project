@@ -460,6 +460,6 @@ public class RedisCacheService : ICacheService
 
     public async Task<CurrentTaskStateDto> GetCurrentTaskStateDtoAsync(string meetingCode, Guid taskId)
     {
-        return await GetCurrentTaskStateDtoAsync(meetingCode, taskId);
+        return await GetCurrentTaskStateDtoAsync( taskId, meetingCode);
     }
 }
