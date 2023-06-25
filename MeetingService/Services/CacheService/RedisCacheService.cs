@@ -309,8 +309,9 @@ public class RedisCacheService : ICacheService
         TasksSelection? tasksSelection = null,
         Evaluations? evaluations = null)
     {
-        tasksSelection ??= await GetTaskSelectionFromCacheAsync(meetingCode);
-        evaluations ??= await GetEvaluationsFromCacheAsync(meetingCode);
+        var meeting = await GetMeetingFromCacheAsync(meetingCode);
+        tasksSelection ??= await GetTaskSelectionFromCacheAsync(meeting.TaskSelectionCode);
+        evaluations ??= await GetEvaluationsFromCacheAsync(meeting.EvaluationsCode);
 
         var taskOpened = tasksSelection.TasksEvaluationsOpen?.TryGetValue(taskId, out var opened) ?? false
             ? opened
