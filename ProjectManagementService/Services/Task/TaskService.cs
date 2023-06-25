@@ -80,12 +80,22 @@ public sealed class TaskService : ITaskService
         foreach(var taskSprintInfo in taskSprintInfos)
         {
             var task = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskSprintInfo.TaskId);
-            if(task is null )
+            if(task is null)
             {
                 continue;
             }
 
-            if(taskSprintInfo.BacklogType == 1)
+            var toWorkState = await GetToWorkStateAsync();
+            if (task.EstimationInPoints != taskSprintInfo.EstimationPoint
+                && task.EstimationInTime != taskSprintInfo.EstimationTime
+                && task.State.Order <= toWorkState.Order)
+            {
+                task.State = taskSprintInfo.EstimationPoint != null || taskSprintInfo.EstimationTime != null
+                    ? toWorkState
+                    : await GetDefaultTaskStateAsync();
+            }
+
+            if (taskSprintInfo.BacklogType == 1)
             {
                 task.SprintId = currentSprintId;
                 task.EstimationInPoints = taskSprintInfo.EstimationPoint;
@@ -96,13 +106,6 @@ public sealed class TaskService : ITaskService
                 task.SprintId = null;
                 task.EstimationInPoints = taskSprintInfo.EstimationPoint;
                 task.EstimationInTime = taskSprintInfo.EstimationTime;
-            }
-            var toWorkState = await GetToWorkStateAsync();
-            if (task.State.Order <= toWorkState.Order)
-            {
-                task.State = taskSprintInfo.EstimationPoint != null || taskSprintInfo.EstimationTime != null
-                    ? await GetToWorkStateAsync()
-                    : await GetDefaultTaskStateAsync();
             }
 
             updatedTasks.Add(task);

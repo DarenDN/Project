@@ -13,7 +13,7 @@ public interface IMeetingHub
     Task ChangeActiveTaskAsync(CurrentTaskStateDto currentTaskDto);
     Task ReevaluateAsync(CurrentTaskStateDto currentTaskDto);
     //
-    Task UpdateUserEvaluationAsync(ParticipantEvaluationDto participantEvaluationDto);
+    Task UpdateUserEvaluationAsync(CurrentTaskStateDto currentTaskDto);
     Task EvaluateTaskFinalAsync(TaskEvaluationDto evaluationDto);
     Task ShowEvaluationsAsync(TaskDto taskDto);
 

@@ -66,6 +66,7 @@ public class RedisCacheService : ICacheService
             {
                 return;
             }
+
             participant.ConnectionId = connectionId;
         }
         else
@@ -455,5 +456,10 @@ public class RedisCacheService : ICacheService
         var awaiter = Task.WhenAll(tasksSave);
         await awaiter;
         return meeting.MeetingCode;
+    }
+
+    public async Task<CurrentTaskStateDto> GetCurrentTaskStateDtoAsync(string meetingCode, Guid taskId)
+    {
+        return await GetCurrentTaskStateDtoAsync(meetingCode, taskId);
     }
 }

@@ -50,10 +50,9 @@ public sealed class MeetingService : IMeetingService
     {
         var meetingCode = GetRequestingMeetingCode();
         var userId = GetRequestingUserId();
-        var connectionId = GetRequestingConnectionId();
         await _cacheService.SetEvaluationAsync(meetingCode, userId.Value, evaluationDto);
-        var participantEvaluationDto = await _cacheService.GetUserCachedEvaluationsAsync (meetingCode, userId.Value);
-        await _meetingHubContext.Clients.All.UpdateUserEvaluationAsync(participantEvaluationDto);
+        var taskState = await _cacheService.GetCurrentTaskStateDtoAsync(meetingCode, evaluationDto.TaskId);
+        await _meetingHubContext.Clients.All.UpdateUserEvaluationAsync(taskState);
     }
 
     public async Task LeaveMeetingAndNotifyAsync()

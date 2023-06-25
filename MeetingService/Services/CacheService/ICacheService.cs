@@ -10,6 +10,7 @@ public interface ICacheService
 {
     Task AddCasheUserConnectionAsync(string meetingCode, string connectionId, Guid userId, string userName);
     Task<ParticipantEvaluationDto> GetUserCachedEvaluationsAsync(string meetingCode, Guid userId);
+    Task<CurrentTaskStateDto> GetCurrentTaskStateDtoAsync(string meetingCode, Guid taskId);
     Task<string> CreateCacheMeetingAsync(Guid projectId, IEnumerable<BacklogTaskDto> tasks);
     Task<IEnumerable<BacklogTaskDto>> GetFinalEvaluationsAsync(string meetingCode);
     Task DeleteCasheMeetingAsync(string meetingCode);

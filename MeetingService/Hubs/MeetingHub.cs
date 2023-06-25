@@ -24,11 +24,6 @@ public class MeetingHub : Hub<IMeetingHub>
         await Clients.OthersInGroup(meetingCode).ReevaluateAsync(currentTaskDto);
     }
 
-    public async Task UpdateUserEvaluationAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)
-    {
-        await Clients.OthersInGroup(meetingCode).UpdateUserEvaluationAsync(participantEvaluationDto);
-    }
-
     public async Task EvaluateTaskFinalAsync(string meetingCode, TaskEvaluationDto evaluationDto)
     {
         await Clients.OthersInGroup(meetingCode).EvaluateTaskFinalAsync(evaluationDto);
@@ -49,11 +44,6 @@ public class MeetingHub : Hub<IMeetingHub>
     {
         await Clients.OthersInGroup(meetingCode).UserLeavedMeetingAsync(new ParticipantIdDto(participantId));
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, meetingCode);
-    }
-
-    public async Task UpdateEvaluationAsync(string meetingCode, ParticipantEvaluationDto participantEvaluationDto)
-    {
-        await Clients.OthersInGroup(meetingCode).UpdateUserEvaluationAsync(participantEvaluationDto);
     }
 
     public async Task DeleteMeetingAsync(string meetingCode)
