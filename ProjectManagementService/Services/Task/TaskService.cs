@@ -80,15 +80,15 @@ public sealed class TaskService : ITaskService
         foreach(var taskSprintInfo in taskSprintInfos)
         {
             var task = await _appDbContext.Tasks.FirstOrDefaultAsync(t => t.Id == taskSprintInfo.TaskId);
-            if(task is null)
+            if(task == null)
             {
                 continue;
             }
 
             var toWorkState = await GetToWorkStateAsync();
-            if (task?.EstimationInPoints != taskSprintInfo?.EstimationPoint
-                && task?.EstimationInTime != taskSprintInfo?.EstimationTime
-                && task.State.Order <= toWorkState.Order)
+            if (task.EstimationInPoints.GetValueOrDefault() != taskSprintInfo.EstimationPoint.GetValueOrDefault()
+                && task.EstimationInTime.GetValueOrDefault() != taskSprintInfo.EstimationTime.GetValueOrDefault()
+                && (task.State?.Order ?? 0) <= toWorkState.Order)
             {
                 task.State = taskSprintInfo.EstimationPoint != null || taskSprintInfo.EstimationTime != null
                     ? toWorkState

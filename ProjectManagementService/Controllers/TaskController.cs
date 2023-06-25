@@ -46,7 +46,7 @@ public sealed class TaskController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ex.Message);
+            return StatusCode(500, ex.Message + ex.StackTrace);
         }
     }
 
