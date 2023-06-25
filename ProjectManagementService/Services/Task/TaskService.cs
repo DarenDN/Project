@@ -86,8 +86,8 @@ public sealed class TaskService : ITaskService
             }
 
             var toWorkState = await GetToWorkStateAsync();
-            if (task.EstimationInPoints != taskSprintInfo.EstimationPoint
-                && task.EstimationInTime != taskSprintInfo.EstimationTime
+            if (task?.EstimationInPoints != taskSprintInfo?.EstimationPoint
+                && task?.EstimationInTime != taskSprintInfo?.EstimationTime
                 && task.State.Order <= toWorkState.Order)
             {
                 task.State = taskSprintInfo.EstimationPoint != null || taskSprintInfo.EstimationTime != null
